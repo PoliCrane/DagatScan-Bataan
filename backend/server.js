@@ -176,6 +176,14 @@ app.post("/login", loginLimiter, async (req, res) => {
     const user = userResult.rows[0];
 
     if (!user.active) {
+      logAction(null, {
+        actor: { id: user.id, username: user.username, roles: user.roles },
+        action: "login_denied_deactivated",
+        category: "auth",
+        severity: "critical",
+        targetType: "user",
+        targetId: user.id,
+      });
       return res.status(403).json({
         error: "This account has been deactivated. Please contact an administrator."
       });
@@ -207,6 +215,15 @@ app.post("/login", loginLimiter, async (req, res) => {
       roles: user.roles,
       municipality_id: user.municipality_id,
       municipality: user.municipality_name,
+    });
+
+    logAction(null, {
+      actor: { id: user.id, username: user.username, roles: user.roles },
+      action: "login_success",
+      category: "auth",
+      severity: "normal",
+      targetType: "user",
+      targetId: user.id,
     });
   } catch (err) {
     console.error(err.message);

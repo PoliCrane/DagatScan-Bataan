@@ -213,6 +213,20 @@
   border-left: 4px solid #d63031;
 }
 
+.password-match-hint {
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.password-match-hint.match {
+  color: var(--secondary);
+}
+
+.password-match-hint.mismatch {
+  color: #d63031;
+}
+
 /* Modal Footer — no border-top, continues the same 30px side margin as the
    header/content so nothing reads as a separate bounded toolbar. */
 .modal-footer {

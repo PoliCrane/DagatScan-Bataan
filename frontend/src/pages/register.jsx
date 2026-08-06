@@ -10,6 +10,15 @@ import "./index-organized.css";
 import "./styles/forms.css";
 import "./styles/requestAccount.css";
 
+const POSITION_OPTIONS = [
+  "DENR Officer",
+  "Municipal Environment and Natural Resources Officer (MENRO)",
+  "LGU Staff",
+  "Environmental Researcher",
+  "Coastal Resource Management Officer",
+  "Others",
+];
+
 // Account Registration — public-facing "Request Access" form. No password is
 // collected here; an admin sets the account's initial password when
 // approving the request (see UserManagement.jsx's ApproveRequestModal).
@@ -25,6 +34,7 @@ export default function Register() {
   const [municipalities, setMunicipalities] = useState([]);
   const [contactNumber, setContactNumber] = useState("");
   const [position, setPosition] = useState("");
+  const [positionIsOther, setPositionIsOther] = useState(false);
   const [requestLetterFile, setRequestLetterFile] = useState(null);
   const [additionalRemarks, setAdditionalRemarks] = useState("");
   const [error, setError] = useState("");
@@ -60,6 +70,17 @@ export default function Register() {
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       setRequestLetterFile(files[0]);
+    }
+  };
+
+  const handlePositionChange = (e) => {
+    const value = e.target.value;
+    if (value === "Others") {
+      setPositionIsOther(true);
+      setPosition("");
+    } else {
+      setPositionIsOther(false);
+      setPosition(value);
     }
   };
 
@@ -181,7 +202,7 @@ export default function Register() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Official Email Address *</label>
+              <label className="form-label">Email Address *</label>
               <input
                 className="form-input"
                 type="email"
@@ -218,13 +239,27 @@ export default function Register() {
             </div>
             <div className="form-group">
               <label className="form-label">Position / Designation *</label>
-              <input
+              <select
                 className="form-input"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                placeholder="Enter position or designation"
+                value={positionIsOther ? "Others" : position}
+                onChange={handlePositionChange}
                 disabled={loading}
-              />
+              >
+                <option value="">Select position</option>
+                {POSITION_OPTIONS.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+              {positionIsOther && (
+                <input
+                  className="form-input"
+                  style={{ marginTop: 8 }}
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  placeholder="Enter your position or designation"
+                  disabled={loading}
+                />
+              )}
             </div>
           </div>
 

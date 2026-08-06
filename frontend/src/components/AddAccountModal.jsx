@@ -12,6 +12,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
     roles: "user",
     municipality_id: "",
   });
@@ -57,6 +58,16 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
     }
     if (!formData.password.trim()) {
       setError("Password is required");
+      return;
+    }
+
+    if (!formData.confirmPassword.trim()) {
+      setError("Please confirm the password");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
       return;
     }
 
@@ -109,7 +120,13 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          roles: formData.roles,
+          municipality_id: formData.municipality_id,
+        }),
       });
 
       const data = await response.json();
@@ -143,6 +160,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
       username: "",
       email: "",
       password: "",
+      confirmPassword: "",
       roles: "municipal",
       municipality_id: "",
     });
@@ -227,6 +245,26 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
                   <span className="requirement-icon">{passwordRequirements.hasSpecial ? "✓" : "○"}</span>
                   Special Characters (! @ # $ % ^ & * ( ) _ +)
                 </div>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm Password *</label>
+            <div className="password-input-wrapper">
+              <input
+                id="confirmPassword"
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Re-enter password"
+                className="form-input"
+              />
+            </div>
+            {formData.confirmPassword && (
+              <div className={`password-match-hint ${formData.password === formData.confirmPassword ? "match" : "mismatch"}`}>
+                {formData.password === formData.confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
               </div>
             )}
           </div>

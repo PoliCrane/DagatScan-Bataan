@@ -8,6 +8,7 @@ import { API_BASE_URL } from "../config/api";
 // server.js's POST /admin/account-requests/:id/approve).
 export default function ApproveRequestModal({ isOpen, request, onClose, onSuccess }) {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [expandPassword, setExpandPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,12 +23,21 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
 
   const handleClose = () => {
     setPassword("");
+    setConfirmPassword("");
     setError("");
     onClose();
   };
 
   const handleApprove = async () => {
     setError("");
+    if (!confirmPassword.trim()) {
+      setError("Please confirm the password");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
     if (!Object.values(passwordRequirements).every(Boolean)) {
       setError("Password does not meet all requirements below");
       return;
@@ -53,6 +63,7 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
       }
       await showSuccess(`Account created for ${request.username}`);
       setPassword("");
+      setConfirmPassword("");
       onSuccess();
     } catch (err) {
       await showError(err.message);
@@ -132,6 +143,26 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
                   <span className="requirement-icon">{passwordRequirements.hasSpecial ? "✓" : "○"}</span>
                   Special Characters (! @ # $ % ^ & * ( ) _ +)
                 </div>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="approve-confirm-password">Confirm Password *</label>
+            <div className="password-input-wrapper">
+              <input
+                id="approve-confirm-password"
+                type="password"
+                className="form-input"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter password"
+                disabled={loading}
+              />
+            </div>
+            {confirmPassword && (
+              <div className={`password-match-hint ${password === confirmPassword ? "match" : "mismatch"}`}>
+                {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
               </div>
             )}
           </div>
