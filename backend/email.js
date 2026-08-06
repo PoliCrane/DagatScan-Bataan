@@ -1,6 +1,13 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
 require("dotenv").config();
+
+// Render's network can't route IPv6, but Node's default DNS lookup order
+// can still return smtp.gmail.com's AAAA record first; the transporter's
+// own `family` option isn't threaded through to the underlying socket, so
+// this has to be forced at the DNS resolution level instead.
+dns.setDefaultResultOrder("ipv4first");
 
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
   console.warn("Warning: EMAIL_USER or EMAIL_PASS not set in environment variables");
@@ -11,10 +18,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS?.replace(/\s/g, '') || ""
-  },
-  // Render's network can't route IPv6, but Node may still resolve
-  // smtp.gmail.com to an AAAA record first; force IPv4.
-  family: 4
+  }
 });
 
 // Verify transporter configuration
