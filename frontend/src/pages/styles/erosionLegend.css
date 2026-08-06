@@ -1,0 +1,174 @@
+/* Erosion Analysis Legend Modal */
+.erosion-legend {
+  position: fixed;
+  left: calc(65px + 15px);
+  top: 65px;
+  width: 308px;
+  background: #eaf4f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  padding: 14px;
+  z-index: 500;
+  animation: slideInLeft 0.3s ease;
+  transition: left 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+}
+
+.erosion-legend.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.erosion-legend.hidden {
+  opacity: 0;
+  transform: translateY(-30px);
+  pointer-events: none;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Legend Header */
+.erosion-legend .legend-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: -14px -14px 2px -14px;
+  padding: 11px 14px 9px 14px;
+  border-bottom: none;
+  background: rgba(0, 106, 182, 0.6);
+  border-radius: 8px 8px 0 0;
+}
+
+.erosion-legend .legend-icon {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+    filter: brightness(0) invert(0);
+}
+
+.erosion-legend .legend-title {
+  margin: 0;
+  font-size: 13px;
+  color: black;
+  font-weight: 600;
+}
+
+/* Legend Content - 2 Column Layout */
+.erosion-legend .legend-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #eaf4f8;
+  padding: 13px;
+  border-radius: 0 0 8px 8px;
+  margin: 0 -14px -14px -14px;
+}
+
+.legend-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.legend-column {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* Legend Item */
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 0;
+  transition: all 0.2s ease;
+}
+
+.legend-item:hover {
+  transform: translateX(2px);
+}
+
+/* Legend Line (instead of circle) — kept at 30% bigger than the original
+   (1.3x) regardless of the legend-wide scale, per request. */
+.legend-line {
+  width: 21px;
+  height: 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Legend Label */
+.legend-label {
+  font-size: 11px;
+  color: #333;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .erosion-legend {
+    left: calc(65px + 10px);
+    top: 80px;
+    width: 286px;
+    padding: 12px;
+  }
+
+  .erosion-legend .legend-content {
+    padding: 11px;
+    margin: 0 -12px -12px -12px;
+  }
+
+  .erosion-legend .legend-header {
+    margin: -12px -12px 9px -12px;
+    padding: 9px 12px 7px 12px;
+  }
+
+  .erosion-legend .legend-title {
+    font-size: 12px;
+  }
+
+  .legend-columns {
+    gap: 11px;
+  }
+
+  .legend-item {
+    padding: 4px 0;
+  }
+
+  .legend-label {
+    font-size: 8px;
+  }
+
+  .legend-line {
+    width: 18px;
+    height: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .erosion-legend {
+    width: 264px;
+  }
+
+  .legend-columns {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .legend-label {
+    font-size: 8px;
+  }
+}

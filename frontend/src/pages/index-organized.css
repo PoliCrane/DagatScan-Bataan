@@ -1,0 +1,26 @@
+
+/* 1. Variables and Theming */
+@import './styles/variables.css';
+
+/* 2. Global Styles */
+@import './styles/globals.css';
+
+/* 3. Component Styles */
+@import './styles/navbar.css';
+@import './styles/forms.css';
+@import './styles/sidebar.css';
+@import './styles/admin-sidebar.css';
+@import './styles/footer.css';
+
+/* 4. Page-Specific Styles */
+@import './styles/index.css';
+@import './styles/map.css';
+@import './styles/reports.css';
+
+/* 5. Layout Styles */
+@import './styles/layout.css';
+@import './styles/data-upload.css';
+@import './styles/user-management.css';
+@import './styles/data-upload.css';
+@import './styles/changePasswordModal.css';
+@import './styles/accountModals.css';

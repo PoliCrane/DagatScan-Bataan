@@ -1,0 +1,62 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "area": "Northern Coastal Zone",
+        "name": "Northern Coastal Zone",
+        "data_quality": "Estimated",
+        "source": "NOAA Historical Data"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.450000, 14.750000],
+          [120.450050, 14.750050],
+          [120.450100, 14.750100],
+          [120.450150, 14.750150],
+          [120.450200, 14.750200]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "area": "Central Beach Area",
+        "name": "Central Beach Area",
+        "data_quality": "Validated",
+        "source": "Local Survey"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.500000, 14.700000],
+          [120.500035, 14.700035],
+          [120.500070, 14.700070],
+          [120.500105, 14.700105],
+          [120.500140, 14.700140]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "area": "Southern Cove",
+        "name": "Southern Cove",
+        "data_quality": "Estimated",
+        "source": "Satellite Analysis"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.550000, 14.650000],
+          [120.550110, 14.650110],
+          [120.550220, 14.650220],
+          [120.550330, 14.650330],
+          [120.550440, 14.650440]
+        ]
+      }
+    }
+  ]
+}

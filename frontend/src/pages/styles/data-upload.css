@@ -1,0 +1,743 @@
+/* Data Upload Page Styles */
+
+.data-upload-container {
+  width: 100%;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
+  min-height: 100vh;
+}
+
+/* Header Section */
+.upload-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.upload-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0077b6;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.upload-subtitle {
+  font-size: 1.1rem;
+  color: #4a5568;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Main Upload Section */
+.upload-main-section {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+/* Toggle bar — only one of NDWI Generator / Satellite Image Upload is
+   mounted at a time, switched here. Full-width two-segment bar (rather than
+   small left-aligned pills) so it spans the same width as the wide card
+   below it. */
+.upload-type-toggle {
+  display: flex;
+  gap: 10px;
+  max-width: 1200px;
+  margin: 0 auto 28px;
+}
+
+.toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f9fafb;
+  color: #4a5568;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  border-color: #0077b6;
+  color: #0077b6;
+}
+
+.toggle-btn.active {
+  background: #e7f0fe;
+  border-color: #0077b6;
+  color: #0077b6;
+}
+
+.toggle-btn-icon {
+  width: 18px;
+  height: 18px;
+  /* Neutral gray by default; the same brand-blue tint used on
+     .dm-view-icon (Data Management) when this segment is active. */
+  filter: brightness(0) saturate(100%) invert(60%) sepia(4%) saturate(300%) hue-rotate(180deg) brightness(90%);
+}
+
+.toggle-btn.active .toggle-btn-icon {
+  filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1729%) hue-rotate(175deg) brightness(96%) contrast(101%);
+}
+
+/* File Upload area — only the active card (per uploadType) renders inside
+   this wrapper, so it's a centered single column, not a grid. Widened past
+   the old two-card layout's cap since the single visible card now gets the
+   full width to itself. */
+.upload-files-grid {
+  display: block;
+  margin: 0 auto 40px;
+  max-width: 1200px;
+}
+
+/* Upload Card */
+.upload-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
+  background: #f9fafb;
+  transition: all 0.3s ease;
+}
+
+.upload-card:hover {
+  border-color: #0077b6;
+  background: #f0f7ff;
+  box-shadow: 0 2px 8px rgba(0, 119, 182, 0.1);
+}
+
+.upload-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.upload-card-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1a365d;
+  font-weight: 600;
+}
+
+.upload-card-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: #718096;
+  font-weight: 400;
+}
+
+/* Small uppercase eyebrow labels that mark off a card's internal sections
+   (dropzone, bounds, location details) now that the Satellite card holds
+   several of these in one place instead of one big heading partway down. */
+.upload-section-label {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475467;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.file-type-badge {
+  background: linear-gradient(135deg, #0077b6 0%, #0096c7 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Card header icon badges — source PNGs are plain solid-black glyphs (same
+   as the Data Management icon set); mask-image punches the glyph's shape
+   out of a solid white fill so it can sit inside a solid-colored circle,
+   matching the reference design's white-icon-on-filled-circle look. */
+.upload-card-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.upload-card-icon-badge img {
+  width: 18px;
+  height: 18px;
+  /* Render the glyph as solid white regardless of the source PNG's own
+     black fill — brightness(0) forces pure black, invert(1) flips it to
+     pure white. */
+  filter: brightness(0) invert(1);
+}
+
+.upload-card-icon-badge.blue {
+  background: linear-gradient(135deg, #0077b6 0%, #0096c7 100%);
+}
+
+.upload-card-icon-badge.green {
+  background: linear-gradient(135deg, #2f9e44 0%, #37b24d 100%);
+}
+
+/* Inline icons on the Generate/Upload/Clear buttons. */
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 8px;
+  filter: brightness(0) invert(1);
+}
+
+/* .btn-reset has a light background + dark text, so its icon stays dark
+   instead of the white used on .btn-upload's blue background. */
+.btn-icon-dark {
+  filter: brightness(0) saturate(100%) invert(20%) sepia(9%) saturate(1017%) hue-rotate(179deg) brightness(94%) contrast(87%);
+}
+
+/* Drop Zone */
+.upload-drop-zone {
+  border: 2px dashed #cbd5e0;
+  border-radius: 8px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.upload-drop-zone:hover {
+  border-color: #0077b6;
+  background: #f0f7ff;
+}
+
+.upload-drop-zone.active {
+  border-color: #0096c7;
+  background: #e0f2fe;
+}
+
+.file-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  height: 120px;
+}
+
+.placeholder-icon {
+  /* Sized to match the 60x60 <img> actually rendered inside it (DataUpload.jsx) —
+     this was previously 20px, so the image overflowed the wrapper's box by
+     40px with nothing to clip it, visually overlapping the text below. */
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-primary {
+  margin: 40px 0 0px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1a365d;
+  align-items: center;
+}
+
+.placeholder-secondary {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #718096;
+  align-items: center;
+}
+
+/* File Selected Display */
+.file-selected-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+}
+
+.file-icon {
+  font-size: 2rem;
+  color: #10b981;
+}
+
+.file-name {
+  margin: 5px 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a365d;
+  word-break: break-word;
+}
+
+.file-size {
+  margin: 5px 0 0;
+  font-size: 0.9rem;
+  color: #718096;
+}
+
+/* Satellite Upload — two-column layout: dropzone left, bounds compass right */
+.satellite-upload-body {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 24px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.satellite-dropzone-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.satellite-dropzone-col .satellite-dropzone {
+  flex: 1;
+}
+
+.satellite-dropzone {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.satellite-bounds-col {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.form-label-hint {
+  font-weight: 400;
+  color: #718096;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Compass layout: North on top, South on bottom, West/East either side of a
+   center marker — mirrors how the bounds map onto the image geographically,
+   instead of a plain reading-order grid. */
+.bounds-compass {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-areas:
+    ".      north  .    "
+    "west   center east "
+    ".      south  .    ";
+  gap: 10px;
+  align-items: end;
+}
+
+.bounds-compass-north { grid-area: north; }
+.bounds-compass-south { grid-area: south; }
+.bounds-compass-west { grid-area: west; }
+.bounds-compass-east { grid-area: east; }
+.bounds-compass-center {
+  grid-area: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .satellite-upload-body {
+    grid-template-columns: 1fr;
+  }
+
+  .bounds-compass {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "north north"
+      "west  east"
+      "south south";
+  }
+
+  .bounds-compass-center {
+    display: none;
+  }
+}
+
+/* Location & Metadata Section */
+.location-metadata-section {
+  margin-top: 24px;
+  margin-bottom: 20px;
+  padding-top: 20px;
+  padding-bottom: 4px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.data-upload-container .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.data-upload-container .form-group-full {
+  grid-column: 1 / -1;
+}
+
+.data-upload-container .form-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.data-upload-container .form-input,
+.data-upload-container .form-select,
+.data-upload-container .form-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1.5px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.data-upload-container .form-input:focus,
+.data-upload-container .form-select:focus,
+.data-upload-container .form-textarea:focus {
+  outline: none;
+  border-color: #0077b6;
+  box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+  background: white;
+}
+
+.data-upload-container .form-input::placeholder,
+.data-upload-container .form-select::placeholder {
+  color: #a0aec0;
+}
+
+.data-upload-container .form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Upload Progress Section */
+.upload-progress-section {
+  background: #e0f2fe;
+  border: 1px solid #0096c7;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0077b6;
+}
+
+.progress-percent {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0096c7;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 119, 182, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0077b6 0%, #0096c7 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Processing phase has no byte-level signal to measure, so the fill sweeps
+   back and forth rather than sitting at a false 100% while the server works. */
+.progress-bar-fill.progress-bar-indeterminate {
+  width: 40% !important;
+  animation: progressSweep 1.2s ease-in-out infinite;
+}
+
+@keyframes progressSweep {
+  0% { margin-left: 0%; }
+  50% { margin-left: 60%; }
+  100% { margin-left: 0%; }
+}
+
+.progress-subtext {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+/* Upload Results */
+.upload-results-section {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  border: 1px solid #e2e8f0;
+}
+
+.results-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a365d;
+  margin: 0 0 20px 0;
+}
+
+.result-card {
+  background: white;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.result-card:last-child {
+  margin-bottom: 0;
+}
+
+.result-success {
+  border-left: 4px solid #10b981;
+  background: #f0fdf4;
+}
+
+.result-error {
+  border-left: 4px solid #ef4444;
+  background: #fef2f2;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.result-type {
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.result-status {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.result-success .result-status {
+  color: #10b981;
+}
+
+.result-error .result-status {
+  color: #ef4444;
+}
+
+.result-body {
+  font-size: 0.95rem;
+  color: #4a5568;
+}
+
+.result-body p {
+  margin: 8px 0;
+}
+
+.error-text {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* Upload Actions */
+.upload-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-upload,
+.btn-reset {
+  padding: 12px 26px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-upload {
+  background: linear-gradient(135deg, #0077b6 0%, #0096c7 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+}
+
+.btn-upload:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(0, 119, 182, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-upload:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-reset {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.btn-reset:hover:not(:disabled) {
+  background: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+.btn-reset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Information Panel */
+.info-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.info-box {
+  background: white;
+  border-left: 4px solid #0077b6;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-box h4 {
+  margin: 0 0 15px 0;
+  font-size: 1.05rem;
+  color: #0077b6;
+  font-weight: 700;
+}
+
+.info-box ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.info-box li {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.info-box code {
+  background: #f0f4f8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: "Monaco", "Courier New", monospace;
+  color: #d63384;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .data-upload-container {
+    padding: 20px 15px;
+  }
+
+  .upload-title {
+    font-size: 1.8rem;
+  }
+
+  .upload-main-section {
+    padding: 25px 15px;
+  }
+
+  .upload-actions {
+    flex-direction: column;
+  }
+
+  .btn-upload,
+  .btn-reset {
+    width: 100%;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-title {
+    font-size: 1.5rem;
+  }
+
+  .upload-main-section {
+    padding: 15px;
+  }
+
+  .upload-drop-zone {
+    padding: 20px 15px;
+  }
+
+  .placeholder-icon {
+    font-size: 2rem;
+  }
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.upload-card,
+.info-box,
+.result-card {
+  animation: slideIn 0.3s ease-out;
+}

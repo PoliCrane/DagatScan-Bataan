@@ -1,0 +1,26 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.5800, 14.5050],
+          [120.5830, 14.5030],
+          [120.5860, 14.5010],
+          [120.5880, 14.4990]
+        ]
+      },
+      "properties": {
+        "erosionRate": -4.9,
+        "riskLevel": "HIGH",
+        "specific_area": "Limay Coastal Zone",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -39.2,
+        "description": "🔴 SEVERE EROSION: Critical erosion in coastal zone with significant retreat (-4.9 m/year)"
+      }
+    }
+  ]
+}

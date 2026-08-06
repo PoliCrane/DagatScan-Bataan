@@ -1,0 +1,137 @@
+.faq-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faq-item {
+  background: #fff;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.faq-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.faq-item.open {
+  border-color: #0054ab;
+  box-shadow: 0 4px 14px rgba(0, 84, 171, 0.18);
+}
+
+.faq-item-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.faq-item-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.faq-item-question {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.faq-item-chevron {
+  width: 9px;
+  height: 9px;
+  margin-left: 10px;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
+  transform: rotate(45deg);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.faq-item.open .faq-item-chevron {
+  transform: rotate(-135deg);
+}
+
+/* Grid-rows 0fr -> 1fr is what actually animates the expand/collapse —
+   height:auto content can't be transitioned directly in CSS, but a grid
+   track can be, and the overflow:hidden on the row + inner div clips
+   everything (including the inner div's own padding) while collapsed. */
+.faq-item-body-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.faq-item.open .faq-item-body-wrapper {
+  grid-template-rows: 1fr;
+}
+
+.faq-item-body {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 22px 0 58px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  transition: padding-bottom 0.3s ease;
+}
+
+/* Padding itself isn't clipped by the grid-rows collapse (only content
+   height is), so the bottom padding has to be toggled in step with .open
+   or a closed item still shows a sliver equal to its own padding. */
+.faq-item.open .faq-item-body {
+  padding-bottom: 20px;
+}
+
+.faq-item-body p {
+  margin: 0 0 12px 0;
+}
+
+.faq-item-body p:last-child {
+  margin-bottom: 0;
+}
+
+.faq-item-body ul {
+  margin: 0 0 12px 0;
+  padding-left: 20px;
+}
+
+.faq-item-body li {
+  margin-bottom: 4px;
+}
+
+.faq-item-note {
+  font-style: italic;
+  font-size: 13px;
+}
+
+@media (max-width: 480px) {
+  .faq-item-header {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .faq-item-question {
+    font-size: 14px;
+  }
+
+  .faq-item-body {
+    padding: 0 16px 0 46px;
+  }
+
+  .faq-item.open .faq-item-body {
+    padding-bottom: 16px;
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.5550, 14.6150],
+          [120.5580, 14.6130],
+          [120.5610, 14.6110],
+          [120.5630, 14.6090],
+          [120.5650, 14.6070]
+        ]
+      },
+      "properties": {
+        "erosionRate": -1.7,
+        "specific_area": "Pilar Main Beach",
+        "name": "Pilar Main Beach",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -13.6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.5750, 14.5950],
+          [120.5720, 14.5970],
+          [120.5690, 14.5990],
+          [120.5660, 14.6010],
+          [120.5630, 14.6030]
+        ]
+      },
+      "properties": {
+        "erosionRate": -0.5,
+        "specific_area": "Pilar River Delta",
+        "name": "Pilar River Delta",
+        "source": "Landsat 8",
+        "data_quality": "Measured",
+        "cumulativeChange": -4.0
+      }
+    }
+  ]
+}

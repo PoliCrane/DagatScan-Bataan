@@ -1,0 +1,310 @@
+/* Segment Shoreline Polylines */
+.leaflet-polyline {
+  transition: opacity 0.2s ease;
+}
+
+.leaflet-polyline:hover {
+  opacity: 1 !important;
+  stroke-width: 6px !important;
+}
+
+/* Segment Markers and UI */
+.segment-marker-popup {
+  min-width: 200px;
+  font-family: 'Muli', sans-serif;
+}
+
+.segment-marker-popup .leaflet-popup-content {
+  padding: 10px;
+  margin: 0;
+}
+
+.segment-marker-popup-header {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.segment-marker-popup-risk {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.segment-marker-popup-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.segment-marker-popup-rate {
+  background: var(--bg-panel);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+/* Segment Markers in Map */
+.segment-marker-high {
+  color: #bd0000;
+}
+
+.segment-marker-moderate {
+  color: #fc4c00;
+}
+
+.segment-marker-low {
+  color: #ffd230;
+}
+
+.segment-marker-stable {
+  color: #00bf63;
+}
+
+/* Segments Panel */
+.segments-panel {
+  position: absolute;
+  right: 50px;
+  bottom: 40px;
+  z-index: 999;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 400px;
+  width: 320px;
+  overflow-y: auto;
+}
+
+.segments-panel.hidden {
+  transform: translateY(450px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segments-panel-header {
+  padding: 16px;
+  border-bottom: 2px solid var(--bg-panel);
+  background: #c4e6ff;
+  color: black;
+  border-radius: 10px 10px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.segments-panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.segments-panel-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.segments-panel-content {
+  padding: 12px;
+}
+
+.segment-item {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border-left: 4px solid var(--primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.segment-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
+}
+
+.segment-item-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.segment-item-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+
+.segment-item-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.segment-item-rate {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: white;
+  padding: 6px;
+  border-radius: 3px;
+}
+
+.segment-item-rate-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.segments-panel-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0);
+  border: none;
+  color: black;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.segments-panel-close:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Municipality Segments Legend */
+.municipality-legend {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #e0e0e0;
+}
+
+.municipality-legend-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.municipality-legend-items {
+  display: grid;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Marker Custom Styles */
+.leaflet-marker-icon.segment-marker {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  width: 32px !important;
+  height: 32px !important;
+  margin-left: -16px !important;
+  margin-top: -16px !important;
+}
+
+.leaflet-marker-icon.segment-marker::before {
+  display: none;
+}
+
+.segment-marker-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+  font-weight: bold !important;
+  font-size: 14px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid white !important;
+}
+
+.leaflet-marker-icon.segment-marker.risk-very-high::before {
+  background: #c0392b;
+  color: white;
+}
+
+.leaflet-marker-icon.segment-marker.risk-high::before {
+  background: #e67e22;
+  color: white;
+}
+
+.leaflet-marker-icon.segment-marker.risk-moderate::before {
+  background: #f1c40f;
+  color: black;
+}
+
+.leaflet-marker-icon.segment-marker.risk-low::before {
+  background: #27ae60;
+  color: white;
+}
+
+.leaflet-marker-icon.segment-marker.risk-very-low::before {
+  background: #2980b9;
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .segments-panel {
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .segments-panel {
+    width: 100%;
+    left: 0;
+    right: 0;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .segment-item {
+    padding: 10px;
+  }
+}

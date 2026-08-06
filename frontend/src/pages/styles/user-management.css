@@ -1,0 +1,418 @@
+/* User Management Page Styles */
+
+.user-management-container {
+  padding: 60px;
+}
+
+.user-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+.user-management-header h1 {
+  margin-bottom: 8px;
+  color: #1a1a1a;
+}
+
+.user-management-header p {
+  color: #666;
+  margin: 0;
+}
+
+/* Add Admin Button */
+.add-admin-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #0077B6;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.add-admin-btn:hover {
+  background-color: #005a8b;
+}
+
+.add-admin-btn:active {
+  background-color: #004062;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  /* Icon is dark by default — invert to white so it's visible against the
+     button's blue background, matching the white "Add Account" text. */
+  filter: brightness(0) invert(1);
+}
+
+/* Section Styles */
+.user-section {
+  margin-bottom: 50px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0077B6;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eaf4f8;
+  padding-bottom: 10px;
+}
+
+/* Search Bar */
+.search-bar-wrapper {
+  position: relative;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-bar {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 999px;
+  font-size: 14px;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: #0077B6;
+  box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+}
+
+.search-bar::placeholder {
+  color: #999;
+}
+
+/* Error Message */
+.user-management-error {
+  padding: 12px;
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+/* Loading & Empty States */
+.user-management-loading,
+.user-management-empty {
+  margin-top: 20px;
+  color: #666;
+}
+
+/* Table Container — the rounded "card" look; border-radius lives here
+   rather than on <table> since border-collapse prevents a table element
+   from clipping its own corners. */
+.user-table-container {
+  margin-top: 0;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Table */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  table-layout: fixed;
+}
+
+.user-table thead {
+  background-color: #eaf4f8;
+}
+
+/* Column widths for consistent alignment — these nth-child rules assume
+   the base 7-column shape (avatar/Username/Email/Status/Joined Date/Last
+   Active/Actions). Tables with extra columns (Municipal Accounts' added
+   Municipality column, the Pending Requests table's very different shape)
+   need their own rules below, or the leftover columns get squeezed toward
+   0 width under table-layout:fixed since the base rules already sum to
+   100%. */
+.user-table th:nth-child(1),
+.user-table td:nth-child(1) {
+  width: 6%;
+}
+
+.user-table th:nth-child(2),
+.user-table td:nth-child(2) {
+  width: 16%;
+}
+
+.user-table th:nth-child(3),
+.user-table td:nth-child(3) {
+  width: 26%;
+}
+
+.user-table th:nth-child(4),
+.user-table td:nth-child(4) {
+  width: 12%;
+}
+
+.user-table th:nth-child(5),
+.user-table td:nth-child(5) {
+  width: 14%;
+}
+
+.user-table th:nth-child(6),
+.user-table td:nth-child(6) {
+  width: 14%;
+}
+
+.user-table th:nth-child(7),
+.user-table td:nth-child(7) {
+  width: 12%;
+}
+
+/* Municipal Accounts — 8 columns: avatar/Username/Email/Municipality/Status/
+   Joined Date/Last Active/Actions */
+.user-table.with-municipality th:nth-child(1),
+.user-table.with-municipality td:nth-child(1) {
+  width: 5%;
+}
+
+.user-table.with-municipality th:nth-child(2),
+.user-table.with-municipality td:nth-child(2) {
+  width: 14%;
+}
+
+.user-table.with-municipality th:nth-child(3),
+.user-table.with-municipality td:nth-child(3) {
+  width: 20%;
+}
+
+.user-table.with-municipality th:nth-child(4),
+.user-table.with-municipality td:nth-child(4) {
+  width: 12%;
+}
+
+.user-table.with-municipality th:nth-child(5),
+.user-table.with-municipality td:nth-child(5) {
+  width: 11%;
+}
+
+.user-table.with-municipality th:nth-child(6),
+.user-table.with-municipality td:nth-child(6) {
+  width: 13%;
+}
+
+.user-table.with-municipality th:nth-child(7),
+.user-table.with-municipality td:nth-child(7) {
+  width: 13%;
+}
+
+.user-table.with-municipality th:nth-child(8),
+.user-table.with-municipality td:nth-child(8) {
+  width: 12%;
+}
+
+/* Pending Account Requests — 8 columns: Username/Email/Municipality/
+   Contact Number/Position/Request Letter/Requested/Actions */
+.user-table.pending-requests th:nth-child(1),
+.user-table.pending-requests td:nth-child(1) {
+  width: 14%;
+}
+
+.user-table.pending-requests th:nth-child(2),
+.user-table.pending-requests td:nth-child(2) {
+  width: 18%;
+}
+
+.user-table.pending-requests th:nth-child(3),
+.user-table.pending-requests td:nth-child(3) {
+  width: 11%;
+}
+
+.user-table.pending-requests th:nth-child(4),
+.user-table.pending-requests td:nth-child(4) {
+  width: 12%;
+}
+
+.user-table.pending-requests th:nth-child(5),
+.user-table.pending-requests td:nth-child(5) {
+  width: 13%;
+}
+
+.user-table.pending-requests th:nth-child(6),
+.user-table.pending-requests td:nth-child(6) {
+  width: 10%;
+}
+
+.user-table.pending-requests th:nth-child(7),
+.user-table.pending-requests td:nth-child(7) {
+  width: 10%;
+}
+
+.user-table.pending-requests th:nth-child(8),
+.user-table.pending-requests td:nth-child(8) {
+  width: 12%;
+}
+
+/* "View Letter" link in the Request Letter column — styled to match
+   Reports' .btn-view-pdf-link (reports.css) instead of the default
+   underlined browser link look. */
+.btn-view-letter-link {
+  background: none;
+  border: none;
+  color: #0077b6;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-view-letter-link:hover {
+  text-decoration: underline;
+}
+
+.user-table thead tr {
+  border-bottom: 2px solid #0077B6;
+}
+
+.user-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #0077B6;
+}
+
+.user-table tbody tr {
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s ease;
+}
+
+.user-table tbody tr:hover {
+  background-color: #f9fbfc;
+}
+
+.user-table td {
+  padding: 12px;
+}
+
+/* Account Avatar — generated initial-letter placeholder, no photo upload */
+.avatar-col {
+  width: 6%;
+}
+
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: #0077B6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Verification Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.verified {
+  background-color: #c8e6c9;
+  color: #1b5e20;
+}
+
+.status-badge.unverified {
+  background-color: #ffccbc;
+  color: #d84315;
+}
+
+.status-badge.deactivated {
+  background-color: #e0e0e0;
+  color: #424242;
+}
+
+/* Icon-based Actions (main tables' Edit + Deactivate/Reactivate) */
+.action-icons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background-color: #eaf4f8;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.icon-action-btn:hover:not(:disabled) {
+  background-color: #d5e9f0;
+}
+
+.icon-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon-action-img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.status-toggle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Deactivated User Row */
+.user-row.deactivated {
+  opacity: 0.6;
+  background-color: #fafafa;
+}
+
+.status-badge.deactivated {
+  background-color: #e0e0e0;
+  color: #424242;
+}

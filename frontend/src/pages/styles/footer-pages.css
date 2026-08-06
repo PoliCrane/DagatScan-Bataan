@@ -1,0 +1,350 @@
+/* Footer Pages Styles */
+
+.footer-page-wrapper {
+  min-height: calc(100vh - 100px);
+  background-color: #ffffff;
+}
+
+.footer-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  min-height: auto;
+  font-family: 'Muli', sans-serif;
+}
+
+.footer-page-header {
+  background: #e0e0e0;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #060b37;
+  padding: 40px;
+  border-radius: 12px;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 6px rgba(0, 119, 182, 0.1);
+  position: relative;
+  border: 1px solid #c4e6ff;
+  text-align: center;
+}
+
+.footer-page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: none;
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.footer-page-header h1,
+.footer-page-header p {
+  position: relative;
+  z-index: 2;
+}
+
+.footer-page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: #060b37;
+}
+
+.footer-page-content {
+  flex: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 40px 60px 40px;
+  width: 100%;
+}
+
+.footer-page-section {
+  background:  linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+  border-radius: 8px;
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 12px;
+}
+
+.section-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(8%) sepia(70%) saturate(600%) hue-rotate(195deg) brightness(97%);
+}
+
+.footer-page-section h2 {
+  font-size: 1.5rem;
+  color: #060b37;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+  font-family: 'Muli', sans-serif;
+}
+
+.footer-page-section h3 {
+  font-size: 1.2rem;
+  color: #060b37;
+  margin: 0;
+  font-weight: 600;
+  font-family: 'Muli', sans-serif;
+}
+
+.footer-page-section p {
+  color: #060b37;
+  line-height: 1.8;
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: 'Muli', sans-serif;
+}
+
+.data-sources-list {
+  margin: 15px 0 0 20px;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.data-sources-list li {
+  color: #060b37;
+  line-height: 1.8;
+  margin-bottom: 8px;
+  font-family: 'Muli', sans-serif;
+}
+
+/* Contact Page Styles */
+
+.contact-box {
+  background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.contact-box h3 {
+  font-size: 1.3rem;
+  color: #060b37;
+  margin: 0 0 20px 0;
+  font-weight: 600;
+  font-family: 'Muli', sans-serif;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.contact-item:last-child {
+  margin-bottom: 0;
+}
+
+.contact-icon {
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(8%) sepia(70%) saturate(600%) hue-rotate(195deg) brightness(97%);
+}
+
+.contact-details {
+  flex: 1;
+}
+
+.contact-details label {
+  display: block;
+  font-weight: 600;
+  color: #060b37;
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+  font-family: 'Muli', sans-serif;
+}
+
+.contact-details span {
+  display: block;
+  color: #060b37;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-family: 'Muli', sans-serif;
+}
+
+.contact-container {
+  border: 2px solid #eaf4f8;
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 25px;
+  background: white;
+}
+
+.contact-container-header {
+  font-size: 1.3rem;
+  color: #060b37;
+  margin: 0 0 15px 0;
+  font-weight: 700;
+  font-family: 'Muli', sans-serif;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #e0e0e0;
+}
+
+.contact-container .contact-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eaf4f8;
+}
+
+.contact-container .contact-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.contact-description {
+  color: #060b37;
+  line-height: 1.8;
+  font-size: 0.95rem;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+  border-radius: 6px;
+  font-family: 'Muli', sans-serif;
+}
+
+.introduction {
+  margin-bottom: 25px;
+}
+
+.introduction h2 {
+  font-size: 1.5rem;
+  color: #060b37;
+  margin: 0 0 15px 0;
+  font-weight: 600;
+  font-family: 'Muli', sans-serif;
+}
+
+.introduction p {
+  color: #060b37;
+  line-height: 1.8;
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: 'Muli', sans-serif;
+}
+
+/* Privacy Policy Container Styles */
+.privacy-policy-container .footer-page-section {
+  background: #ffffff;
+}
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+  .footer-page-header {
+    padding: 40px 20px;
+    margin-bottom: 30px;
+  }
+
+  .footer-page-header h1 {
+    font-size: 2rem;
+  }
+
+  .footer-page-content {
+    padding: 0 20px 40px 20px;
+  }
+
+  .footer-page-section {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+  }
+
+  .footer-page-section h2 {
+    font-size: 1.3rem;
+  }
+
+  .footer-page-section h3 {
+    font-size: 1.1rem;
+  }
+
+  .footer-page-section p {
+    font-size: 0.9rem;
+  }
+
+  .contact-box {
+    padding: 15px;
+  }
+
+  .contact-box h3 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+
+  .contact-item {
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+
+  .contact-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .contact-details label {
+    font-size: 0.9rem;
+  }
+
+  .contact-details span {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-page-header {
+    padding: 30px 15px;
+    margin-bottom: 20px;
+  }
+
+  .footer-page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .footer-page-content {
+    padding: 0 15px 30px 15px;
+  }
+
+  .footer-page-section {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .footer-page-section h2 {
+    font-size: 1.1rem;
+  }
+
+  .footer-page-section h3 {
+    font-size: 1rem;
+  }
+
+  .footer-page-section p {
+    font-size: 0.85rem;
+  }
+
+  .contact-description {
+    padding: 15px;
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4900, 14.5800],
+          [120.4930, 14.5780],
+          [120.4960, 14.5760],
+          [120.4980, 14.5740],
+          [120.5000, 14.5720]
+        ]
+      },
+      "properties": {
+        "erosionRate": -1.9,
+        "specific_area": "Orion Harbor Coast",
+        "name": "Orion Harbor Coast",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -15.2
+      }
+    }
+  ]
+}

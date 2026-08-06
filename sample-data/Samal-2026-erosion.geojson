@@ -1,0 +1,26 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.5000, 14.4950],
+          [120.5030, 14.4930],
+          [120.5060, 14.4910],
+          [120.5080, 14.4890],
+          [120.5100, 14.4870]
+        ]
+      },
+      "properties": {
+        "erosionRate": -0.7,
+        "specific_area": "Samal Island Perimeter",
+        "name": "Samal Island Perimeter",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -5.6
+      }
+    }
+  ]
+}

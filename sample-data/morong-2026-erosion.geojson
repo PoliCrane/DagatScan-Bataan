@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4650, 14.7200],
+          [120.4680, 14.7180],
+          [120.4710, 14.7160],
+          [120.4740, 14.7140],
+          [120.4760, 14.7120]
+        ]
+      },
+      "properties": {
+        "erosionRate": -5.2,
+        "riskLevel": "HIGH",
+        "specific_area": "Morong Coastal Center",
+        "name": "Morong Coastal Center",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -41.6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4600, 14.7250],
+          [120.4620, 14.7240],
+          [120.4650, 14.7220],
+          [120.4650, 14.7200]
+        ]
+      },
+      "properties": {
+        "erosionRate": -2.1,
+        "riskLevel": "MODERATE",
+        "specific_area": "Morong North Point",
+        "name": "Morong North Point",
+        "source": "Landsat 8",
+        "data_quality": "Measured",
+        "cumulativeChange": -16.8
+      }
+    }
+  ]
+}

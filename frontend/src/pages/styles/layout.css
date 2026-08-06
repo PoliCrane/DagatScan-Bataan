@@ -1,0 +1,40 @@
+/* Layout Container Styles */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.layout-content {
+  display: flex;
+  flex: 1;
+  background: white;
+  position: relative;
+}
+
+.layout-main {
+  flex: 1;
+  margin-left: 65px;
+  transition: margin-left 0.3s ease;
+  animation: fadeIn 0.4s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: auto;
+  min-height: 100%;
+}
+
+/* When sidebar hovers/expands, shift main content */
+.map-sidebar:hover ~ .layout-main,
+.admin-sidebar:hover ~ .layout-main {
+  margin-left: 224px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

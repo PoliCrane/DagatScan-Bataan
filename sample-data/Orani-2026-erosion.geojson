@@ -1,0 +1,26 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4300, 14.6500],
+          [120.4330, 14.6480],
+          [120.4360, 14.6460],
+          [120.4380, 14.6440],
+          [120.4400, 14.6420]
+        ]
+      },
+      "properties": {
+        "erosionRate": -1.2,
+        "specific_area": "Orani Western Coast",
+        "name": "Orani Western Coast",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Estimated",
+        "cumulativeChange": -9.6
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+/* Fixed bottom-right position, independent of any page-specific floating
+   widgets (SatelliteToggle/legends/summary cards all live near the top) so
+   one placement works uniformly across every page that has this button. */
+.tour-info-btn {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 950;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--primary);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.tour-info-btn:hover {
+  background: #f0f8ff;
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(0, 119, 182, 0.3);
+}
+
+.tour-info-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+@media (max-width: 480px) {
+  .tour-info-btn {
+    right: 16px;
+    bottom: 16px;
+    width: 40px;
+    height: 40px;
+  }
+  .tour-info-icon {
+    width: 20px;
+    height: 20px;
+  }
+}

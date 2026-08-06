@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4750, 14.6700],
+          [120.4780, 14.6680],
+          [120.4810, 14.6660],
+          [120.4840, 14.6640]
+        ]
+      },
+      "properties": {
+        "erosionRate": -5.1,
+        "riskLevel": "HIGH",
+        "specific_area": "Balanga North Cliff",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -40.8,
+        "description": "🔴 SEVERE EROSION: Critical erosion hotspot at cliff face with affect to settlements (-5.1 m/year)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4600, 14.6600],
+          [120.4630, 14.6580],
+          [120.4660, 14.6560],
+          [120.4680, 14.6540]
+        ]
+      },
+      "properties": {
+        "erosionRate": 1.3,
+        "riskLevel": "STABLE",
+        "specific_area": "Balanga Urban Beach",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": 10.4,
+        "description": "🟢 STABLE/ACCRETING: Consistent sediment deposition along beach area (+1.3 m/year)"
+      }
+    }
+  ]
+}

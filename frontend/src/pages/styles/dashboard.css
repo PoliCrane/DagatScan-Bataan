@@ -1,0 +1,641 @@
+/* Dashboard Container */
+.dashboard-container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 30px 40px;
+  min-height: calc(100vh - 120px);
+  font-family: 'Muli', sans-serif;
+  box-sizing: border-box;
+}
+
+/* Welcome Section */
+.dashboard-welcome {
+  background: #eaf4f8;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #1A1A1A;
+  padding: 40px;
+  border-radius: 12px;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 6px rgba(0, 119, 182, 0.1);
+  position: relative;
+  border: 1px solid #c4e6ff;
+}
+
+.dashboard-welcome::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: none;
+  border-radius: 12px;
+  z-index: 1;
+}
+
+.dashboard-welcome h1,
+.dashboard-welcome p {
+  position: relative;
+  z-index: 2;
+}
+
+.dashboard-welcome h1 {
+  margin: 0 0 10px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #060b37;
+}
+
+.dashboard-welcome p {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.95;
+  color: #060b37;
+}
+
+.welcome-timestamp {
+  margin-top: 15px;
+  font-size: 14px;
+  opacity: 0.9;
+  color: #060b37;
+}
+
+/* Stats Section */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 40px;
+  color: #060b37;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  padding: 18px 20px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  border-left: 3px solid var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 119, 182, 0.1);
+  border-left-color: #005fa3;
+}
+
+.stat-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  display: block;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(24%) sepia(94%) saturate(1600%) hue-rotate(197deg) brightness(96%);
+  -webkit-filter: brightness(0) saturate(100%) invert(24%) sepia(94%) saturate(1600%) hue-rotate(197deg) brightness(96%);
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.stat-value {
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.stat-info {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+
+/* Quick Actions Section */
+.dashboard-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--bg-panel);
+}
+
+.dashboard-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-section-header .dashboard-section-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.view-full-link,
+.view-all-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.view-full-link:hover,
+.view-all-link:hover {
+  color: #005fa3;
+  text-decoration: underline;
+}
+
+/* Map Section — stretches to match the sidebar column's natural height
+   (System Status + Risk Legend + Focus Area + Segments list) so the two
+   dashboard-grid columns look uniform instead of the map having its own
+   arbitrary fixed height. */
+.dashboard-map-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Map Container */
+.map-container {
+  background: var(--bg-card);
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  flex: 1;
+  min-height: 370px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.map-container .leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 9px;
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.dashboard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Info Box */
+.info-box {
+  background: linear-gradient(135deg, var(--bg-card) 0%, #f9f9f9 100%);
+  padding: 14px 16px;
+  border-radius: 10px;
+  border-left: 4px solid var(--secondary);
+  transition: all 0.2s ease;
+}
+
+.info-box:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.info-box h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.info-box p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.info-meta {
+  font-size: 11px !important;
+  margin-top: 6px !important;
+  color: var(--text-secondary) !important;
+}
+
+.info-box.system-status {
+  border-left-color: #eddc28;
+}
+
+.info-box.system-status:hover {
+  border-left-color: #a79c28;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.1);
+}
+
+.info-box.focus-area {
+  border-left-color: var(--primary);
+}
+
+.info-box.focus-area:hover {
+  border-left-color: #005fa3;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
+}
+
+.info-box.high-risk {
+  border-left-color: var(--danger);
+}
+
+.info-box.high-risk:hover {
+  border-left-color: #bd2130;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.1);
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.info-header-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.info-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Focus Area Icon - Blue */
+.focus-area .info-icon {
+  filter: brightness(0) saturate(100%) invert(24%) sepia(94%) saturate(1600%) hue-rotate(197deg) brightness(96%);
+  -webkit-filter: brightness(0) saturate(100%) invert(24%) sepia(94%) saturate(1600%) hue-rotate(197deg) brightness(96%);
+}
+
+/* High Risk Icon - Red */
+.high-risk-container .info-icon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(99%) saturate(7460%) hue-rotate(0deg) brightness(104%);
+  -webkit-filter: brightness(0) saturate(100%) invert(18%) sepia(99%) saturate(7460%) hue-rotate(0deg) brightness(104%);
+}
+
+.info-box.risk-legend-card {
+  border-left-color: #7393B3;
+}
+
+.info-box.risk-legend-card:hover {
+  border-left-color: #4e6a80;
+  box-shadow: 0 4px 12px rgba(115, 147, 179, 0.15);
+}
+
+.risk-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.risk-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.risk-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.risk-legend-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  background: #ffef41;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+/* High Risk List Section in Sidebar */
+.high-risk-container {
+  background: linear-gradient(135deg, var(--bg-card) 0%, #f9f9f9 100%);
+  height: 100%;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border-left: 4px solid var(--danger);
+}
+
+.high-risk-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.high-risk-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.high-risk-header .view-all-link {
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.high-risk-description {
+  margin: 0 0 10px 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Action Buttons */
+.dashboard-button {
+  display: inline-block;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  text-align: center;
+  width: 100%;
+}
+
+.dashboard-button:hover {
+  background: #005fa3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 119, 182, 0.2);
+}
+
+.dashboard-button.secondary {
+  background: var(--secondary);
+  color: white;
+}
+
+.dashboard-button.secondary:hover {
+  background: #008070;
+}
+
+.dashboard-button.outline {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+
+.dashboard-button.outline:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* Scrollable Segments Container */
+.segments-scrollable-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-top: 8px;
+}
+
+.segments-scrollable-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.segments-scrollable-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.segments-scrollable-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 119, 182, 0.4);
+  border-radius: 3px;
+}
+
+.segments-scrollable-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 119, 182, 0.6);
+}
+
+.segment-item-home {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 10px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.segment-item-home:hover {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 6px rgba(0, 119, 182, 0.1);
+  transform: translateX(4px);
+}
+
+.segment-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.segment-name {
+  font-size: 12px;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 150px;
+  line-height: 1.3;
+}
+
+.segment-risk-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  padding: 3px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.segment-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.segment-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.segment-detail strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.loading-message,
+.no-data-message {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  border: 1px dashed rgba(0, 119, 182, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 20px 40px;
+  }
+
+  .dashboard-welcome {
+    padding: 30px 20px;
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 24px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 15px 16px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .stat-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .dashboard-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .dashboard-map-section {
+    height: auto;
+  }
+
+  .map-container {
+    flex: none;
+    height: 250px;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 15px 20px;
+  }
+
+  .dashboard-welcome {
+    padding: 20px 15px;
+  }
+
+  .dashboard-welcome h1 {
+    font-size: 20px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-card {
+    padding: 12px 14px;
+  }
+
+  .stat-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 6px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+  }
+
+  .dashboard-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .map-container {
+    flex: none;
+    height: 200px;
+    min-height: 0;
+  }
+}

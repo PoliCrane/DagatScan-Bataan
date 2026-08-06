@@ -1,0 +1,81 @@
+/* Modal Overlay - Darkened background */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 2;
+  }
+}
+
+/* Modal Content Box */
+.modal-content {
+  background: white;
+  border-radius: 10px;
+  padding: 0;
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Login modal variant — softer, larger radius per redesign. Scoped so
+   ForgotPassword/ResetPassword keep the original 10px radius. */
+.modal-content-login,
+.modal-content-login .form-container {
+  border-radius: 28px;
+}
+
+/* Close Button */
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 5px 10px;
+  transition: 0.2s;
+  z-index: 1000;
+}
+
+.modal-close:hover {
+  color: #000;
+}
+
+/* Adjust form container inside modal */
+.modal-content .form-container {
+  margin: 0;
+  padding: 40px 30px;
+  max-width: 100%;
+}

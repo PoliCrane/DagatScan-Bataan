@@ -1,0 +1,72 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4820, 14.2500],
+          [120.4850, 14.2480],
+          [120.4880, 14.2460],
+          [120.4910, 14.2440],
+          [120.4940, 14.2420]
+        ]
+      },
+      "properties": {
+        "erosionRate": -5.8,
+        "riskLevel": "HIGH",
+        "specific_area": "Cabcaben Point",
+        "name": "Cabcaben Point",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -46.4,
+        "description": "Critical erosion hotspot with rapid coastal retreat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4600, 14.2800],
+          [120.4620, 14.2780],
+          [120.4650, 14.2750],
+          [120.4700, 14.2700]
+        ]
+      },
+      "properties": {
+        "erosionRate": -4.5,
+        "riskLevel": "HIGH",
+        "specific_area": "Mariveles Northwest Cliff",
+        "name": "Mariveles Northwest Cliff",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -36.0,
+        "description": "High erosion at cliff face with retreat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4750, 14.2600],
+          [120.4770, 14.2580],
+          [120.4800, 14.2560],
+          [120.4820, 14.2500]
+        ]
+      },
+      "properties": {
+        "erosionRate": -3.2,
+        "riskLevel": "MODERATE",
+        "specific_area": "Mariveles Central Coast",
+        "name": "Mariveles Central Coast",
+        "source": "Landsat 8",
+        "data_quality": "Measured",
+        "cumulativeChange": -25.6,
+        "description": "Moderate erosion along central beach area"
+      }
+    }
+  ]
+}
