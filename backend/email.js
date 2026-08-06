@@ -1,58 +1,56 @@
-const nodemailer = require("nodemailer");
-const dns = require("dns");
-
 require("dotenv").config();
 
-// Render's network can't route IPv6, but Node's default DNS lookup order
-// can still return smtp.gmail.com's AAAA record first; the transporter's
-// own `family` option isn't threaded through to the underlying socket, so
-// this has to be forced at the DNS resolution level instead.
-dns.setDefaultResultOrder("ipv4first");
-
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  console.warn("Warning: EMAIL_USER or EMAIL_PASS not set in environment variables");
+// Render's free tier blocks all outbound SMTP traffic (ports 25/465/587),
+// so email can't go through Gmail's SMTP server from there. Brevo's
+// transactional email API sends over HTTPS instead, which isn't blocked.
+if (!process.env.BREVO_API_KEY || !process.env.EMAIL_USER) {
+  console.warn("Warning: BREVO_API_KEY or EMAIL_USER not set in environment variables");
+} else {
+  console.log("Email service ready (Brevo)");
 }
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS?.replace(/\s/g, '') || ""
-  }
-});
+const sendViaBrevo = async ({ to, subject, html }) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      sender: { name: "DagatScan Bataan", email: process.env.EMAIL_USER },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    })
+  });
 
-// Verify transporter configuration
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("Email service error:", error);
-  } else {
-    console.log("Email service ready");
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Brevo API error (${response.status}): ${errorBody}`);
   }
-});
+};
 
 const sendPasswordResetEmail = async (email, resetCode) => {
   try {
-    const mailOptions = {
-      from: `"DagatScan Bataan" <${process.env.EMAIL_USER}>`,
+    await sendViaBrevo({
       to: email,
       subject: "Reset your password for DagatScan Bataan",
       html: `
         <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #0077B6;">Reset Your Password</h2>
           <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
-          
+
           <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
             <p style="font-size: 14px; margin: 0 0 10px 0;">Your password reset code is:</p>
             <p style="font-size: 32px; font-weight: bold; color: #0077B6; margin: 0; letter-spacing: 5px;">${resetCode}</p>
           </div>
-          
+
           <p style="color: #666;">This code will expire in 30 minutes.</p>
           <p style="color: #999; font-size: 12px;">For security, never share this code with anyone.</p>
         </div>
       `
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
     console.log(`Password reset email sent to ${email}`);
     return true;
   } catch (error) {
@@ -63,8 +61,7 @@ const sendPasswordResetEmail = async (email, resetCode) => {
 
 const sendAccountApprovedEmail = async (email, username, password, municipalityName) => {
   try {
-    const mailOptions = {
-      from: `"DagatScan Bataan" <${process.env.EMAIL_USER}>`,
+    await sendViaBrevo({
       to: email,
       subject: "Your DagatScan Bataan account has been approved",
       html: `
@@ -83,9 +80,7 @@ const sendAccountApprovedEmail = async (email, username, password, municipalityN
           <p style="color: #999; font-size: 12px;">For security, never share this password with anyone.</p>
         </div>
       `
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
     console.log(`Account approved email sent to ${email}`);
     return true;
   } catch (error) {
@@ -96,8 +91,7 @@ const sendAccountApprovedEmail = async (email, username, password, municipalityN
 
 const sendAccountDeactivatedEmail = async (email, username) => {
   try {
-    const mailOptions = {
-      from: `"DagatScan Bataan" <${process.env.EMAIL_USER}>`,
+    await sendViaBrevo({
       to: email,
       subject: "Your DagatScan Bataan account has been deactivated",
       html: `
@@ -107,9 +101,7 @@ const sendAccountDeactivatedEmail = async (email, username) => {
           <p style="color: #666;">If you believe this is a mistake, please contact your DENR-Bataan administrator.</p>
         </div>
       `
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
     console.log(`Account deactivated email sent to ${email}`);
     return true;
   } catch (error) {
@@ -120,8 +112,7 @@ const sendAccountDeactivatedEmail = async (email, username) => {
 
 const sendAccountReactivatedEmail = async (email, username) => {
   try {
-    const mailOptions = {
-      from: `"DagatScan Bataan" <${process.env.EMAIL_USER}>`,
+    await sendViaBrevo({
       to: email,
       subject: "Your DagatScan Bataan account has been reactivated",
       html: `
@@ -130,9 +121,7 @@ const sendAccountReactivatedEmail = async (email, username) => {
           <p>Hi ${username}, your DagatScan Bataan account has been reactivated. You can now log in again.</p>
         </div>
       `
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
     console.log(`Account reactivated email sent to ${email}`);
     return true;
   } catch (error) {

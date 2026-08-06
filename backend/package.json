@@ -28,7 +28,6 @@
     "geotiff": "^3.0.5",
     "jsonwebtoken": "^9.0.3",
     "multer": "*",
-    "nodemailer": "^8.0.2",
     "pdfkit": "^0.19.1",
     "pg": "^8.20.0",
     "sharp": "^0.34.5"
