@@ -11,7 +11,10 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS?.replace(/\s/g, '') || ""
-  }
+  },
+  // Render's network can't route IPv6, but Node may still resolve
+  // smtp.gmail.com to an AAAA record first; force IPv4.
+  family: 4
 });
 
 // Verify transporter configuration
