@@ -234,8 +234,8 @@ export default function Home() {
                 <div className="status-indicator"></div>
                 <h3>System Status</h3>
               </div>
-              <p>Local only</p>
-              <p className="info-meta">Development mode</p>
+              <p>{import.meta.env.PROD ? "Live" : "Local only"}</p>
+              <p className="info-meta">{import.meta.env.PROD ? "Production mode" : "Development mode"}</p>
             </div>
 
             <RiskLevelLegendCard />
