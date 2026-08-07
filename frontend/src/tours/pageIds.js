@@ -7,4 +7,7 @@ export const TOUR_PAGE_IDS = {
   REPORTS: "reports",
   DASHBOARD: "dashboard",
   DATA_UPLOAD: "dataUpload",
+  DATA_MANAGEMENT: "dataManagement",
+  USER_MANAGEMENT: "userManagement",
+  AUDIT_TRAIL: "auditTrail",
 };

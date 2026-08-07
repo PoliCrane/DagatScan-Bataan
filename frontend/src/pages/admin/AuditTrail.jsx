@@ -2,6 +2,10 @@ import AdminLayout from "../../components/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/audit-trail.css";
+import useGuidedTour from "../../hooks/useGuidedTour";
+import TourInfoButton from "../../components/tour/TourInfoButton";
+import { TOUR_PAGE_IDS } from "../../tours/pageIds";
+import { auditTrailSteps } from "../../tours/steps/auditTrailSteps";
 
 import { API_BASE_URL } from "../../config/api";
 const API_BASE = API_BASE_URL;
@@ -123,6 +127,7 @@ const describeLog = (log) => {
 
 export default function AuditTrail() {
   const navigate = useNavigate();
+  const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.AUDIT_TRAIL, auditTrailSteps);
 
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -213,6 +218,8 @@ export default function AuditTrail() {
 
   return (
     <AdminLayout>
+      {Tour}
+      <TourInfoButton onClick={replay} />
       <div className="audit-trail-container">
         <div className="audit-trail-header">
           <div>

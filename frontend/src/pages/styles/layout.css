@@ -15,6 +15,12 @@
 .layout-main {
   flex: 1;
   margin-left: 65px;
+  /* Clears .main-navbar's fixed 50px height (navbar.css) — without this,
+     content near the top of .layout-main renders underneath the navbar
+     regardless of scroll position, since the navbar is position:fixed and
+     scrolling .layout-main doesn't move it out from under a fixed element.
+     Matches the same fix already applied to .admin-sidebar's padding-top. */
+  padding-top: 50px;
   transition: margin-left 0.3s ease;
   animation: fadeIn 0.4s ease-in-out;
   display: flex;

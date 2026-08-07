@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 import "../index-organized.css";
 import "../styles/data-management.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
+import useGuidedTour from "../../hooks/useGuidedTour";
+import TourInfoButton from "../../components/tour/TourInfoButton";
+import { TOUR_PAGE_IDS } from "../../tours/pageIds";
+import { dataManagementSteps } from "../../tours/steps/dataManagementSteps";
 
 import { API_BASE_URL } from "../../config/api";
 const API_BASE = API_BASE_URL;
@@ -36,6 +40,7 @@ const thumbnailUrl = (fileName) => {
 
 export default function DataManagement() {
   const navigate = useNavigate();
+  const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DATA_MANAGEMENT, dataManagementSteps);
 
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -244,6 +249,8 @@ export default function DataManagement() {
 
   return (
     <AdminLayout>
+      {Tour}
+      <TourInfoButton onClick={replay} />
       <div className="data-management-container">
         <div className="data-management-header">
           <div>

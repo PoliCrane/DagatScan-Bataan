@@ -1,5 +1,6 @@
 import {BrowserRouter,Routes,Route} from "react-router-dom";
 
+import MobileBlockOverlay from "./components/MobileBlockOverlay";
 import Index from "./pages/index";
 import Home from "./pages/Home";
 import MapPage from "./pages/coastalmonitoring";
@@ -19,6 +20,10 @@ import Register from "./pages/register";
 export default function App(){
 
 return(
+
+<>
+
+<MobileBlockOverlay/>
 
 <BrowserRouter>
 
@@ -44,6 +49,8 @@ return(
 </Routes>
 
 </BrowserRouter>
+
+</>
 
 )
 

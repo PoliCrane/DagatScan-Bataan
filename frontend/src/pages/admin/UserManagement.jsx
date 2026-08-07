@@ -9,6 +9,10 @@ import { useNavigate } from "react-router-dom";
 import "../index-organized.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
 import { formatRelativeTime } from "../../utils/formatRelativeTime";
+import useGuidedTour from "../../hooks/useGuidedTour";
+import TourInfoButton from "../../components/tour/TourInfoButton";
+import { TOUR_PAGE_IDS } from "../../tours/pageIds";
+import { userManagementSteps } from "../../tours/steps/userManagementSteps";
 
 import { API_BASE_URL } from "../../config/api";
 const formatJoinedDate = (isoString) =>
@@ -16,6 +20,7 @@ const formatJoinedDate = (isoString) =>
 
 export default function UserManagement() {
   const navigate = useNavigate();
+  const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.USER_MANAGEMENT, userManagementSteps);
 
   const [superadmins, setSuperadmins] = useState([]);
   const [admins, setAdmins] = useState([]);
@@ -261,7 +266,7 @@ export default function UserManagement() {
                   {allowEdit && (
                     <button
                       type="button"
-                      className="icon-action-btn"
+                      className="icon-action-btn icon-edit-btn"
                       onClick={() => handleEdit(account)}
                       disabled={deletingUserId !== null}
                       title="Edit account"
@@ -292,6 +297,8 @@ export default function UserManagement() {
 
   return (
     <AdminLayout>
+      {Tour}
+      <TourInfoButton onClick={replay} />
       <div className="user-management-container">
         <div className="user-management-header">
           <div>
