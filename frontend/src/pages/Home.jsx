@@ -13,6 +13,18 @@ import { TOUR_PAGE_IDS } from "../tours/pageIds";
 import { dashboardSteps } from "../tours/steps/dashboardSteps";
 
 import { API_BASE_URL } from "../config/api";
+
+// Standardized status palette used across the system: green = online/operational,
+// yellow = warning/degraded, red = critical/outage, blue = ongoing process,
+// gray = inactive. "System Status" reflects real backend reachability, not just
+// which environment this build is running in — checking naturally covers a
+// Render free-tier cold start, since it just stays blue for as long as that takes.
+const BACKEND_STATUS_CONFIG = {
+  checking: { color: "blue", label: "Checking...", info: "Contacting backend" },
+  online: { color: "green", label: "Online", info: "Backend operational" },
+  offline: { color: "red", label: "Offline", info: "Backend unreachable" },
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("User");
@@ -25,6 +37,7 @@ export default function Home() {
   });
   const [allZones, setAllZones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [backendStatus, setBackendStatus] = useState("checking");
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DASHBOARD, dashboardSteps);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -45,6 +58,23 @@ export default function Home() {
       }
     };
     loadGeoJson();
+  }, []);
+
+  // Drives the sidebar's "System Status" card — a real connectivity check,
+  // not just an environment label. Stays "checking" for as long as a Render
+  // free-tier cold start takes, since that's exactly what a pending fetch is.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE_URL}/api/health`)
+      .then((res) => {
+        if (!cancelled) setBackendStatus(res.ok ? "online" : "offline");
+      })
+      .catch(() => {
+        if (!cancelled) setBackendStatus("offline");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // .map-container's size changes once sidebar content replaces its loading
@@ -229,13 +259,15 @@ export default function Home() {
           {/* Sidebar */}
           <div className="dashboard-sidebar">
             {/* System Status */}
-            <div className="info-box system-status">
+            <div className={`info-box system-status status-${BACKEND_STATUS_CONFIG[backendStatus].color}`}>
               <div className="info-header">
-                <div className="status-indicator"></div>
+                <div className={`status-indicator status-${BACKEND_STATUS_CONFIG[backendStatus].color}`}></div>
                 <h3>System Status</h3>
               </div>
-              <p>{import.meta.env.PROD ? "Live" : "Local only"}</p>
-              <p className="info-meta">{import.meta.env.PROD ? "Production mode" : "Development mode"}</p>
+              <p>{BACKEND_STATUS_CONFIG[backendStatus].label}</p>
+              <p className="info-meta">
+                {BACKEND_STATUS_CONFIG[backendStatus].info} — {import.meta.env.PROD ? "Production" : "Local dev"}
+              </p>
             </div>
 
             <RiskLevelLegendCard />

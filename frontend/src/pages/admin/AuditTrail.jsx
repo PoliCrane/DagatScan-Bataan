@@ -113,9 +113,9 @@ const describeLog = (log) => {
           d.deleted !== undefined ? `${d.deleted} zone record${d.deleted === 1 ? "" : "s"} removed` : rawFallbackDetail(d),
       };
     case "login_success":
-      return { target: "Own account", detail: "Logged in successfully" };
+      return { target: "-", detail: "Logged in successfully" };
     case "login_denied_deactivated":
-      return { target: "Own account", detail: "Blocked — account is deactivated" };
+      return { target: "-", detail: "Blocked — account is deactivated" };
     default:
       return { target: rawFallbackTarget(log), detail: rawFallbackDetail(d) };
   }

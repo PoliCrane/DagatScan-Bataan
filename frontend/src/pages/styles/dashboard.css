@@ -248,13 +248,37 @@
   color: var(--text-secondary) !important;
 }
 
-.info-box.system-status {
-  border-left-color: #eddc28;
+/* Standardized status palette, shared by .info-box.system-status and
+   .status-indicator below: green = online/operational, yellow = warning/
+   degraded, red = critical/outage, blue = ongoing process, gray = inactive. */
+.info-box.system-status.status-blue { border-left-color: var(--primary); }
+.info-box.system-status.status-blue:hover {
+  border-left-color: #005fa3;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
 }
 
-.info-box.system-status:hover {
-  border-left-color: #a79c28;
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.1);
+.info-box.system-status.status-green { border-left-color: var(--secondary); }
+.info-box.system-status.status-green:hover {
+  border-left-color: #00875f;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.1);
+}
+
+.info-box.system-status.status-yellow { border-left-color: var(--accent); }
+.info-box.system-status.status-yellow:hover {
+  border-left-color: #c9a800;
+  box-shadow: 0 4px 12px rgba(255, 217, 61, 0.15);
+}
+
+.info-box.system-status.status-red { border-left-color: var(--danger); }
+.info-box.system-status.status-red:hover {
+  border-left-color: #bd2130;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
+}
+
+.info-box.system-status.status-gray { border-left-color: #98a2b3; }
+.info-box.system-status.status-gray:hover {
+  border-left-color: #667085;
+  box-shadow: 0 4px 12px rgba(152, 162, 179, 0.15);
 }
 
 .info-box.focus-area {
@@ -344,9 +368,17 @@
 .status-indicator {
   width: 10px;
   height: 10px;
-  background: #ffef41;
   border-radius: 50%;
   animation: pulse 2s infinite;
+}
+
+.status-indicator.status-blue { background: var(--primary); }
+.status-indicator.status-green { background: var(--secondary); }
+.status-indicator.status-yellow { background: var(--accent); }
+.status-indicator.status-red { background: var(--danger); }
+.status-indicator.status-gray {
+  background: #98a2b3;
+  animation: none;
 }
 
 /* High Risk List Section in Sidebar */
