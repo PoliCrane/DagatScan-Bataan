@@ -453,6 +453,16 @@ router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
       records: inserted,
       note: "Replace this with actual data as it becomes available"
     });
+
+    logAction(null, {
+      actor: req.user,
+      action: "sample_data_seeded",
+      category: "data",
+      severity: "normal",
+      targetType: "municipality",
+      targetId: municipality,
+      details: { municipality, startYear, endYear, recordCount: inserted.length },
+    });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Error seeding data:", err);
@@ -524,13 +534,24 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
       
       // Invalidate cache for this municipality
       await invalidateMunicipalityCache(municipality);
-      
-      return res.json({
+
+      res.json({
         success: true,
         message: `Updated ${municipality} data for year ${yearNum}. Cache invalidated.`,
         action: "updated",
         data: result.rows[0]
       });
+
+      logAction(null, {
+        actor: req.user,
+        action: "shoreline_year_data_saved",
+        category: "data",
+        severity: "normal",
+        targetType: "shoreline_zones",
+        targetId: result.rows[0].id,
+        details: { municipality, year: yearNum, specific_area, dbAction: "updated" },
+      });
+      return;
     } else {
       // Insert new record
       result = await pool.query(
@@ -544,12 +565,23 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
       // Invalidate cache for this municipality
       await invalidateMunicipalityCache(municipality);
 
-      return res.json({
+      res.json({
         success: true,
         message: `Added ${municipality} data for year ${yearNum}. Cache invalidated.`,
         action: "inserted",
         data: result.rows[0]
       });
+
+      logAction(null, {
+        actor: req.user,
+        action: "shoreline_year_data_saved",
+        category: "data",
+        severity: "normal",
+        targetType: "shoreline_zones",
+        targetId: result.rows[0].id,
+        details: { municipality, year: yearNum, specific_area, dbAction: "inserted" },
+      });
+      return;
     }
   } catch (err) {
     console.error("Error inserting yearly data:", err);

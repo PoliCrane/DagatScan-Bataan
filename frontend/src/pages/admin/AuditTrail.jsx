@@ -120,6 +120,31 @@ const describeLog = (log) => {
       return { target: "-", detail: "Logged in successfully" };
     case "login_denied_deactivated":
       return { target: "-", detail: "Blocked — account is deactivated" };
+    case "login_failed_unknown_email":
+      return { target: log.actor_username || "Unknown", detail: "Login failed — no account with this email" };
+    case "login_failed_wrong_password":
+      return { target: "-", detail: "Login failed — incorrect password" };
+    case "password_changed":
+      return { target: "-", detail: "Password changed" };
+    case "password_reset_requested":
+      return { target: "-", detail: "Password reset requested" };
+    case "password_reset_completed":
+      return { target: "-", detail: "Password reset completed" };
+    case "shoreline_year_data_saved":
+      return {
+        target: d.municipality || rawFallbackTarget(log),
+        detail: [d.dbAction === "updated" ? "Updated" : "Added", d.year ? `Year ${d.year}` : null, d.specific_area]
+          .filter(Boolean)
+          .join(" — "),
+      };
+    case "sample_data_seeded":
+      return {
+        target: d.municipality || rawFallbackTarget(log),
+        detail:
+          d.startYear && d.endYear
+            ? `Seeded ${d.recordCount ?? "?"} years (${d.startYear}-${d.endYear})`
+            : rawFallbackDetail(d),
+      };
     default:
       return { target: rawFallbackTarget(log), detail: rawFallbackDetail(d) };
   }

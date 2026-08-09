@@ -130,9 +130,38 @@ const sendAccountReactivatedEmail = async (email, username) => {
   }
 };
 
+const sendBackupFailureEmail = async (errorMessage) => {
+  const to = process.env.BACKUP_ALERT_EMAIL || process.env.EMAIL_USER;
+  try {
+    await sendViaBrevo({
+      to,
+      subject: "DagatScan Bataan — daily database backup failed",
+      html: `
+        <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0077B6;">Database Backup Failed</h2>
+          <p>The scheduled daily database backup did not complete successfully.</p>
+
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <p style="font-size: 14px; margin: 0 0 10px 0;">Error:</p>
+            <p style="font-size: 14px; color: #a70000; margin: 0; font-family: monospace;">${errorMessage}</p>
+          </div>
+
+          <p style="color: #666;">Check the GitHub Actions run history for the full log, and confirm the next scheduled backup succeeds.</p>
+        </div>
+      `
+    });
+    console.log(`Backup failure alert sent to ${to}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to send backup failure alert:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendPasswordResetEmail,
   sendAccountApprovedEmail,
   sendAccountDeactivatedEmail,
   sendAccountReactivatedEmail,
+  sendBackupFailureEmail,
 };

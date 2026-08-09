@@ -170,8 +170,15 @@ app.post("/login", loginLimiter, async (req, res) => {
       [email]
     );
 
-    if (userResult.rows.length === 0)
+    if (userResult.rows.length === 0) {
+      logAction(null, {
+        actor: { id: null, username: email, roles: "unknown" },
+        action: "login_failed_unknown_email",
+        category: "auth",
+        severity: "normal",
+      });
       return res.status(400).json({ error: "Invalid email or password" });
+    }
 
     const user = userResult.rows[0];
 
@@ -191,8 +198,17 @@ app.post("/login", loginLimiter, async (req, res) => {
 
     const validPassword = await bcrypt.compare(password, user.password_hash);
 
-    if (!validPassword)
+    if (!validPassword) {
+      logAction(null, {
+        actor: { id: user.id, username: user.username, roles: user.roles },
+        action: "login_failed_wrong_password",
+        category: "auth",
+        severity: "normal",
+        targetType: "user",
+        targetId: user.id,
+      });
       return res.status(400).json({ error: "Invalid email or password" });
+    }
 
     await pool.query("UPDATE users SET last_login = NOW() WHERE id = $1", [user.id]);
 
@@ -255,6 +271,15 @@ app.post("/forgot-password", passwordResetLimiter, async (req, res) => {
         "UPDATE users SET password_reset_code = $1, password_reset_expiry = $2, reset_attempt_count = 0 WHERE email = $3",
         [resetCode, resetExpiry, email]
       );
+
+      logAction(null, {
+        actor: { id: userResult.rows[0].id, username: userResult.rows[0].username, roles: userResult.rows[0].roles },
+        action: "password_reset_requested",
+        category: "auth",
+        severity: "normal",
+        targetType: "user",
+        targetId: userResult.rows[0].id,
+      });
     }
 
     // Same response whether or not the email is registered, so this
@@ -328,6 +353,15 @@ app.post("/reset-password", passwordResetLimiter, async (req, res) => {
     );
 
     res.json({ message: "Password reset successfully" });
+
+    logAction(null, {
+      actor: { id: user.id, username: user.username, roles: user.roles },
+      action: "password_reset_completed",
+      category: "auth",
+      severity: "normal",
+      targetType: "user",
+      targetId: user.id,
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Failed to reset password" });
@@ -366,6 +400,15 @@ app.post("/change-password", verifyToken, async (req, res) => {
     );
 
     res.json({ message: "Password changed successfully" });
+
+    logAction(null, {
+      actor: req.user,
+      action: "password_changed",
+      category: "auth",
+      severity: "normal",
+      targetType: "user",
+      targetId: userId,
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Failed to change password" });
