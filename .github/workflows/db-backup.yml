@@ -16,8 +16,17 @@ jobs:
         with:
           node-version: "25.x"
 
-      - name: Install postgresql-client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      # Ubuntu's default apt package for postgresql-client trails Supabase's
+      # actual Postgres version (was 16, Supabase runs 17) — pg_dump refuses
+      # to dump from a server newer than itself. Installing from PGDG (the
+      # official PostgreSQL apt repo) instead lets us pin the exact matching
+      # major version.
+      - name: Install postgresql-client 17 (matches Supabase's Postgres version)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common
+          yes | sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+          sudo apt-get install -y postgresql-client-17
 
       - name: Install backend dependencies
         working-directory: backend
