@@ -28,16 +28,6 @@ const formatRole = (role) => {
   return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
-/**
- * Backend writes a grayscale PNG preview for the GeoTIFF upload; URL is
- * derived from file_name (not stored), so pre-existing rows have no preview.
- */
-const thumbnailUrl = (fileName) => {
-  if (!fileName) return null;
-  const base = fileName.replace(/\.[^.]+$/, "");
-  return `${API_BASE}/uploads/satellite-images/thumbnails/${encodeURIComponent(base)}.png`;
-};
-
 export default function DataManagement() {
   const navigate = useNavigate();
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DATA_MANAGEMENT, dataManagementSteps);
@@ -51,6 +41,7 @@ export default function DataManagement() {
   const [brokenThumbs, setBrokenThumbs] = useState(() => new Set());
   // Separate from busyId since this is a plain read with no confirm dialog.
   const [loadingImageryId, setLoadingImageryId] = useState(null);
+  const [reuploadingId, setReuploadingId] = useState(null);
 
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({ municipality: "", year: "", status: "" });
@@ -179,6 +170,54 @@ export default function DataManagement() {
       console.error("Error fetching satellite imagery:", err);
     } finally {
       setLoadingImageryId(null);
+    }
+  };
+
+  // Re-runs NDWI generation for this exact area/year using its stored bounds
+  // (satellite_imagery.bounds, joined in by GET /api/admin/uploads) — no need
+  // to retype coordinates. Safe to repeat: satellite_imagery upserts on
+  // (area_id, year) and shoreline_zones replaces rather than duplicates.
+  const handleReupload = async (dataset) => {
+    if (!dataset.bounds) return;
+
+    const confirmed = await confirmAction(
+      `Reupload <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>This regenerates NDWI imagery for this area/year from Earth Engine and replaces the existing analysis. This can take a little while.</small>`
+    );
+    if (!confirmed) return;
+
+    setReuploadingId(dataset.id);
+    try {
+      const token = localStorage.getItem("token");
+      const b = dataset.bounds;
+      const response = await fetch(`${API_BASE}/api/generate-ndwi`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          lonMin: b.west,
+          latMin: b.south,
+          lonMax: b.east,
+          latMax: b.north,
+          year: dataset.year,
+          coastlineName: dataset.coastal_area,
+          municipality: dataset.municipality,
+          specificArea: dataset.coastal_area,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.message || "Reupload failed");
+      }
+
+      await showSuccess(data.message || "Reupload complete.");
+      await fetchDatasets();
+    } catch (err) {
+      await showError(err.message);
+      console.error("Error reuploading dataset:", err);
+    } finally {
+      setReuploadingId(null);
     }
   };
 
@@ -388,7 +427,7 @@ export default function DataManagement() {
                 ) : (
                   pageRows.map((d) => {
                     const uploaded = formatUploadDate(d.created_at);
-                    const thumb = thumbnailUrl(d.file_name);
+                    const thumb = d.thumbnail_url ? `${API_BASE}${d.thumbnail_url}` : null;
                     return (
                       <tr key={d.id} className={`dm-row ${!d.active ? "inactive" : ""}`}>
                         <td>
@@ -451,6 +490,22 @@ export default function DataManagement() {
                             >
                               {loadingImageryId === d.id ? "Loading..." : "Satellite Imagery"}
                             </button>
+                            {d.upload_type === "Satellite_Image" && (
+                              <button
+                                type="button"
+                                className="dm-reupload-btn"
+                                onClick={() => handleReupload(d)}
+                                disabled={!d.bounds || reuploadingId !== null}
+                                title={
+                                  d.bounds
+                                    ? "Regenerate NDWI imagery for this area/year"
+                                    : "No stored bounds for this dataset — reupload isn't available"
+                                }
+                              >
+                                <img src="/reupload.png" alt="" className="dm-reupload-icon" />
+                                {reuploadingId === d.id ? "Reuploading..." : "Reupload"}
+                              </button>
+                            )}
                             {isSuperadmin && (
                               d.can_deactivate ? (
                                 <StatusToggle

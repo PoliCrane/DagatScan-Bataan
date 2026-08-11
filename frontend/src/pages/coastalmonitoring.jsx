@@ -328,9 +328,9 @@ export default function CoastalMonitoring() {
               >
                 <Popup className="segment-marker-popup">
                   <div className="segment-marker-popup-header">{segment.name}</div>
-                  <div 
+                  <div
                     className="segment-marker-popup-risk"
-                    style={{ background: riskColor }}
+                    style={{ background: `${riskColor}22`, color: riskColor }}
                   >
                     {SEGMENT_RISK_LEVELS[segment.risk] || segment.risk}
                   </div>
@@ -339,13 +339,8 @@ export default function CoastalMonitoring() {
                   )}
                   <div className="segment-marker-popup-rate">
                     <strong>Erosion Rate:</strong> {segment.erosionRate} {segment.unit}
+                    {segment.year != null && <> · <strong>Latest:</strong> {segment.year}</>}
                   </div>
-                  {segment.eprConfidence != null && (
-                    <div className="segment-marker-popup-rate">
-                      <strong>Confidence:</strong> {Math.round(segment.eprConfidence * 100)}%
-                      {segment.year != null && <> · <strong>Latest:</strong> {segment.year}</>}
-                    </div>
-                  )}
                 </Popup>
               </Marker>
             ) : null;

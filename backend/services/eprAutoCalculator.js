@@ -7,7 +7,7 @@
  *   await autoCalculateErosionRates(dbClient, features, municipality, year);
  */
 
-const calculateEPR = require("./eprCalculator");
+const { calculateEPR } = require("./eprCalculator");
 const { findAreaId } = require("./coastalAreas");
 
 /**

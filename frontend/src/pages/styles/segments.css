@@ -9,14 +9,19 @@
 }
 
 /* Segment Markers and UI */
+.segment-marker-popup .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+}
+
 .segment-marker-popup {
   min-width: 200px;
   font-family: 'Muli', sans-serif;
 }
 
 .segment-marker-popup .leaflet-popup-content {
-  padding: 10px;
-  margin: 0;
+  padding: 4px;
+  margin: 14px 16px;
 }
 
 .segment-marker-popup-header {
@@ -28,11 +33,10 @@
 
 .segment-marker-popup-risk {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
   margin-bottom: 8px;
 }
 
@@ -46,7 +50,7 @@
 .segment-marker-popup-rate {
   background: var(--bg-panel);
   padding: 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   margin-top: 8px;
   font-weight: 600;
@@ -117,18 +121,19 @@
 }
 
 .segment-item {
-  padding: 12px;
+  padding: 14px;
   margin-bottom: 10px;
-  border-radius: 6px;
+  border-radius: 10px;
   background: var(--bg-card);
   border-left: 4px solid var(--primary);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .segment-item:hover {
   transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.2);
 }
 
 .segment-item-name {
@@ -143,11 +148,10 @@
 
 .segment-item-badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 3px;
+  padding: 2px 9px;
+  border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
-  color: white;
+  font-weight: 700;
 }
 
 .segment-item-description {
@@ -163,8 +167,9 @@
   font-size: 11px;
   color: var(--text-secondary);
   background: white;
-  padding: 6px;
-  border-radius: 3px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
 }
 
 .segment-item-rate-value {

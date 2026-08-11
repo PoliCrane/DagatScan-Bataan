@@ -1,6 +1,8 @@
 import {BrowserRouter,Routes,Route} from "react-router-dom";
 
 import MobileBlockOverlay from "./components/MobileBlockOverlay";
+import NdwiBatchWidget from "./components/NdwiBatchWidget";
+import { NdwiBatchProvider } from "./contexts/NdwiBatchContext";
 import Index from "./pages/index";
 import Home from "./pages/Home";
 import MapPage from "./pages/coastalmonitoring";
@@ -25,6 +27,7 @@ return(
 
 <MobileBlockOverlay/>
 
+<NdwiBatchProvider>
 <BrowserRouter>
 
 <Routes>
@@ -48,7 +51,10 @@ return(
 
 </Routes>
 
+<NdwiBatchWidget/>
+
 </BrowserRouter>
+</NdwiBatchProvider>
 
 </>
 

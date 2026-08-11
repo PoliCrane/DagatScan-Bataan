@@ -8,11 +8,12 @@ import { useEffect, useState, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./index-organized.css";
+import "./styles/erosionSegmentPopup.css";
 import { extractCoastline, smoothCoastline, getCoastlineLength } from "../utils/coastlineUtils";
 import { getShorelineData } from "../api/shorelineData";
 import { generateShoreline_ByEPR } from "../utils/eprUtils";
 import { buildAreaSegments } from "../utils/areaSegments";
-import { classifyErosionRisk } from "../utils/segmentData";
+import { classifyErosionRisk, getRiskColor, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 import useGuidedTour from "../hooks/useGuidedTour";
 import useMunicipalityDataStatus from "../hooks/useMunicipalityDataStatus";
 import TourInfoButton from "../components/tour/TourInfoButton";
@@ -270,23 +271,23 @@ export default function ErosionAnalysis() {
       } else {
         const fallbackShoreline = yearlyShorelineData[yearlyShorelineData.length - 1]?.shoreline;
         if (fallbackShoreline && fallbackShoreline.length >= 2) {
-          // Fallback: whole polygon coastline as one area. Use the real EPR
+          // Fallback: whole polygon coastline as one area. Use the real LRR
           // regression (not just the latest erosion_rate) when enough years exist.
           const hasSufficientData = yearlyShorelineData.length >= 2;
-          let eprRate = null;
-          let eprConfidence = null;
+          let lrrRate = null;
+          let lrrConfidence = null;
           if (hasSufficientData) {
             try {
-              const eprRes = await fetch(
+              const lrrRes = await fetch(
                 `${API_BASE_URL}/api/shoreline/municipality/${encodeURIComponent(selectedMunicipality)}/epr`
               );
-              if (eprRes.ok) {
-                const eprData = await eprRes.json();
-                eprRate = eprData.epr_rate;
-                eprConfidence = eprData.confidence;
+              if (lrrRes.ok) {
+                const lrrData = await lrrRes.json();
+                lrrRate = lrrData.epr_rate;
+                lrrConfidence = lrrData.confidence;
               }
             } catch (err) {
-              console.warn("Could not fetch EPR for fallback coastline:", err.message);
+              console.warn("Could not fetch LRR for fallback coastline:", err.message);
             }
           }
 
@@ -296,8 +297,8 @@ export default function ErosionAnalysis() {
               coastlinePoints: fallbackShoreline,
               sourceType: "Polygon Boundary",
               hasSufficientData,
-              eprRate,
-              eprConfidence,
+              lrrRate,
+              lrrConfidence,
               yearsAvailable: yearlyShorelineData.map((y) => y.year),
               year: yearlyShorelineData[yearlyShorelineData.length - 1]?.year,
             }],
@@ -544,8 +545,8 @@ export default function ErosionAnalysis() {
       predictedYear: estimate.predictedYear,
       estimatedRetreat: estimate.estimatedRetreat,
       estimatedRetreatUnit: estimate.estimatedRetreatUnit,
-      projectedEPR: estimate.projectedEPR,
-      projectedEPRUnit: estimate.projectedEPRUnit,
+      projectedLRR: estimate.projectedLRR,
+      projectedLRRUnit: estimate.projectedLRRUnit,
     });
 
     setPredictedYear(predictionYear);
@@ -822,37 +823,66 @@ export default function ErosionAnalysis() {
                   },
                 }}
               >
-                <Popup>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{segment.name}</div>
-                  {segment.hasSufficientData ? (
-                    <>
-                      <div>
-                        EPR: {segment.erosionRate?.toFixed(2)} {segment.unit}
-                        {segment.eprConfidence != null && (
-                          <span style={{ color: '#666' }}> (confidence {(segment.eprConfidence * 100).toFixed(0)}%)</span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                        Based on {segment.yearsAvailable.length} years: {segment.yearsAvailable.join(', ')}
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{ fontSize: 12, color: '#b45309', marginTop: 4 }}>
-                      Only {segment.yearsAvailable.length} year{segment.yearsAvailable.length === 1 ? '' : 's'} on record
-                      {segment.yearsAvailable.length > 0 ? ` (${segment.yearsAvailable.join(', ')})` : ''} — upload
-                      another year for this area to enable Compare/Predict.
-                    </div>
-                  )}
-                  <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                    Source: {segment.source}
-                  </div>
-                  <div style={{ fontSize: 12, marginTop: 4 }}>
-                    {!segment.hasSufficientData
+                <Popup className="ea-segment-popup">
+                  {(() => {
+                    const riskKey = classifyErosionRisk(segment.erosionRate);
+                    const riskColor = getRiskColor(riskKey);
+                    const years = segment.yearsAvailable;
+                    const footerText = !segment.hasSufficientData
                       ? 'Locked — not enough data yet'
                       : isSelected
                         ? 'Selected — Compare/Predict use this segment only'
-                        : 'Click to select this segment'}
-                  </div>
+                        : 'Click to select this segment';
+
+                    return (
+                      <>
+                        <div className="ea-popup-header">
+                          <span className="ea-popup-title">{segment.name}</span>
+                          {segment.hasSufficientData && (
+                            <span
+                              className="ea-popup-risk-pill"
+                              style={{ background: `${riskColor}22`, color: riskColor }}
+                            >
+                              {SEGMENT_RISK_LEVELS[riskKey] || riskKey} Risk
+                            </span>
+                          )}
+                        </div>
+
+                        {segment.hasSufficientData ? (
+                          <>
+                            <div className="ea-popup-rate">
+                              LRR: {segment.erosionRate?.toFixed(2)} {segment.unit}
+                              {segment.lrrConfidence != null && (
+                                <span className="ea-popup-confidence"> (confidence {(segment.lrrConfidence * 100).toFixed(0)}%)</span>
+                              )}
+                            </div>
+                            <div className="ea-popup-years">
+                              <svg className="ea-popup-calendar-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                                <path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                              </svg>
+                              {Math.min(...years)}–{Math.max(...years)} • {years.length} dataset{years.length === 1 ? '' : 's'}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="ea-popup-locked">
+                            Only {years.length} year{years.length === 1 ? '' : 's'} on record
+                            {years.length > 0 ? ` (${years.join(', ')})` : ''} — upload
+                            another year for this area to enable Compare/Predict.
+                          </div>
+                        )}
+
+                        <div className="ea-popup-divider" />
+
+                        <div className="ea-popup-footer">
+                          <span className={`ea-popup-footer-icon ${isSelected ? 'is-selected' : ''}`}>
+                            {isSelected ? '✓' : '○'}
+                          </span>
+                          {footerText}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </Popup>
               </Marker>
             );

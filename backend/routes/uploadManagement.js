@@ -622,6 +622,11 @@ async function processSatelliteImageFile(
   // failure path) can use the FK'd id.
   const municipalityId = await getOrCreateMunicipalityId(client, municipality);
 
+  // Declared outside the try block (not `const` inside it) because the
+  // catch block's failure INSERT also needs it — stays null if the
+  // exception happened before resolveAreaId ran below.
+  let areaId = null;
+
   try {
     // Always validate + store basic image metadata first
     const imageProcessResult = await processSatelliteImage(file.path, {
@@ -667,7 +672,26 @@ async function processSatelliteImageFile(
     // years can be audited later — they'd otherwise show up as phantom "erosion".
     // Keyed on (area_id, year), not (municipality, year), so different areas in the same
     // municipality/year don't overwrite each other; areaId is reused for the rest of this function.
-    const areaId = await resolveAreaId(client, municipalityId, specific_area);
+    areaId = await resolveAreaId(client, municipalityId, specific_area);
+
+    // Captured before satellite_imagery's upsert below overwrites it — used
+    // after a successful reprocess to delete the now-superseded file from
+    // disk (see priorImagePath usage further down).
+    const priorImageResult = await client.query(
+      `SELECT image_path FROM satellite_imagery WHERE area_id = $1 AND year = $2`,
+      [areaId, parseInt(year)]
+    );
+    const priorImagePath = priorImageResult.rows[0]?.image_path || null;
+
+    // Reprocessing the same area/year replaces its upload_history record
+    // rather than appending another one — satellite_imagery already upserts
+    // on (area_id, year) below; this keeps upload_history at the same grain
+    // instead of accumulating what look like duplicate rows in Data Management.
+    await client.query(
+      `DELETE FROM upload_history WHERE area_id = $1 AND year = $2 AND upload_type = 'Satellite_Image'`,
+      [areaId, parseInt(year)]
+    );
+
     const satelliteRecord = await client.query(
       `INSERT INTO satellite_imagery
        (area_id, year, image_path, capture_date, resolution, source, bounds, created_by)
@@ -718,8 +742,14 @@ async function processSatelliteImageFile(
     // If a prior-year shoreline exists, compare and store the erosion rate. Otherwise,
     // store the detected coastline as a baseline zone for the next upload to compare against.
     let analysisOutcome = { ran: false, reason: "Not attempted" };
+    // Declared outside the try block (not `const` inside it) because the
+    // no-usable-result message below (after the try/catch closes) also
+    // reads it — a block-scoped `const` there would throw ReferenceError
+    // whenever detection found nothing, which is exactly the case that
+    // message exists to describe.
+    let reference = null;
     try {
-      const reference = await findReferenceCoastline(client, areaId, parseInt(year));
+      reference = await findReferenceCoastline(client, areaId, parseInt(year));
 
       const analysis = await processSatelliteImageWithAnalysis(file.path, {
         municipality,
@@ -847,14 +877,15 @@ async function processSatelliteImageFile(
     // Create upload history record
     const uploadRecord = await client.query(
       `INSERT INTO upload_history
-       (admin_id, upload_type, municipality_id, year, file_name, file_path,
+       (admin_id, upload_type, municipality_id, area_id, year, file_name, file_path,
         file_size, process_status, processed_records)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id, process_status`,
       [
         adminId,
         "Satellite_Image",
         municipalityId,
+        areaId,
         parseInt(year),
         file.filename,
         file.path,
@@ -863,6 +894,18 @@ async function processSatelliteImageFile(
         analysisOutcome.zonesStored || 1,
       ]
     );
+
+    // Only reached once the new file is fully processed and recorded — a
+    // failed reprocess (caught below) never touches the last known-good file.
+    if (priorImagePath && priorImagePath !== file.path) {
+      for (const p of [priorImagePath, thumbnailPathFor(priorImagePath)]) {
+        if (fs.existsSync(p)) {
+          fs.unlink(p, (err) => {
+            if (err) console.error("Error deleting superseded file:", err);
+          });
+        }
+      }
+    }
 
     return {
       type: "Satellite_Image",
@@ -886,14 +929,15 @@ async function processSatelliteImageFile(
 
     const failedUpload = await client.query(
       `INSERT INTO upload_history
-       (admin_id, upload_type, municipality_id, year, file_name, file_path,
+       (admin_id, upload_type, municipality_id, area_id, year, file_name, file_path,
         file_size, process_status, error_message)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
         adminId,
         "Satellite_Image",
         municipalityId,
+        areaId,
         parseInt(year),
         file.filename,
         file.path,
@@ -910,6 +954,20 @@ async function processSatelliteImageFile(
       error: error.message,
     };
   }
+}
+
+/**
+ * Derives a thumbnail's public URL from a row's actual file_path, rather
+ * than assuming a fixed folder — different upload paths store files under
+ * different subdirectories (uploads/satellite-images/ for manual uploads,
+ * uploads/ndwi/ for NDWI-generated ones), but thumbnailPathFor always
+ * places the preview in a sibling "thumbnails" dir either way.
+ */
+function computeThumbnailUrl(filePath) {
+  if (!filePath) return null;
+  const thumbPath = thumbnailPathFor(filePath);
+  const relative = path.relative(path.join(__dirname, "../uploads"), thumbPath).split(path.sep).join("/");
+  return `/uploads/${relative}`;
 }
 
 /**
@@ -930,7 +988,8 @@ router.get("/", async (req, res) => {
                         u.username AS uploaded_by,
                         u.roles AS uploaded_by_role,
                         (uh.area_id IS NOT NULL AND uh.upload_type = 'Satellite_Image') AS can_deactivate,
-                        (si.bounds IS NOT NULL) AS has_bounds
+                        (si.bounds IS NOT NULL) AS has_bounds,
+                        si.bounds AS bounds
                  FROM upload_history uh
                  JOIN municipalities m ON uh.municipality_id = m.id
                  LEFT JOIN coastal_areas ca ON uh.area_id = ca.id
@@ -982,7 +1041,10 @@ router.get("/", async (req, res) => {
     ]);
 
     res.json({
-      uploads: result.rows,
+      uploads: result.rows.map((row) => ({
+        ...row,
+        thumbnail_url: computeThumbnailUrl(row.file_path),
+      })),
       pagination: {
         total: countResult.rows[0].total,
         limit: parseInt(limit),
@@ -1531,3 +1593,9 @@ module.exports = router;
 // Exposed for one-off maintenance/backfill scripts (e.g. recomputing all
 // existing satellite zones after a fix to the erosion-distance algorithm).
 module.exports.recomputeAreaTimeSeries = recomputeAreaTimeSeries;
+// Exposed so NDWI generation (single-year and batch) can feed a freshly
+// generated GeoTIFF straight into the same processing pipeline a manual
+// upload uses — this function only ever reads file.path/.filename/.size,
+// never req/res, so a synthetic file object pointing at an on-disk NDWI
+// export works identically to a real multer upload.
+module.exports.processSatelliteImageFile = processSatelliteImageFile;

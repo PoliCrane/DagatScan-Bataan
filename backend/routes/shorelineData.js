@@ -180,7 +180,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
     const geomQuery = year
       ? `SELECT DISTINCT ON (sz.area_id)
           sz.year, sz.source_type, sz.geojson_data, ca.name AS specific_area,
-          ca.projected_epr, ca.epr_confidence
+          ca.projected_lrr, ca.lrr_confidence
          FROM shoreline_zones sz
          JOIN coastal_areas ca ON sz.area_id = ca.id
          JOIN municipalities m ON ca.municipality_id = m.id
@@ -190,7 +190,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
          ORDER BY sz.area_id, sz.id DESC`
       : `SELECT DISTINCT ON (sz.area_id)
           sz.year, sz.source_type, sz.geojson_data, ca.name AS specific_area,
-          ca.projected_epr, ca.epr_confidence
+          ca.projected_lrr, ca.lrr_confidence
          FROM shoreline_zones sz
          JOIN coastal_areas ca ON sz.area_id = ca.id
          JOIN municipalities m ON ca.municipality_id = m.id
@@ -206,8 +206,8 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
       return res.status(404).json({ hasSatelliteCoastline: false, areas: [] });
     }
 
-    // Year list only gates Compare/Predict (>=2 years); EPR is maintained on
-    // coastal_areas at write time (recomputeMunicipalityAreaEPR) and just read here.
+    // Year list only gates Compare/Predict (>=2 years); LRR is maintained on
+    // coastal_areas at write time (recomputeMunicipalityAreaLRR) and just read here.
     const yearsResult = await pool.query(
       `SELECT sz.area_id, ca.name AS specific_area, CAST(sz.year AS INTEGER) as year
        FROM shoreline_zones sz
@@ -251,8 +251,8 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
           coastlinePoints: coords,
           yearsAvailable,
           hasSufficientData,
-          eprRate: row.projected_epr !== null ? parseFloat(row.projected_epr) : null,
-          eprConfidence: row.epr_confidence !== null ? parseFloat(row.epr_confidence) : null,
+          lrrRate: row.projected_lrr !== null ? parseFloat(row.projected_lrr) : null,
+          lrrConfidence: row.lrr_confidence !== null ? parseFloat(row.lrr_confidence) : null,
         };
       })
       .filter(Boolean);
@@ -274,8 +274,8 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
 });
 
 /**
- * EPR-offset estimate for Predict/Compare — pure read of coastal_areas' stored projected_epr
- * (kept current by recomputeMunicipalityAreaEPR); only the per-year-pair retreat multiplication
+ * LRR-offset estimate for Predict/Compare — pure read of coastal_areas' stored projected_lrr
+ * (kept current by recomputeMunicipalityAreaLRR); only the per-year-pair retreat multiplication
  * happens here. ?baseYear=X&targetYear=Y&area=<specificArea> (area optional, targetYear may
  * precede baseYear); estimatedRetreat is always a positive magnitude.
  */
@@ -302,19 +302,19 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
         return res.status(400).json({ error: `Area "${area}" has insufficient data to estimate` });
       }
       const result = await pool.query(
-        `SELECT id, name, projected_epr, risk_level FROM coastal_areas WHERE id = $1`,
+        `SELECT id, name, projected_lrr, risk_level FROM coastal_areas WHERE id = $1`,
         [areaId]
       );
       areaRows = result.rows;
     } else {
       const result = await pool.query(
-        `SELECT id, name, projected_epr, risk_level FROM coastal_areas WHERE municipality_id = $1`,
+        `SELECT id, name, projected_lrr, risk_level FROM coastal_areas WHERE municipality_id = $1`,
         [municipalityId]
       );
       areaRows = result.rows;
     }
 
-    const targetAreas = areaRows.filter((row) => row.projected_epr !== null);
+    const targetAreas = areaRows.filter((row) => row.projected_lrr !== null);
     if (targetAreas.length === 0) {
       return res.status(400).json({
         error: area
@@ -324,24 +324,24 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
     }
 
     const segments = targetAreas.map((row) => {
-      const projectedEpr = parseFloat(row.projected_epr);
+      const projectedLrr = parseFloat(row.projected_lrr);
       return {
         area: row.name,
-        erosionRate: projectedEpr,
-        retreat: Math.abs(projectedEpr * (targetYear - baseYear)),
+        erosionRate: projectedLrr,
+        retreat: Math.abs(projectedLrr * (targetYear - baseYear)),
         riskLevel: row.risk_level,
       };
     });
 
-    const avgEpr = segments.reduce((sum, s) => sum + s.erosionRate, 0) / segments.length;
+    const avgLrr = segments.reduce((sum, s) => sum + s.erosionRate, 0) / segments.length;
     const avgRetreat = segments.reduce((sum, s) => sum + s.retreat, 0) / segments.length;
 
     res.json({
       predictedYear: targetYear.toString(),
       estimatedRetreat: avgRetreat.toFixed(1),
       estimatedRetreatUnit: "m",
-      projectedEPR: Math.abs(avgEpr).toFixed(2),
-      projectedEPRUnit: "m/year",
+      projectedLRR: Math.abs(avgLrr).toFixed(2),
+      projectedLRRUnit: "m/year",
       segments,
     });
   } catch (err) {

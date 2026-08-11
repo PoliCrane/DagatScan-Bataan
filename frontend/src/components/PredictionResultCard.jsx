@@ -66,7 +66,7 @@ export default function PredictionResultCard({
         <div className="card-item">
           <span className="card-label">Projected Erosion Rate</span>
           <span className="card-value">
-            {predictionData.projectedEPR} <span className="card-unit">{predictionData.projectedEPRUnit}</span>
+            {predictionData.projectedLRR} <span className="card-unit">{predictionData.projectedLRRUnit}</span>
           </span>
         </div>
       </div>

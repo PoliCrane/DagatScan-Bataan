@@ -1,16 +1,13 @@
 import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 
-// The NDWI Generator and Satellite Image Upload cards are mutually
-// exclusive again (a toggle switches between them), so a step targeting
-// either card's contents first has to flip DataUpload.jsx's `uploadType`
-// state before Joyride can measure/spotlight it — plain scrollIntoView
-// (see the shared scrollTargetIntoView.js, used on pages where everything
-// is always mounted) isn't enough on its own here. switchTabAndScroll does
-// both: set the tab, wait two animation frames for React to commit and lay
-// out the newly-mounted card, then scroll the target into view.
-const switchTabAndScroll = (tab, setUploadType, selector) => () =>
+// Satellite Image Upload is hidden (see SHOW_SATELLITE_UPLOAD in
+// DataUpload.jsx), so the NDWI card is the only thing ever mounted here now.
+// scrollTargetIntoView would normally handle this, but the card's fields
+// only exist once uploadType === "ndwi" is set, so this still needs to wait
+// two animation frames for React to commit before measuring/spotlighting.
+const scrollNdwiTargetIntoView = (setUploadType, selector) => () =>
   new Promise((resolve) => {
-    setUploadType(tab);
+    setUploadType("ndwi");
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
         document.querySelector(selector)?.scrollIntoView({ block: "center", behavior: "instant" });
@@ -26,62 +23,31 @@ export function buildDataUploadSteps(setUploadType) {
       placement: "center",
       title: "Welcome to Data Upload",
       content:
-        "The Data Upload page allows administrators to generate and upload NDWI (Normalized Difference Water Index) satellite images for coastal erosion analysis. Use the toggle at the top to switch between the NDWI Generator (generate and download an NDWI image) and Satellite Image Upload (upload it and complete the required location details). You can continue this guide by clicking the 'Next' button or close it at any time. To reopen the guide, simply click the Information (i) icon available on the page.",
+        "The Data Upload page allows administrators to generate NDWI (Normalized Difference Water Index) satellite imagery for coastal erosion analysis. Enter a bounding box, municipality, and coastline name, then generate a single year or all available years at once — each image is automatically analyzed and saved, with no separate upload step required. You can continue this guide by clicking the 'Next' button or close it at any time. To reopen the guide, simply click the Information (i) icon available on the page.",
     },
     {
       target: "#ndwi-generator-fields",
       placement: "bottom",
       title: "NDWI Generator",
-      before: switchTabAndScroll("ndwi", setUploadType, "#ndwi-generator-fields"),
+      before: scrollNdwiTargetIntoView(setUploadType, "#ndwi-generator-fields"),
       content:
-        "The NDWI Generator allows you to generate an NDWI satellite image using Google Earth Engine. Enter the required information: Latitude Min (South), Latitude Max (North), Longitude Min (West), Longitude Max (East), Year, Coastline Name (Optional). These values define the area and year of the satellite imagery that will be processed.",
+        "The NDWI Generator uses Google Earth Engine to generate NDWI satellite imagery. Enter the required information: Latitude Min (South), Latitude Max (North), Longitude Min (West), Longitude Max (East), Municipality, and Coastline Name. These values define the area that will be processed.",
     },
     {
       target: "#generate-ndwi-btn",
       placement: "top",
-      title: "Generate NDWI Image",
-      before: switchTabAndScroll("ndwi", setUploadType, "#generate-ndwi-btn"),
+      title: "Generate This Year",
+      before: scrollNdwiTargetIntoView(setUploadType, "#generate-ndwi-btn"),
       content:
-        "After entering the required information, click the Generate NDWI Image button. Once the image is generated, a message will appear below the form indicating that the file is ready. Click the highlighted Download link to save the NDWI image, then switch to the Satellite Image Upload tab to upload it.",
+        "Enter a Year, then click Generate This Year. The image is generated and automatically analyzed for shoreline data in one step — a confirmation message appears once it's done.",
     },
     {
-      target: ".upload-drop-zone.satellite-dropzone",
-      placement: "right",
-      title: "Satellite Image Upload",
-      before: switchTabAndScroll("satellite", setUploadType, ".upload-drop-zone.satellite-dropzone"),
-      content:
-        "The Satellite Image Upload card lets you upload the generated NDWI image or other satellite images. Drag and drop an image into the upload area or click the upload box to browse your files.",
-    },
-    {
-      target: ".satellite-bounds-col",
-      placement: "left",
-      title: "Image Bounds",
-      before: switchTabAndScroll("satellite", setUploadType, ".satellite-bounds-col"),
-      content:
-        "If you upload an NDWI or .tif image, entering the image bounds is optional. For other image formats (such as .jpg or .png), providing the North, South, West, and East coordinates is recommended for more accurate shoreline processing.",
-    },
-    {
-      target: ".location-metadata-section",
+      target: "#generate-ndwi-all-years-btn",
       placement: "top",
-      title: "Location Details",
-      before: switchTabAndScroll("satellite", setUploadType, ".location-metadata-section"),
+      title: "Generate All Years",
+      before: scrollNdwiTargetIntoView(setUploadType, "#generate-ndwi-all-years-btn"),
       content:
-        "The Location Details section is used for file naming and organizing uploaded satellite images. Enter the required information: Municipality, Specific Area, Year of Data, Data Quality (Confidence Rating).",
-    },
-    {
-      target: "#upload-files-btn",
-      placement: "top",
-      title: "Upload Files",
-      before: switchTabAndScroll("satellite", setUploadType, "#upload-files-btn"),
-      content:
-        "After completing the required information, click the Upload Files button. A progress bar will appear while the file is being uploaded. Once the upload is complete, the system will display a confirmation message.",
-    },
-    {
-      target: ".btn-reset",
-      placement: "top",
-      title: "Clear Button",
-      before: switchTabAndScroll("satellite", setUploadType, ".btn-reset"),
-      content: "Click the Clear button to remove the entered image bounds and reset the coordinate fields.",
+        "Click Generate All Years to process every available year (2015 to present) for this area in one go. This runs in the background — a progress bar shows how many years are complete, and a summary appears once the batch finishes, including any years that were skipped and why. Feeding more years into the system makes the projected Linear Regression Rate (LRR) more statistically reliable.",
     },
     {
       target: "body",

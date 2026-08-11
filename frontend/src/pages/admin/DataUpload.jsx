@@ -7,6 +7,7 @@ import useGuidedTour from "../../hooks/useGuidedTour";
 import TourInfoButton from "../../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../../tours/pageIds";
 import { buildDataUploadSteps } from "../../tours/steps/dataUploadSteps";
+import { useNdwiBatch } from "../../contexts/NdwiBatchContext";
 
 import { API_BASE_URL } from "../../config/api";
 export default function DataUpload() {
@@ -19,6 +20,10 @@ export default function DataUpload() {
       navigate("/coastalmonitoring", { replace: true });
     }
   }, [navigate]);
+
+  // Satellite Image Upload is hidden (not deleted) — the system's scope is
+  // now NDWI-only auto-generation. Flip to true to bring the card back.
+  const SHOW_SATELLITE_UPLOAD = false;
 
   const [uploadType, setUploadType] = useState("ndwi");
   const [datasetFile, setDatasetFile] = useState(null);
@@ -42,6 +47,12 @@ export default function DataUpload() {
   const [ndwiGenerating, setNdwiGenerating] = useState(false);
   const [ndwiResult, setNdwiResult] = useState(null);
   const [ndwiError, setNdwiError] = useState(null);
+
+  // Multi-year batch generation (2015 -> current year) is tracked app-wide
+  // by NdwiBatchContext (see contexts/NdwiBatchContext.jsx) so its progress
+  // survives navigating away from this page — see the floating widget in
+  // App.jsx for the persistent view of the same job.
+  const ndwiBatch = useNdwiBatch();
 
   // Location & Metadata Fields
   const [municipality, setMunicipality] = useState("Balanga");
@@ -234,34 +245,46 @@ export default function DataUpload() {
     return { valid: errors.length === 0, errors };
   };
 
-  const handleGenerateNDWI = async () => {
-    setNdwiError(null);
-    setNdwiResult(null);
-
-    if (!ndwiLonMin || !ndwiLatMin || !ndwiLonMax || !ndwiLatMax || !ndwiYear) {
-      setNdwiError("All bounds fields and year are required");
-      return;
+  // Shared bounds/municipality/coastline-name validation + parsing for both
+  // the single-year and "all years" NDWI generation actions.
+  const validateAndParseNdwiInputs = () => {
+    if (!ndwiLonMin || !ndwiLatMin || !ndwiLonMax || !ndwiLatMax) {
+      return { error: "All bounds fields are required" };
     }
     if (!ndwiMunicipality) {
-      setNdwiError("Municipality is required");
-      return;
+      return { error: "Municipality is required" };
     }
     if (!ndwiCoastlineName) {
-      setNdwiError("Coastline name is required");
-      return;
+      return { error: "Coastline name is required" };
     }
 
-    // Accepts decimal degrees or DMS (e.g. 14°33'54.17"N) — same parser used
-    // for the Satellite tab's image bounds fields.
+    // Accepts decimal degrees or DMS (e.g. 14°33'54.17"N).
     const lonMinParsed = parseDMSOrDecimal(ndwiLonMin);
     const latMinParsed = parseDMSOrDecimal(ndwiLatMin);
     const lonMaxParsed = parseDMSOrDecimal(ndwiLonMax);
     const latMaxParsed = parseDMSOrDecimal(ndwiLatMax);
 
     if ([lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed].some((v) => v === null || isNaN(v))) {
-      setNdwiError('Could not parse one or more bounds. Use decimal degrees (120.3816) or DMS (120°22\'53.66"E).');
+      return { error: 'Could not parse one or more bounds. Use decimal degrees (120.3816) or DMS (120°22\'53.66"E).' };
+    }
+
+    return { bounds: { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } };
+  };
+
+  const handleGenerateNDWI = async () => {
+    setNdwiError(null);
+    setNdwiResult(null);
+
+    if (!ndwiYear) {
+      setNdwiError("Year is required");
       return;
     }
+    const { error, bounds } = validateAndParseNdwiInputs();
+    if (error) {
+      setNdwiError(error);
+      return;
+    }
+    const { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } = bounds;
 
     setNdwiGenerating(true);
     try {
@@ -278,22 +301,49 @@ export default function DataUpload() {
           latMax: latMaxParsed,
           year: ndwiYear,
           coastlineName: ndwiCoastlineName,
+          municipality: ndwiMunicipality,
+          specificArea: ndwiCoastlineName,
         }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setNdwiError(data.error || "NDWI generation failed");
+      if (!response.ok || !data.success) {
+        setNdwiError(data.error || data.message || "NDWI generation failed");
         return;
       }
 
       setNdwiResult(data);
-      await showSuccess("NDWI GeoTIFF generated. Click the download link to save it, then upload it in the Satellite Image Upload Tab.");
+      await showSuccess(data.message || "NDWI generated and processed successfully.");
     } catch (err) {
       setNdwiError(err.message || "Network error while generating NDWI");
     } finally {
       setNdwiGenerating(false);
+    }
+  };
+
+  const handleGenerateAllYears = async () => {
+    setNdwiError(null);
+    setNdwiResult(null);
+
+    const { error, bounds } = validateAndParseNdwiInputs();
+    if (error) {
+      setNdwiError(error);
+      return;
+    }
+    const { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } = bounds;
+
+    try {
+      await ndwiBatch.startBatch({
+        lonMin: lonMinParsed,
+        latMin: latMinParsed,
+        lonMax: lonMaxParsed,
+        latMax: latMaxParsed,
+        municipality: ndwiMunicipality,
+        specificArea: ndwiCoastlineName,
+      });
+    } catch (err) {
+      setNdwiError(err.message || "Failed to start batch generation");
     }
   };
 
@@ -430,14 +480,20 @@ export default function DataUpload() {
               <img src="/NDWI.png" alt="" className="toggle-btn-icon" />
               NDWI Generator
             </button>
-            <button
-              type="button"
-              className={`toggle-btn ${uploadType === "satellite" ? "active" : ""}`}
-              onClick={() => setUploadType("satellite")}
-            >
-              <img src="/uploadSatellite.png" alt="" className="toggle-btn-icon" />
-              Satellite Image Upload
-            </button>
+            {/*
+              Satellite Image Upload is hidden (not deleted) — the system's
+              scope is now NDWI-only auto-generation, feeding LRR/EPR directly
+              off Earth Engine imagery. Re-enable by uncommenting this button
+              and the matching card block below.
+              <button
+                type="button"
+                className={`toggle-btn ${uploadType === "satellite" ? "active" : ""}`}
+                onClick={() => setUploadType("satellite")}
+              >
+                <img src="/uploadSatellite.png" alt="" className="toggle-btn-icon" />
+                Satellite Image Upload
+              </button>
+            */}
           </div>
 
           {/* GeoJSON temporarily disabled */}
@@ -456,7 +512,7 @@ export default function DataUpload() {
               </div>
 
               <p className="placeholder-secondary" style={{ margin: '0 0 16px' }}>
-                Generate NDWI imagery from Google Earth Engine using a bounding box and year, then download and upload it in the Satellite Image Upload Tab.
+                Generate NDWI imagery from Google Earth Engine using a bounding box, then generate a single year or all available years (2015–{new Date().getFullYear()}) at once — each is analyzed and saved automatically, no manual upload step needed.
               </p>
 
               <div className="form-grid" id="ndwi-generator-fields">
@@ -536,15 +592,24 @@ export default function DataUpload() {
                 </div>
               </div>
 
-              <div className="upload-actions" style={{ marginTop: '16px' }}>
+              <div className="upload-actions" style={{ marginTop: '16px', gap: '10px', flexWrap: 'wrap' }}>
                 <button
                   className="btn-upload"
                   id="generate-ndwi-btn"
                   onClick={handleGenerateNDWI}
-                  disabled={ndwiGenerating}
+                  disabled={ndwiGenerating || ndwiBatch.running}
                 >
                   <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiGenerating ? "Generating..." : "Generate NDWI Image"}
+                  {ndwiGenerating ? "Generating..." : "Generate This Year"}
+                </button>
+                <button
+                  className="btn-upload"
+                  id="generate-ndwi-all-years-btn"
+                  onClick={handleGenerateAllYears}
+                  disabled={ndwiGenerating || ndwiBatch.running}
+                >
+                  <img src="/generateNDWI.png" alt="" className="btn-icon" />
+                  {ndwiBatch.running ? "Generating All Years..." : `Generate All Years (2015–${new Date().getFullYear()})`}
                 </button>
               </div>
 
@@ -555,28 +620,18 @@ export default function DataUpload() {
               {ndwiResult && (
                 <div className="result-card result-success" style={{ marginTop: '12px' }}>
                   <div className="result-body">
-                    <p><strong>File ready:</strong> {ndwiResult.fileName}</p>
-                    <p>
-                      <a
-                        href={`${API_BASE_URL}${ndwiResult.downloadUrl}`}
-                        download
-                        style={{ color: '#0077B6', fontWeight: 'bold' }}
-                      >
-                        Download NDWI GeoTIFF
-                      </a>
-                    </p>
-                    <p className="placeholder-secondary">
-                      After downloading, upload this file using the Satellite Image Upload
-                      card to run coastline detection on it.
-                    </p>
+                    <p><strong>{ndwiResult.fileName}</strong> generated and processed successfully.</p>
+                    {ndwiResult.message && <p className="placeholder-secondary">{ndwiResult.message}</p>}
                   </div>
                 </div>
               )}
+
+              {ndwiBatch.status && <NdwiBatchPanel batch={ndwiBatch} />}
             </div>
             )}
 
-            {/* Satellite Image Upload */}
-            {uploadType === "satellite" && (
+            {/* Satellite Image Upload — hidden via SHOW_SATELLITE_UPLOAD, see declaration above */}
+            {SHOW_SATELLITE_UPLOAD && uploadType === "satellite" && (
             <div className="upload-card">
               <div className="upload-card-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -857,6 +912,78 @@ export default function DataUpload() {
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+const NDWI_MIN_YEAR = 2015;
+
+// Inline "Generate All Years" progress panel — the fuller counterpart to the
+// floating NdwiBatchWidget (components/NdwiBatchWidget.jsx), which shows a
+// compact version of the same tracked job anywhere else in the app.
+function NdwiBatchPanel({ batch }) {
+  const { status, running } = batch;
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - NDWI_MIN_YEAR + 1 }, (_, i) => NDWI_MIN_YEAR + i);
+  const failedByYear = new Map((status.failedYears || []).map((f) => [f.year, f.reason]));
+  const completedSet = new Set(status.completedYears || []);
+  const doneCount = completedSet.size + failedByYear.size;
+  const percent = Math.round((doneCount / (status.totalYears || 1)) * 100);
+
+  return (
+    <div className="ndwi-batch-panel" style={{ marginTop: '12px' }}>
+      <div className="ndwi-batch-panel-top">
+        <div className="ndwi-batch-panel-percent">{percent}%</div>
+        <div>
+          <p className="ndwi-batch-panel-headline">
+            {doneCount} of {status.totalYears} years processed
+          </p>
+          <p className="ndwi-batch-panel-subtext">
+            {running
+              ? status.currentYear
+                ? `Currently processing satellite imagery for ${status.currentYear}`
+                : "Starting…"
+              : status.failedYears?.length
+                ? `${status.completedYears.length} succeeded, ${status.failedYears.length} skipped`
+                : "All years processed successfully."}
+          </p>
+        </div>
+      </div>
+
+      <div className="progress-bar-container" style={{ margin: '12px 0' }}>
+        <div className="progress-bar-fill" style={{ width: `${percent}%` }} />
+      </div>
+
+      <div className="ndwi-batch-panel-timeline">
+        {years.map((year) => {
+          const state = completedSet.has(year)
+            ? "done"
+            : failedByYear.has(year)
+              ? "failed"
+              : running && status.currentYear === year
+                ? "current"
+                : "pending";
+          return (
+            <div key={year} className="ndwi-batch-panel-timeline-item" title={failedByYear.get(year) || undefined}>
+              <span className={`ndwi-batch-panel-dot ndwi-batch-panel-dot-${state}`} />
+              <span className="ndwi-batch-panel-year">{year}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {running ? (
+        <p className="ndwi-batch-panel-note">
+          <span className="ndwi-batch-panel-note-icon">✓</span>
+          You can safely navigate to another page. Processing will continue in the background.
+        </p>
+      ) : status.failedYears?.length > 0 && (
+        <ul className="ndwi-batch-panel-skipped">
+          {status.failedYears.map((f) => (
+            <li key={f.year}><strong>{f.year}:</strong> {f.reason}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

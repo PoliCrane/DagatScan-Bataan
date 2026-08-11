@@ -106,11 +106,12 @@ function calculateEPR(coords1, coords2, year1, year2) {
 }
 
 /**
- * EPR via least-squares linear regression over all available years, more
- * accurate than the two-point method above.
+ * Linear Regression Rate (LRR) — fits a least-squares regression line across
+ * every available year, unlike calculateEPR above (which only ever uses the
+ * two endpoint years). More years generally means a more reliable rate.
  * @param {Array<{year: number, value: number}>} dataPoints - one point per year
  */
-function calculateLinearRegressionEPR(dataPoints) {
+function calculateLRR(dataPoints) {
   if (!Array.isArray(dataPoints) || dataPoints.length < 2) {
     throw new Error("At least 2 years of data are required for regression");
   }
@@ -141,6 +142,4 @@ function calculateLinearRegressionEPR(dataPoints) {
   return { slope, intercept, confidence, r2 };
 }
 
-calculateEPR.linearRegression = calculateLinearRegressionEPR;
-
-module.exports = calculateEPR;
+module.exports = { calculateEPR, calculateLRR };

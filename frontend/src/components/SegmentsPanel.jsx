@@ -74,9 +74,9 @@ export default function SegmentsPanel({
                 {segment.name}
               </div>
 
-              <div 
+              <div
                 className="segment-item-badge"
-                style={{ background: riskColor }}
+                style={{ background: `${riskColor}22`, color: riskColor }}
               >
                 {SEGMENT_RISK_LEVELS[segment.risk] || segment.risk}
               </div>
@@ -93,15 +93,6 @@ export default function SegmentsPanel({
                   {segment.erosionRate} {segment.unit}
                 </span>
               </div>
-
-              {segment.eprConfidence != null && (
-                <div className="segment-item-rate">
-                  <span>Confidence:</span>
-                  <span className="segment-item-rate-value">
-                    {Math.round(segment.eprConfidence * 100)}%
-                  </span>
-                </div>
-              )}
 
               {segment.year != null && (
                 <div className="segment-item-rate">

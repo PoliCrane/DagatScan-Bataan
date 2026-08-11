@@ -18,9 +18,9 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
   return areas.map((area, index) => {
     const shoreline = area.coastlinePoints;
     const hasSufficientData = area.hasSufficientData ?? false;
-    // Prefer this area's own regression-based EPR; only fall back to the
+    // Prefer this area's own regression-based LRR; only fall back to the
     // municipality-wide rate when the area itself lacks a computed one.
-    const erosionRate = area.eprRate ?? fallbackErosionRate ?? 0;
+    const erosionRate = area.lrrRate ?? fallbackErosionRate ?? 0;
     const yearsAvailable = area.yearsAvailable || [];
 
     return {
@@ -30,13 +30,13 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
       markerPosition: shoreline[Math.floor(shoreline.length / 2)],
       risk: calculateRiskLevel(erosionRate),
       erosionRate,
-      eprConfidence: area.eprConfidence ?? null,
+      lrrConfidence: area.lrrConfidence ?? null,
       unit: "m/year",
       source: area.sourceType,
       year: area.year,
       yearsAvailable,
       hasSufficientData,
-      // Sufficient-data segments show eprConfidence/year/source as their own
+      // Sufficient-data segments show lrrConfidence/year/source as their own
       // stat rows instead (SegmentsPanel.jsx, coastalmonitoring.jsx) — this
       // stays reserved for the actionable insufficient-data warning.
       description: hasSufficientData
@@ -49,7 +49,7 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
 /**
  * Fetches the satellite-detected coastline area(s) for a municipality, and
  * falls back to a single "Main Coastline" area (using the polygon-derived
- * coastline + a fetched municipality-wide EPR) when no satellite-analyzed
+ * coastline + a fetched municipality-wide LRR) when no satellite-analyzed
  * area exists yet.
  */
 export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyShorelineData) {
@@ -74,20 +74,20 @@ export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyS
   }
 
   const hasSufficientData = yearlyShorelineData.length >= 2;
-  let eprRate = null;
-  let eprConfidence = null;
+  let lrrRate = null;
+  let lrrConfidence = null;
   if (hasSufficientData) {
     try {
-      const eprRes = await fetch(
+      const lrrRes = await fetch(
         `${API_BASE_URL}/api/shoreline/municipality/${encodeURIComponent(municipality)}/epr`
       );
-      if (eprRes.ok) {
-        const eprData = await eprRes.json();
-        eprRate = eprData.epr_rate;
-        eprConfidence = eprData.confidence;
+      if (lrrRes.ok) {
+        const lrrData = await lrrRes.json();
+        lrrRate = lrrData.epr_rate;
+        lrrConfidence = lrrData.confidence;
       }
     } catch (err) {
-      console.warn(`Could not fetch EPR for fallback coastline (${municipality}):`, err.message);
+      console.warn(`Could not fetch LRR for fallback coastline (${municipality}):`, err.message);
     }
   }
 
@@ -96,8 +96,8 @@ export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyS
     coastlinePoints: fallbackShoreline,
     sourceType: "Polygon Boundary",
     hasSufficientData,
-    eprRate,
-    eprConfidence,
+    lrrRate,
+    lrrConfidence,
     yearsAvailable: yearlyShorelineData.map((y) => y.year),
     year: yearlyShorelineData[yearlyShorelineData.length - 1]?.year,
   };

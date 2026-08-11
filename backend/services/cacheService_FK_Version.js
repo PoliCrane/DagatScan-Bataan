@@ -14,7 +14,7 @@
 
 const pool = require("../db");
 const { classifyErosionRisk } = require("./riskClassification");
-const calculateEPR = require("./eprCalculator");
+const { calculateLRR } = require("./eprCalculator");
 
 /**
  * Row predicate for every derived erosion computation in this file:
@@ -374,15 +374,15 @@ async function getMunicipalitySummary(municipalityId) {
 }
 
 /**
- * Recomputes each of a municipality's coastal_areas' EPR regression
- * (projected_epr, epr_confidence, risk_level) eagerly at write time so read
+ * Recomputes each of a municipality's coastal_areas' LRR regression
+ * (projected_lrr, lrr_confidence, risk_level) eagerly at write time so read
  * routes can just SELECT instead of recomputing per request. Recomputes all
  * areas rather than tracking which one changed — regression is cheap and
  * municipalities have few areas. Scoped to active satellite data only
  * (activeSatelliteZones), matching municipality_analysis_cache's risk_level.
  * History is fetched in one batched query across areas; UPDATEs stay per-area.
  */
-async function recomputeMunicipalityAreaEPR(municipalityId) {
+async function recomputeMunicipalityAreaLRR(municipalityId) {
   const areasResult = await pool.query(
     `SELECT id FROM coastal_areas WHERE municipality_id = $1`,
     [municipalityId]
@@ -412,22 +412,22 @@ async function recomputeMunicipalityAreaEPR(municipalityId) {
     const history = historyByArea.get(areaId);
 
     if (history.length >= 2) {
-      const regression = calculateEPR.linearRegression(history);
-      const projectedEpr = parseFloat(regression.slope.toFixed(4));
-      const eprConfidence = parseFloat(regression.confidence.toFixed(2));
-      const riskLevel = classifyErosionRisk(projectedEpr);
+      const regression = calculateLRR(history);
+      const projectedLrr = parseFloat(regression.slope.toFixed(4));
+      const lrrConfidence = parseFloat(regression.confidence.toFixed(2));
+      const riskLevel = classifyErosionRisk(projectedLrr);
 
       await pool.query(
         `UPDATE coastal_areas
-         SET projected_epr = $1, epr_confidence = $2, risk_level = $3, epr_calculated_at = NOW()
+         SET projected_lrr = $1, lrr_confidence = $2, risk_level = $3, lrr_calculated_at = NOW()
          WHERE id = $4`,
-        [projectedEpr, eprConfidence, riskLevel, areaId]
+        [projectedLrr, lrrConfidence, riskLevel, areaId]
       );
     } else {
       // Below the 2-year regression threshold — clear any previously-computed value.
       await pool.query(
         `UPDATE coastal_areas
-         SET projected_epr = NULL, epr_confidence = NULL, risk_level = NULL, epr_calculated_at = NULL
+         SET projected_lrr = NULL, lrr_confidence = NULL, risk_level = NULL, lrr_calculated_at = NULL
          WHERE id = $1`,
         [areaId]
       );
@@ -435,10 +435,10 @@ async function recomputeMunicipalityAreaEPR(municipalityId) {
   }
 }
 
-// Refreshes all derived values for one municipality: per-area EPR/risk and
+// Refreshes all derived values for one municipality: per-area LRR/risk and
 // its municipality_analysis_cache row.
 async function refreshMunicipalityDerived(municipalityId) {
-  await recomputeMunicipalityAreaEPR(municipalityId);
+  await recomputeMunicipalityAreaLRR(municipalityId);
   await computeAndStoreMunicipalityAnalysis(municipalityId);
 }
 
@@ -476,7 +476,7 @@ module.exports = {
   invalidateMunicipalityCache,
   invalidateAllCaches,
   refreshMunicipalityDerived,
-  recomputeMunicipalityAreaEPR,
+  recomputeMunicipalityAreaLRR,
   calculateLineStringLength,
   getMunicipalityId,
 };
