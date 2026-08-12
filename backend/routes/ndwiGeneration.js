@@ -5,12 +5,12 @@ const router = express.Router();
 const fs = require("fs");
 const pool = require("../db");
 const { generateNDWIGeoTIFF } = require("../services/earthEngineService");
-const { runNdwiBatch, MIN_YEAR } = require("../services/ndwiBatchWorker");
 const { processSatelliteImageFile } = require("./uploadManagement");
-const { getOrCreateMunicipalityId } = require("../services/municipalities");
 const { invalidateMunicipalityCache } = require("../services/cacheService_FK_Version");
 const { logAction } = require("../services/auditLog");
 const { verifyToken, verifyAdmin } = require("../middleware/auth");
+
+const MIN_YEAR = 2015; // Sentinel-2 launch year
 
 function parseBounds(body) {
   const { lonMin, latMin, lonMax, latMax } = body;
@@ -112,82 +112,6 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
   } catch (err) {
     console.error("NDWI generation error:", err);
     res.status(500).json({ error: err.message || "NDWI generation failed" });
-  }
-});
-
-// Kicks off a multi-year batch (2015-current year) for the same bbox/area,
-// fire-and-forget — responds immediately with a job id rather than blocking
-// for however long the whole batch takes (potentially over an hour).
-router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const { municipality, specificArea } = req.body;
-    const { bounds, error: boundsError } = parseBounds(req.body);
-    if (boundsError) return res.status(400).json({ error: boundsError });
-
-    if (!municipality || !specificArea) {
-      return res.status(400).json({ error: "municipality and specificArea are required" });
-    }
-
-    const municipalityId = await getOrCreateMunicipalityId(pool, municipality);
-
-    const totalYears = new Date().getFullYear() - MIN_YEAR + 1;
-
-    const jobResult = await pool.query(
-      `INSERT INTO ndwi_batch_jobs (municipality_id, bounds, specific_area, requested_by, status, total_years)
-       VALUES ($1, $2, $3, $4, 'pending', $5)
-       RETURNING id`,
-      [municipalityId, JSON.stringify(bounds), specificArea, req.user.id, totalYears]
-    );
-    const jobId = jobResult.rows[0].id;
-
-    res.json({ jobId, totalYears });
-
-    // Not awaited — the batch runs in the background after this response.
-    runNdwiBatch(jobId).catch((err) => {
-      console.error(`NDWI batch job ${jobId} crashed:`, err.message);
-    });
-  } catch (err) {
-    console.error("NDWI batch start error:", err);
-    res.status(500).json({ error: err.message || "Failed to start NDWI batch" });
-  }
-});
-
-// Signals ndwiBatchWorker.js's loop to stop before starting its next year —
-// can't interrupt a year already mid-processing, only pre-empt the next one.
-router.post("/generate-ndwi-batch/:jobId/cancel", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const result = await pool.query(
-      `UPDATE ndwi_batch_jobs SET cancel_requested = true WHERE id = $1 AND status = 'running' RETURNING id`,
-      [req.params.jobId]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Batch job not found or not currently running" });
-    }
-    res.json({ ok: true });
-  } catch (err) {
-    console.error("NDWI batch cancel error:", err);
-    res.status(500).json({ error: "Failed to cancel batch" });
-  }
-});
-
-// Polled by the frontend to show batch progress.
-router.get("/generate-ndwi-batch/:jobId", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT * FROM ndwi_batch_jobs WHERE id = $1`, [req.params.jobId]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Batch job not found" });
-    }
-    const job = result.rows[0];
-    res.json({
-      status: job.status,
-      totalYears: job.total_years,
-      completedYears: job.completed_years,
-      failedYears: job.failed_years,
-      currentYear: job.current_year,
-    });
-  } catch (err) {
-    console.error("NDWI batch status error:", err);
-    res.status(500).json({ error: "Failed to fetch batch status" });
   }
 });
 

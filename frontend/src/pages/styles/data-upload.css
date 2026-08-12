@@ -742,20 +742,8 @@
   animation: slideIn 0.3s ease-out;
 }
 
-/* Inline "Generate All Years" progress panel — see NdwiBatchPanel in
-   DataUpload.jsx. The floating NdwiBatchWidget (ndwi-batch-widget.css)
-   mirrors the same job in a compact form on every other page. */
-.ndwi-batch-panel {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 16px;
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Single-year generation's progress feedback — same card language as
-   .ndwi-batch-panel above, but purely local/visual (no tracked job behind
-   it, since one year is far shorter than the full batch). */
+/* Single-year generation's progress card — icon badge + headline/subtext,
+   same visual language the old multi-year batch panel used. */
 .ndwi-single-progress {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -764,87 +752,39 @@
   animation: slideIn 0.3s ease-out;
 }
 
-.ndwi-single-progress-text {
-  margin: 0 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.ndwi-batch-panel-top {
+.ndwi-single-progress-top {
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-bottom: 12px;
 }
 
-.ndwi-batch-panel-percent {
-  font-size: 28px;
-  font-weight: 800;
-  color: #0077b6;
-  min-width: 64px;
+.ndwi-single-progress-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
-.ndwi-batch-panel-headline {
+.ndwi-single-progress-headline {
   margin: 0;
   font-size: 14px;
   font-weight: 700;
   color: #0f172a;
 }
 
-.ndwi-batch-panel-subtext {
+.ndwi-single-progress-subtext {
   margin: 2px 0 0;
   font-size: 13px;
   color: #64748b;
 }
 
-.ndwi-batch-panel-timeline {
-  display: flex;
-  justify-content: space-between;
-  gap: 4px;
-  overflow-x: auto;
-  padding-top: 4px;
-}
-
-.ndwi-batch-panel-timeline-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  min-width: 28px;
-}
-
-.ndwi-batch-panel-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #cbd5e1;
-}
-
-.ndwi-batch-panel-dot-done {
-  background: #0077b6;
-}
-
-.ndwi-batch-panel-dot-current {
-  background: #0096c7;
-  animation: ndwiDotPulse 1.2s ease-in-out infinite;
-}
-
-.ndwi-batch-panel-dot-failed {
-  background: #ef4444;
-}
-
-@keyframes ndwiDotPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 150, 199, 0.5); }
-  50% { box-shadow: 0 0 0 5px rgba(0, 150, 199, 0); }
-}
-
-.ndwi-batch-panel-year {
-  font-size: 10px;
-  color: #94a3b8;
-  white-space: nowrap;
-}
-
-.ndwi-batch-panel-note {
+.ndwi-single-progress-note {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -857,7 +797,7 @@
   color: #166534;
 }
 
-.ndwi-batch-panel-note-icon {
+.ndwi-single-progress-note-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -868,29 +808,4 @@
   color: #fff;
   font-size: 11px;
   flex-shrink: 0;
-}
-
-.ndwi-batch-panel-cancel-btn {
-  margin-top: 10px;
-  padding: 8px 14px;
-  background: #fff;
-  border: 1.5px solid #fca5a5;
-  color: #dc2626;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.ndwi-batch-panel-cancel-btn:hover {
-  background: #fef2f2;
-}
-
-.ndwi-batch-panel-skipped {
-  margin: 14px 0 0;
-  padding-left: 18px;
-  font-size: 13px;
-  color: #7c2d12;
 }

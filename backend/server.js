@@ -941,16 +941,6 @@ const httpServer = app.listen(PORT, () => {
     }, 10000);
   }
 
-  // Purges finished ndwi_batch_jobs rows older than 30 days — see
-  // services/ndwiBatchCleanup.js for why this exists.
-  const { purgeStaleNdwiBatchJobs } = require('./services/ndwiBatchCleanup');
-  const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
-  setTimeout(() => {
-    purgeStaleNdwiBatchJobs().catch(err => console.error('[ndwiBatchCleanup] Initial purge failed:', err.message));
-    setInterval(() => {
-      purgeStaleNdwiBatchJobs().catch(err => console.error('[ndwiBatchCleanup] Purge failed:', err.message));
-    }, CLEANUP_INTERVAL_MS);
-  }, 15000);
 });
 
 // Satellite uploads run CNN training synchronously (~10 min, pure-JS CPU backend);

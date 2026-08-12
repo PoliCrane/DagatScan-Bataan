@@ -7,7 +7,7 @@ import useGuidedTour from "../../hooks/useGuidedTour";
 import TourInfoButton from "../../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../../tours/pageIds";
 import { buildDataUploadSteps } from "../../tours/steps/dataUploadSteps";
-import { useNdwiBatch } from "../../contexts/NdwiBatchContext";
+import { useNdwiGeneration } from "../../contexts/NdwiGenerationContext";
 
 import { API_BASE_URL } from "../../config/api";
 export default function DataUpload() {
@@ -46,16 +46,15 @@ export default function DataUpload() {
   const [ndwiCoastlineName, setNdwiCoastlineName] = useState("");
   // Validation errors only (checked before any request is sent) — the
   // actual generation's in-flight/result/error state lives in
-  // NdwiBatchContext (ndwiBatch.singleYear) instead, below.
+  // NdwiGenerationContext (ndwiGeneration.singleYear) instead, below.
   const [ndwiError, setNdwiError] = useState(null);
 
-  // Both single-year and multi-year batch generation are tracked app-wide by
-  // NdwiBatchContext (see contexts/NdwiBatchContext.jsx) so their progress
-  // survives navigating away from this page — see the floating widget in
-  // App.jsx for the persistent view of the same state, and so a second click
-  // from another page can't start a duplicate request on top of one still
-  // running.
-  const ndwiBatch = useNdwiBatch();
+  // Single-year generation is tracked app-wide by NdwiGenerationContext (see
+  // contexts/NdwiGenerationContext.jsx) so its progress survives navigating
+  // away from this page — see the floating widget in App.jsx for the
+  // persistent view of the same state, and so a second click from another
+  // page can't start a duplicate request on top of one still running.
+  const ndwiGeneration = useNdwiGeneration();
 
   // Location & Metadata Fields
   const [municipality, setMunicipality] = useState("Balanga");
@@ -288,7 +287,7 @@ export default function DataUpload() {
     }
     const { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } = bounds;
 
-    const result = await ndwiBatch.startSingleYear({
+    const result = await ndwiGeneration.startSingleYear({
       lonMin: lonMinParsed,
       latMin: latMinParsed,
       lonMax: lonMaxParsed,
@@ -301,30 +300,8 @@ export default function DataUpload() {
 
     if (result.success) {
       await showSuccess(result.message || "NDWI generated and processed successfully.");
-    }
-  };
-
-  const handleGenerateAllYears = async () => {
-    setNdwiError(null);
-
-    const { error, bounds } = validateAndParseNdwiInputs();
-    if (error) {
-      setNdwiError(error);
-      return;
-    }
-    const { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } = bounds;
-
-    try {
-      await ndwiBatch.startBatch({
-        lonMin: lonMinParsed,
-        latMin: latMinParsed,
-        lonMax: lonMaxParsed,
-        latMax: latMaxParsed,
-        municipality: ndwiMunicipality,
-        specificArea: ndwiCoastlineName,
-      });
-    } catch (err) {
-      setNdwiError(err.message || "Failed to start batch generation");
+    } else if (result.error) {
+      await showError(result.error);
     }
   };
 
@@ -493,7 +470,7 @@ export default function DataUpload() {
               </div>
 
               <p className="placeholder-secondary" style={{ margin: '0 0 16px' }}>
-                Generate NDWI imagery from Google Earth Engine using a bounding box, then generate a single year or all available years (2015–{new Date().getFullYear()}) at once — each is analyzed and saved automatically, no manual upload step needed.
+                Generate NDWI imagery from Google Earth Engine using a bounding box, then generate a single year (2015–{new Date().getFullYear()}) — it's analyzed and saved automatically, no manual upload step needed.
               </p>
 
               <div className="form-grid" id="ndwi-generator-fields">
@@ -586,47 +563,48 @@ export default function DataUpload() {
                   className="btn-upload"
                   id="generate-ndwi-btn"
                   onClick={handleGenerateNDWI}
-                  disabled={ndwiBatch.singleYear.generating || ndwiBatch.running}
+                  disabled={ndwiGeneration.singleYear.generating}
                 >
                   <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiBatch.singleYear.generating ? "Generating..." : "Generate & Upload Selected Year"}
-                </button>
-                <button
-                  className="btn-upload"
-                  id="generate-ndwi-all-years-btn"
-                  onClick={handleGenerateAllYears}
-                  disabled={ndwiBatch.singleYear.generating || ndwiBatch.running}
-                >
-                  <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiBatch.running ? "Generating All Years..." : `Generate & Upload All Years (2015–${new Date().getFullYear()})`}
+                  {ndwiGeneration.singleYear.generating ? "Generating..." : "Generate & Upload Selected Year"}
                 </button>
               </div>
 
-              {ndwiBatch.singleYear.generating && (
+              {ndwiGeneration.singleYear.generating && (
                 <div className="ndwi-single-progress" style={{ marginTop: '12px' }}>
-                  <p className="ndwi-single-progress-text">
-                    Generating and analyzing imagery for {ndwiBatch.singleYear.year}… this can take up to a minute.
-                  </p>
+                  <div className="ndwi-single-progress-top">
+                    <div className="ndwi-single-progress-icon">⏳</div>
+                    <div>
+                      <p className="ndwi-single-progress-headline">
+                        Generating NDWI for {ndwiGeneration.singleYear.year}
+                      </p>
+                      <p className="ndwi-single-progress-subtext">
+                        Analyzing satellite imagery… this can take up to a minute.
+                      </p>
+                    </div>
+                  </div>
                   <div className="progress-bar-container">
                     <div className="progress-bar-fill progress-bar-indeterminate" />
                   </div>
+                  <p className="ndwi-single-progress-note">
+                    <span className="ndwi-single-progress-note-icon">✓</span>
+                    You can safely navigate to another page — we'll show a confirmation when it's done.
+                  </p>
                 </div>
               )}
 
-              {(ndwiError || ndwiBatch.singleYear.error) && (
-                <p className="error-text" style={{ marginTop: '12px' }}>{ndwiError || ndwiBatch.singleYear.error}</p>
+              {(ndwiError || ndwiGeneration.singleYear.error) && (
+                <p className="error-text" style={{ marginTop: '12px' }}>{ndwiError || ndwiGeneration.singleYear.error}</p>
               )}
 
-              {ndwiBatch.singleYear.result && (
+              {ndwiGeneration.singleYear.result && (
                 <div className="result-card result-success" style={{ marginTop: '12px' }}>
                   <div className="result-body">
-                    <p><strong>{ndwiBatch.singleYear.result.fileName}</strong> generated and processed successfully.</p>
-                    {ndwiBatch.singleYear.result.message && <p className="placeholder-secondary">{ndwiBatch.singleYear.result.message}</p>}
+                    <p><strong>{ndwiGeneration.singleYear.result.fileName}</strong> generated and processed successfully.</p>
+                    {ndwiGeneration.singleYear.result.message && <p className="placeholder-secondary">{ndwiGeneration.singleYear.result.message}</p>}
                   </div>
                 </div>
               )}
-
-              {ndwiBatch.status && <NdwiBatchPanel batch={ndwiBatch} />}
             </div>
             )}
 
@@ -912,83 +890,6 @@ export default function DataUpload() {
         </div>
       </div>
     </AdminLayout>
-  );
-}
-
-const NDWI_MIN_YEAR = 2015;
-
-// Inline "Generate All Years" progress panel — the fuller counterpart to the
-// floating NdwiBatchWidget (components/NdwiBatchWidget.jsx), which shows a
-// compact version of the same tracked job anywhere else in the app.
-function NdwiBatchPanel({ batch }) {
-  const { status, running, cancelBatch } = batch;
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - NDWI_MIN_YEAR + 1 }, (_, i) => NDWI_MIN_YEAR + i);
-  const failedByYear = new Map((status.failedYears || []).map((f) => [f.year, f.reason]));
-  const completedSet = new Set(status.completedYears || []);
-  const doneCount = completedSet.size + failedByYear.size;
-  const percent = Math.round((doneCount / (status.totalYears || 1)) * 100);
-
-  return (
-    <div className="ndwi-batch-panel" style={{ marginTop: '12px' }}>
-      <div className="ndwi-batch-panel-top">
-        <div className="ndwi-batch-panel-percent">{percent}%</div>
-        <div>
-          <p className="ndwi-batch-panel-headline">
-            {doneCount} of {status.totalYears} years processed
-          </p>
-          <p className="ndwi-batch-panel-subtext">
-            {running
-              ? status.currentYear
-                ? `Currently processing satellite imagery for ${status.currentYear}`
-                : "Starting…"
-              : status.failedYears?.length
-                ? `${status.completedYears.length} succeeded, ${status.failedYears.length} skipped`
-                : "All years processed successfully."}
-          </p>
-        </div>
-      </div>
-
-      <div className="progress-bar-container" style={{ margin: '12px 0' }}>
-        <div className="progress-bar-fill" style={{ width: `${percent}%` }} />
-      </div>
-
-      <div className="ndwi-batch-panel-timeline">
-        {years.map((year) => {
-          const state = completedSet.has(year)
-            ? "done"
-            : failedByYear.has(year)
-              ? "failed"
-              : running && status.currentYear === year
-                ? "current"
-                : "pending";
-          return (
-            <div key={year} className="ndwi-batch-panel-timeline-item" title={failedByYear.get(year) || undefined}>
-              <span className={`ndwi-batch-panel-dot ndwi-batch-panel-dot-${state}`} />
-              <span className="ndwi-batch-panel-year">{year}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {running ? (
-        <>
-          <p className="ndwi-batch-panel-note">
-            <span className="ndwi-batch-panel-note-icon">✓</span>
-            You can safely navigate to another page. Processing will continue in the background.
-          </p>
-          <button type="button" className="ndwi-batch-panel-cancel-btn" onClick={cancelBatch}>
-            Cancel batch
-          </button>
-        </>
-      ) : status.failedYears?.length > 0 && (
-        <ul className="ndwi-batch-panel-skipped">
-          {status.failedYears.map((f) => (
-            <li key={f.year}><strong>{f.year}:</strong> {f.reason}</li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 }
 
