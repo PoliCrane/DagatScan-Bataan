@@ -35,6 +35,17 @@ let initPromise = null;
 // a dead promise.
 const EE_INIT_TIMEOUT_MS = 25000;
 
+// getDownloadURL/getThumbURL (Earth Engine's export-prep step) and the
+// actual file download were both discovered to have zero timeout — same
+// class of bug as EE_INIT_TIMEOUT_MS above, just further down the same call
+// chain. A stall in either hangs generateNDWIGeoTIFF/generateTrueColorImage
+// forever with nothing logged (nothing here runs inside an HTTP request
+// whose own timeout could catch it — the batch worker calls this from a
+// fire-and-forget background loop). Generous but bounded so a genuinely
+// slow-but-working export doesn't get killed unnecessarily.
+const EE_EXPORT_TIMEOUT_MS = 90000;
+const DOWNLOAD_TIMEOUT_MS = 60000;
+
 function initEE() {
   if (initialized) return Promise.resolve();
   if (initPromise) return initPromise;
@@ -88,10 +99,22 @@ function initEE() {
   return initPromise;
 }
 
+// getDownloadURL/getThumbURL are opaque Earth Engine SDK callbacks — there's
+// no request/socket handle to set a timeout on directly (unlike
+// downloadToFile below), so this just stops waiting on our side; the EE-side
+// operation may continue regardless, but the caller (a batch year, or a
+// single generation request) is freed to fail cleanly instead of hanging.
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms)),
+  ]);
+}
+
 function downloadToFile(url, destPath) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(destPath);
-    https.get(url, (response) => {
+    const request = https.get(url, (response) => {
       if (response.statusCode !== 200) {
         file.close();
         fs.unlink(destPath, () => {});
@@ -100,7 +123,15 @@ function downloadToFile(url, destPath) {
       }
       response.pipe(file);
       file.on('finish', () => file.close(() => resolve()));
-    }).on('error', (err) => {
+    });
+    // setTimeout here fires on socket inactivity (no data for this long),
+    // not a hard cap on total download time — destroy() aborts the
+    // in-flight connection (not just our own wait) and triggers the
+    // 'error' handler below with a clear message.
+    request.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
+      request.destroy(new Error(`Earth Engine file download timed out after ${DOWNLOAD_TIMEOUT_MS / 1000}s`));
+    });
+    request.on('error', (err) => {
       fs.unlink(destPath, () => {});
       reject(err);
     });
@@ -140,7 +171,7 @@ async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coast
   const nir = composite.select('B8');
   const ndwi = green.subtract(nir).divide(green.add(nir)).rename('NDWI').clip(geometry);
 
-  const downloadUrl = await new Promise((resolve, reject) => {
+  const downloadUrl = await withTimeout(new Promise((resolve, reject) => {
     ndwi.getDownloadURL(
       {
         name: `NDWI_${coastlineName}_${year}`,
@@ -157,7 +188,7 @@ async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coast
         else resolve(url);
       }
     );
-  });
+  }), EE_EXPORT_TIMEOUT_MS, `Earth Engine export timed out after ${EE_EXPORT_TIMEOUT_MS / 1000}s`);
 
   if (!fs.existsSync(NDWI_OUTPUT_DIR)) fs.mkdirSync(NDWI_OUTPUT_DIR, { recursive: true });
 
@@ -184,7 +215,7 @@ async function generateTrueColorImage({ lonMin, latMin, lonMax, latMax, year, de
 
   const rgb = composite.visualize({ bands: ['B4', 'B3', 'B2'], min: 0, max: 3000, gamma: 1.4 });
 
-  const thumbUrl = await new Promise((resolve, reject) => {
+  const thumbUrl = await withTimeout(new Promise((resolve, reject) => {
     rgb.getThumbURL(
       {
         region: geometry,
@@ -197,7 +228,7 @@ async function generateTrueColorImage({ lonMin, latMin, lonMax, latMax, year, de
         else resolve(url);
       }
     );
-  });
+  }), EE_EXPORT_TIMEOUT_MS, `Earth Engine thumbnail export timed out after ${EE_EXPORT_TIMEOUT_MS / 1000}s`);
 
   const destDir = path.dirname(destPath);
   if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
