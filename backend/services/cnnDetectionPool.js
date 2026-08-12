@@ -53,8 +53,10 @@ function spawnChild() {
     }
   });
 
-  child.on("exit", (code) => {
-    console.warn(`[cnnDetectionPool] Child process exited (code ${code}) — falling back to synchronous in-process detection for the rest of this server's uptime`);
+  child.on("exit", (code, signal) => {
+    // signal (e.g. SIGKILL) is what shows up for an OOM-killed process —
+    // code alone would just be null in that case, hiding the real cause.
+    console.warn(`[cnnDetectionPool] Child process exited (code=${code}, signal=${signal}) — falling back to synchronous in-process detection for the rest of this server's uptime`);
     ready = false;
     child = null;
     rejectAllPending("CNN detection child process exited");
@@ -105,6 +107,13 @@ async function detectCoastlineInSubprocess(imagePath) {
     } catch (err) {
       console.warn(`[cnnDetectionPool] Subprocess detection failed (${err.message}), falling back to synchronous in-process detection for this request`);
     }
+  } else {
+    // Previously silent — this is the "child was never ready / already dead"
+    // case, distinct from "child was healthy but this one request failed"
+    // above. Without this log, a permanently-dead child was indistinguishable
+    // from the intended fast path except by noticing imageCNNDetection.js's
+    // own startup log printing again mid-request.
+    console.warn(`[cnnDetectionPool] Child process not available (ready=${ready}, child=${!!child}) — using synchronous in-process detection for this request`);
   }
 
   const { detectCoastlineWithCNN } = require("./imageCNNDetection");
