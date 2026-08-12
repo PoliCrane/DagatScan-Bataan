@@ -44,14 +44,17 @@ export default function DataUpload() {
   const [ndwiLatMax, setNdwiLatMax] = useState("");
   const [ndwiYear, setNdwiYear] = useState(new Date().getFullYear().toString());
   const [ndwiCoastlineName, setNdwiCoastlineName] = useState("");
-  const [ndwiGenerating, setNdwiGenerating] = useState(false);
-  const [ndwiResult, setNdwiResult] = useState(null);
+  // Validation errors only (checked before any request is sent) — the
+  // actual generation's in-flight/result/error state lives in
+  // NdwiBatchContext (ndwiBatch.singleYear) instead, below.
   const [ndwiError, setNdwiError] = useState(null);
 
-  // Multi-year batch generation (2015 -> current year) is tracked app-wide
-  // by NdwiBatchContext (see contexts/NdwiBatchContext.jsx) so its progress
+  // Both single-year and multi-year batch generation are tracked app-wide by
+  // NdwiBatchContext (see contexts/NdwiBatchContext.jsx) so their progress
   // survives navigating away from this page — see the floating widget in
-  // App.jsx for the persistent view of the same job.
+  // App.jsx for the persistent view of the same state, and so a second click
+  // from another page can't start a duplicate request on top of one still
+  // running.
   const ndwiBatch = useNdwiBatch();
 
   // Location & Metadata Fields
@@ -273,7 +276,6 @@ export default function DataUpload() {
 
   const handleGenerateNDWI = async () => {
     setNdwiError(null);
-    setNdwiResult(null);
 
     if (!ndwiYear) {
       setNdwiError("Year is required");
@@ -286,45 +288,24 @@ export default function DataUpload() {
     }
     const { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } = bounds;
 
-    setNdwiGenerating(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/generate-ndwi`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          lonMin: lonMinParsed,
-          latMin: latMinParsed,
-          lonMax: lonMaxParsed,
-          latMax: latMaxParsed,
-          year: ndwiYear,
-          coastlineName: ndwiCoastlineName,
-          municipality: ndwiMunicipality,
-          specificArea: ndwiCoastlineName,
-        }),
-      });
+    const result = await ndwiBatch.startSingleYear({
+      lonMin: lonMinParsed,
+      latMin: latMinParsed,
+      lonMax: lonMaxParsed,
+      latMax: latMaxParsed,
+      year: ndwiYear,
+      coastlineName: ndwiCoastlineName,
+      municipality: ndwiMunicipality,
+      specificArea: ndwiCoastlineName,
+    });
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        setNdwiError(data.error || data.message || "NDWI generation failed");
-        return;
-      }
-
-      setNdwiResult(data);
-      await showSuccess(data.message || "NDWI generated and processed successfully.");
-    } catch (err) {
-      setNdwiError(err.message || "Network error while generating NDWI");
-    } finally {
-      setNdwiGenerating(false);
+    if (result.success) {
+      await showSuccess(result.message || "NDWI generated and processed successfully.");
     }
   };
 
   const handleGenerateAllYears = async () => {
     setNdwiError(null);
-    setNdwiResult(null);
 
     const { error, bounds } = validateAndParseNdwiInputs();
     if (error) {
@@ -605,26 +586,26 @@ export default function DataUpload() {
                   className="btn-upload"
                   id="generate-ndwi-btn"
                   onClick={handleGenerateNDWI}
-                  disabled={ndwiGenerating || ndwiBatch.running}
+                  disabled={ndwiBatch.singleYear.generating || ndwiBatch.running}
                 >
                   <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiGenerating ? "Generating..." : "Generate & Upload Selected Year"}
+                  {ndwiBatch.singleYear.generating ? "Generating..." : "Generate & Upload Selected Year"}
                 </button>
                 <button
                   className="btn-upload"
                   id="generate-ndwi-all-years-btn"
                   onClick={handleGenerateAllYears}
-                  disabled={ndwiGenerating || ndwiBatch.running}
+                  disabled={ndwiBatch.singleYear.generating || ndwiBatch.running}
                 >
                   <img src="/generateNDWI.png" alt="" className="btn-icon" />
                   {ndwiBatch.running ? "Generating All Years..." : `Generate & Upload All Years (2015–${new Date().getFullYear()})`}
                 </button>
               </div>
 
-              {ndwiGenerating && (
+              {ndwiBatch.singleYear.generating && (
                 <div className="ndwi-single-progress" style={{ marginTop: '12px' }}>
                   <p className="ndwi-single-progress-text">
-                    Generating and analyzing imagery for {ndwiYear}… this can take up to a minute.
+                    Generating and analyzing imagery for {ndwiBatch.singleYear.year}… this can take up to a minute.
                   </p>
                   <div className="progress-bar-container">
                     <div className="progress-bar-fill progress-bar-indeterminate" />
@@ -632,15 +613,15 @@ export default function DataUpload() {
                 </div>
               )}
 
-              {ndwiError && (
-                <p className="error-text" style={{ marginTop: '12px' }}>{ndwiError}</p>
+              {(ndwiError || ndwiBatch.singleYear.error) && (
+                <p className="error-text" style={{ marginTop: '12px' }}>{ndwiError || ndwiBatch.singleYear.error}</p>
               )}
 
-              {ndwiResult && (
+              {ndwiBatch.singleYear.result && (
                 <div className="result-card result-success" style={{ marginTop: '12px' }}>
                   <div className="result-body">
-                    <p><strong>{ndwiResult.fileName}</strong> generated and processed successfully.</p>
-                    {ndwiResult.message && <p className="placeholder-secondary">{ndwiResult.message}</p>}
+                    <p><strong>{ndwiBatch.singleYear.result.fileName}</strong> generated and processed successfully.</p>
+                    {ndwiBatch.singleYear.result.message && <p className="placeholder-secondary">{ndwiBatch.singleYear.result.message}</p>}
                   </div>
                 </div>
               )}

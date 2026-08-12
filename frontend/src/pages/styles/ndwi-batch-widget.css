@@ -112,6 +112,19 @@
   transition: width 0.3s ease;
 }
 
+/* Single-year generation has no year-count to show real progress against —
+   sweeps back and forth instead of sitting at a false fixed width. */
+.ndwi-widget-progress-fill.ndwi-widget-progress-indeterminate {
+  width: 40%;
+  animation: ndwiWidgetProgressSweep 1.2s ease-in-out infinite;
+}
+
+@keyframes ndwiWidgetProgressSweep {
+  0% { margin-left: 0%; }
+  50% { margin-left: 60%; }
+  100% { margin-left: 0%; }
+}
+
 .ndwi-widget-actions {
   display: flex;
   gap: 8px;

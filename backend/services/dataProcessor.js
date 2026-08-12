@@ -351,9 +351,6 @@ async function processSatelliteImageWithAnalysis(imagePath, metadata = {}) {
       pixelToGeo,
     } = require("./imageGeoreference");
     const {
-      detectCoastlineWithCNN,
-    } = require("./imageCNNDetection");
-    const {
       compareWithReferenceCoastline,
       extractZoneMetrics,
       assessQuality,
@@ -369,9 +366,13 @@ async function processSatelliteImageWithAnalysis(imagePath, metadata = {}) {
       };
     }
 
-    // Step 2: Detect coastline using CNN (U-Net Lite, self-supervised)
+    // Step 2: Detect coastline using CNN (U-Net Lite, self-supervised) — run
+    // in a separate child process (cnnDetectionPool.js) so its ~30s model.fit
+    // doesn't block the main server; falls back to the synchronous in-process
+    // path automatically if that process is ever unavailable.
     const { COASTLINE_GRID_SIZE } = require('./imageCNNDetection');
-    const detection = await detectCoastlineWithCNN(imagePath);
+    const { detectCoastlineInSubprocess } = require('./cnnDetectionPool');
+    const detection = await detectCoastlineInSubprocess(imagePath);
     if (!detection.valid) {
       return {
         valid: false,

@@ -33,6 +33,10 @@ const { loginLimiter, passwordResetLimiter, accountRequestLimiter } = require(".
 const { logAction } = require("./services/auditLog");
 
 const app = express();
+// Render sits one reverse-proxy hop in front of this app and sets
+// X-Forwarded-For — without this, express-rate-limit can't safely trust
+// that header to identify real clients and throws on every request.
+app.set("trust proxy", 1);
 // Render (and most PaaS hosts) assign a dynamic port via this env var and
 // only route traffic there — falls back to 5000 for local dev.
 const PORT = process.env.PORT || 5000;
@@ -919,8 +923,12 @@ app.get("/api/health", (req, res) => {
 
 const httpServer = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  const { initCNNModel } = require('./services/imageCNNDetection');
-  initCNNModel().catch(err => console.warn('[CNN] Pre-warm skipped:', err.message));
+  // CNN detection runs in its own child process (cnnDetectionPool.js) so
+  // its ~30s-per-image model.fit can't block this process's event loop —
+  // spawned here to warm up before the first real upload, same as the old
+  // in-process initCNNModel() pre-warm did.
+  const { initCNNDetectionPool } = require('./services/cnnDetectionPool');
+  initCNNDetectionPool();
 
   // Uploaded files (GeoJSON/satellite images/request letters) get mirrored
   // to Supabase Storage on a timer rather than inline during upload — see

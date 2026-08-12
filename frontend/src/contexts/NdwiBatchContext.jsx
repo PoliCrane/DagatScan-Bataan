@@ -24,6 +24,15 @@ export function NdwiBatchProvider({ children }) {
   const [minimized, setMinimized] = useState(false);
   const intervalRef = useRef(null);
 
+  // Single-year generation ("Generate This Year") has no server-side job to
+  // poll — it's one direct request/response — but tracking it here (instead
+  // of as page-local state in DataUpload.jsx) means it survives navigating
+  // away and back, and a second click from another page can't start a
+  // duplicate request on top of one still running. Doesn't survive a hard
+  // refresh (unlike the batch above) — a real reload genuinely aborts any
+  // in-flight fetch, and there's no server-side job id to resume polling.
+  const [singleYear, setSingleYear] = useState({ generating: false, year: null, result: null, error: null });
+
   const clearPolling = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -97,6 +106,39 @@ export function NdwiBatchProvider({ children }) {
     return data;
   }, [beginPolling]);
 
+  // Runs the actual fetch here (not in DataUpload.jsx) so it lives in this
+  // provider's closure — mounted once in App.jsx, above the router, so the
+  // request keeps running and updating shared state no matter which page
+  // is active when it resolves.
+  const startSingleYear = useCallback(async (payload) => {
+    setSingleYear({ generating: true, year: payload.year, result: null, error: null });
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/generate-ndwi`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        const errorMessage = data.error || data.message || "NDWI generation failed";
+        setSingleYear({ generating: false, year: payload.year, result: null, error: errorMessage });
+        return { success: false, error: errorMessage };
+      }
+
+      setSingleYear({ generating: false, year: payload.year, result: data, error: null });
+      return data;
+    } catch (err) {
+      const errorMessage = err.message || "Network error while generating NDWI";
+      setSingleYear({ generating: false, year: payload.year, result: null, error: errorMessage });
+      return { success: false, error: errorMessage };
+    }
+  }, []);
+
   // Best-effort — doesn't optimistically flip local state, the next poll
   // tick (already running every 3s) reflects whatever the server actually
   // did. Can only pre-empt the *next* year the worker was about to start,
@@ -127,7 +169,7 @@ export function NdwiBatchProvider({ children }) {
 
   return (
     <NdwiBatchContext.Provider
-      value={{ jobId, status, running, minimized, startBatch, dismiss, toggleMinimized, cancelBatch }}
+      value={{ jobId, status, running, minimized, startBatch, dismiss, toggleMinimized, cancelBatch, singleYear, startSingleYear }}
     >
       {children}
     </NdwiBatchContext.Provider>
