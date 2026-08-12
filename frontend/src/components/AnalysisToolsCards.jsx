@@ -22,10 +22,11 @@ export default function AnalysisToolsCards({
 
   const BASE_YEAR = new Date().getFullYear();
 
-  // Historical years for comparison — 2010 through the current year, so
-  // this never needs a manual yearly edit.
-  const historicalYears = Array.from({ length: BASE_YEAR - 2010 + 1 }, (_, i) => {
-    const year = 2010 + i;
+  // Historical years for comparison — 2015 (Sentinel-2/Earth Engine's
+  // earliest available year, same MIN_YEAR used by the NDWI pipeline)
+  // through the current year, so this never needs a manual yearly edit.
+  const historicalYears = Array.from({ length: BASE_YEAR - 2015 + 1 }, (_, i) => {
+    const year = 2015 + i;
     return { value: year.toString(), label: year === BASE_YEAR ? `${year} (Current)` : year.toString() };
   });
 

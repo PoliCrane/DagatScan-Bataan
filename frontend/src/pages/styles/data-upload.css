@@ -753,6 +753,24 @@
   animation: slideIn 0.3s ease-out;
 }
 
+/* Single-year generation's progress feedback — same card language as
+   .ndwi-batch-panel above, but purely local/visual (no tracked job behind
+   it, since one year is far shorter than the full batch). */
+.ndwi-single-progress {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.ndwi-single-progress-text {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
 .ndwi-batch-panel-top {
   display: flex;
   align-items: center;

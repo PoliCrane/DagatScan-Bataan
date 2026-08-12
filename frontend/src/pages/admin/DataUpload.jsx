@@ -588,6 +588,14 @@ export default function DataUpload() {
                     municipality={ndwiMunicipality}
                     value={ndwiCoastlineName}
                     onChange={setNdwiCoastlineName}
+                    onAreaSelect={(area) => {
+                      if (!area.bounds) return;
+                      const { north, south, east, west } = area.bounds;
+                      if (north != null) setNdwiLatMax(String(north));
+                      if (south != null) setNdwiLatMin(String(south));
+                      if (east != null) setNdwiLonMax(String(east));
+                      if (west != null) setNdwiLonMin(String(west));
+                    }}
                   />
                 </div>
               </div>
@@ -600,7 +608,7 @@ export default function DataUpload() {
                   disabled={ndwiGenerating || ndwiBatch.running}
                 >
                   <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiGenerating ? "Generating..." : "Generate This Year"}
+                  {ndwiGenerating ? "Generating..." : "Generate & Upload Selected Year"}
                 </button>
                 <button
                   className="btn-upload"
@@ -609,9 +617,20 @@ export default function DataUpload() {
                   disabled={ndwiGenerating || ndwiBatch.running}
                 >
                   <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiBatch.running ? "Generating All Years..." : `Generate All Years (2015–${new Date().getFullYear()})`}
+                  {ndwiBatch.running ? "Generating All Years..." : `Generate & Upload All Years (2015–${new Date().getFullYear()})`}
                 </button>
               </div>
+
+              {ndwiGenerating && (
+                <div className="ndwi-single-progress" style={{ marginTop: '12px' }}>
+                  <p className="ndwi-single-progress-text">
+                    Generating and analyzing imagery for {ndwiYear}… this can take up to a minute.
+                  </p>
+                  <div className="progress-bar-container">
+                    <div className="progress-bar-fill progress-bar-indeterminate" />
+                  </div>
+                </div>
+              )}
 
               {ndwiError && (
                 <p className="error-text" style={{ marginTop: '12px' }}>{ndwiError}</p>
@@ -995,7 +1014,7 @@ function NdwiBatchPanel({ batch }) {
 // Shared by the Satellite card's "Specific Area" and the NDWI card's
 // "Coastline Name" — both need the same "pick an existing coastal_areas
 // name for this municipality, or type a new one" behavior.
-function AreaNameField({ municipality, value, onChange }) {
+function AreaNameField({ municipality, value, onChange, onAreaSelect }) {
   const [areas, setAreas] = useState([]);
   const [otherSelected, setOtherSelected] = useState(false);
 
@@ -1042,6 +1061,12 @@ function AreaNameField({ municipality, value, onChange }) {
     } else {
       setOtherSelected(false);
       onChange(selected);
+      // A newly-typed ("Others") area has no bounds on file yet — only a
+      // known existing area (found in the fetched list) has one to offer.
+      if (onAreaSelect) {
+        const area = areas.find((a) => a.name === selected);
+        if (area) onAreaSelect(area);
+      }
     }
   };
 

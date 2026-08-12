@@ -7,7 +7,10 @@ const pool = new Pool({
   host: process.env.DB_HOST || "localhost",
   database: process.env.DB_NAME || "db_coastalerosion",
   password: process.env.DB_PASSWORD || "admin123",
-  port: process.env.DB_PORT || 5432
+  port: process.env.DB_PORT || 5432,
+  // Without this, a request made while the pool (default max: 10) is fully
+  // checked out hangs indefinitely instead of failing with a clear error.
+  connectionTimeoutMillis: 10000,
 });
 
 // Without this, an idle-client hiccup emits an unhandled 'error' event that crashes the process.

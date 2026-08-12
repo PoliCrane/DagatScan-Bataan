@@ -822,8 +822,12 @@ router.get("/municipality/:municipality/areas", async (req, res) => {
   try {
     const { municipality } = req.params;
 
+    // bounds: the area's most recently uploaded image bounds, if any — lets
+    // the frontend pre-fill a new NDWI generation's bounds when an admin
+    // picks an existing area instead of typing coordinates from scratch.
     const result = await pool.query(
-      `SELECT ca.id, ca.name
+      `SELECT ca.id, ca.name,
+              (SELECT bounds FROM satellite_imagery WHERE area_id = ca.id ORDER BY year DESC LIMIT 1) AS bounds
        FROM coastal_areas ca
        JOIN municipalities m ON m.id = ca.municipality_id
        WHERE LOWER(m.name) = LOWER($1)
