@@ -923,12 +923,8 @@ app.get("/api/health", (req, res) => {
 
 const httpServer = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  // CNN detection runs in its own child process (cnnDetectionPool.js) so
-  // its ~30s-per-image model.fit can't block this process's event loop —
-  // spawned here to warm up before the first real upload, same as the old
-  // in-process initCNNModel() pre-warm did.
-  const { initCNNDetectionPool } = require('./services/cnnDetectionPool');
-  initCNNDetectionPool();
+  const { initCNNModel } = require('./services/imageCNNDetection');
+  initCNNModel().catch(err => console.warn('[CNN] Pre-warm skipped:', err.message));
 
   // Uploaded files (GeoJSON/satellite images/request letters) get mirrored
   // to Supabase Storage on a timer rather than inline during upload — see

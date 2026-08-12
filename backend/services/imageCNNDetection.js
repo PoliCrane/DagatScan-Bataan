@@ -340,7 +340,21 @@ async function classifyWithCNN(inputData3ch, pseudoLabels, size) {
   let mask;
   try {
     const epochs = 200; // native tfjs-node backend: ~140ms/epoch at 256px, so 200 epochs is still only ~30s
-    const history = await model.fit(xTrain, yTrain, { epochs, batchSize: 1, verbose: 0 });
+    const history = await model.fit(xTrain, yTrain, {
+      epochs,
+      batchSize: 1,
+      verbose: 0,
+      // fit() awaits this between every epoch — yields the event loop so
+      // other pending work (other requests' I/O callbacks) gets a chance to
+      // run instead of this ~30s staying one uninterrupted block. Doesn't
+      // make training itself non-blocking (each epoch is still ~140ms of
+      // real CPU work), just caps the longest possible freeze at one epoch.
+      callbacks: {
+        onEpochEnd: async () => {
+          await new Promise((resolve) => setImmediate(resolve));
+        },
+      },
+    });
     const loss = history.history.loss[history.history.loss.length - 1];
     console.log(`[Detection] CNN fine-tuned on this image (${size}px, ${epochs} epochs) — loss: ${loss.toFixed(4)}`);
     await saveModel(model);
