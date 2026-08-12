@@ -9,6 +9,7 @@ const { runNdwiBatch, MIN_YEAR } = require("../services/ndwiBatchWorker");
 const { processSatelliteImageFile } = require("./uploadManagement");
 const { getOrCreateMunicipalityId } = require("../services/municipalities");
 const { invalidateMunicipalityCache } = require("../services/cacheService_FK_Version");
+const { logAction } = require("../services/auditLog");
 const { verifyToken, verifyAdmin } = require("../middleware/auth");
 
 function parseBounds(body) {
@@ -34,7 +35,7 @@ function parseBounds(body) {
 // satellite upload uses — no download/re-upload step.
 router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { year, coastlineName, municipality, specificArea } = req.body;
+    const { year, coastlineName, municipality, specificArea, isReupload } = req.body;
 
     const { bounds, error: boundsError } = parseBounds(req.body);
     if (boundsError) return res.status(400).json({ error: boundsError });
@@ -84,6 +85,21 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
       } catch (err) {
         console.error("Cache invalidation failed after NDWI generation:", err.message);
       }
+
+      // Neither this route nor processSatelliteImageFile logged anything
+      // before — only the old manual-upload route handler did, and this
+      // path never goes through it. isReupload distinguishes a Reupload
+      // (DataManagement.jsx) from a fresh "Generate This Year" so Audit
+      // Trail can show them as distinct actions.
+      logAction(null, {
+        actor: req.user,
+        action: isReupload ? "ndwi_reupload" : "ndwi_generated",
+        category: "data",
+        severity: "normal",
+        targetType: "upload_history",
+        targetId: result.uploadId,
+        details: { municipality, year: yearNum, specific_area: specificArea },
+      });
     }
 
     res.json({
@@ -133,6 +149,24 @@ router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) =
   } catch (err) {
     console.error("NDWI batch start error:", err);
     res.status(500).json({ error: err.message || "Failed to start NDWI batch" });
+  }
+});
+
+// Signals ndwiBatchWorker.js's loop to stop before starting its next year —
+// can't interrupt a year already mid-processing, only pre-empt the next one.
+router.post("/generate-ndwi-batch/:jobId/cancel", verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `UPDATE ndwi_batch_jobs SET cancel_requested = true WHERE id = $1 AND status = 'running' RETURNING id`,
+      [req.params.jobId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Batch job not found or not currently running" });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("NDWI batch cancel error:", err);
+    res.status(500).json({ error: "Failed to cancel batch" });
   }
 });
 

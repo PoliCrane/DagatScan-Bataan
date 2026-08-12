@@ -11,6 +11,7 @@ const fs = require("fs");
 const path = require("path");
 const pool = require("../db");
 const { uploadLocalFile } = require("./supabaseStorage");
+const { thumbnailPathFor } = require("./thumbnailGenerator");
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
 const REQUEST_LETTERS_DIR = path.join(UPLOAD_DIR, "request-letters");
@@ -85,6 +86,27 @@ async function syncPendingFilesToStorage() {
     } catch (err) {
       failed++;
       console.error(`[storageSync] account_requests id=${row.id}:`, err.message);
+    }
+  }
+
+  // 4. upload_history thumbnails — the source .tif above is durable once
+  // synced, but the browser-viewable preview PNG (thumbnailGenerator.js)
+  // lives next to it on the same ephemeral local disk and was never covered
+  // by the sync above, so it still vanished on every Render redeploy.
+  const pendingThumbnails = await pool.query(
+    `SELECT id, file_path FROM upload_history
+     WHERE thumbnail_storage_url IS NULL AND file_path IS NOT NULL AND process_status != 'Failed'`
+  );
+  for (const row of pendingThumbnails.rows) {
+    const thumbPath = thumbnailPathFor(row.file_path);
+    if (!fs.existsSync(thumbPath)) continue;
+    try {
+      const url = await uploadOnce(thumbPath);
+      await pool.query(`UPDATE upload_history SET thumbnail_storage_url = $1 WHERE id = $2`, [url, row.id]);
+      synced++;
+    } catch (err) {
+      failed++;
+      console.error(`[storageSync] upload_history thumbnail id=${row.id}:`, err.message);
     }
   }
 

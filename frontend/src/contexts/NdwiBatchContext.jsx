@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "../config/api";
 
-const TERMINAL_STATUSES = ["complete", "complete_with_errors", "failed"];
+const TERMINAL_STATUSES = ["complete", "complete_with_errors", "failed", "cancelled"];
 const STORAGE_KEY = "ndwiBatchJobId";
 const POLL_INTERVAL_MS = 3000;
 
@@ -97,6 +97,23 @@ export function NdwiBatchProvider({ children }) {
     return data;
   }, [beginPolling]);
 
+  // Best-effort — doesn't optimistically flip local state, the next poll
+  // tick (already running every 3s) reflects whatever the server actually
+  // did. Can only pre-empt the *next* year the worker was about to start,
+  // not one already mid-processing.
+  const cancelBatch = useCallback(async () => {
+    if (!jobId) return;
+    const token = localStorage.getItem("token");
+    try {
+      await fetch(`${API_BASE_URL}/api/generate-ndwi-batch/${jobId}/cancel`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {
+      // Transient network hiccup — the next poll tick will show the real state regardless.
+    }
+  }, [jobId]);
+
   const dismiss = useCallback(() => {
     clearPolling();
     localStorage.removeItem(STORAGE_KEY);
@@ -110,7 +127,7 @@ export function NdwiBatchProvider({ children }) {
 
   return (
     <NdwiBatchContext.Provider
-      value={{ jobId, status, running, minimized, startBatch, dismiss, toggleMinimized }}
+      value={{ jobId, status, running, minimized, startBatch, dismiss, toggleMinimized, cancelBatch }}
     >
       {children}
     </NdwiBatchContext.Provider>

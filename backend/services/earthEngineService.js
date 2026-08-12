@@ -27,11 +27,19 @@ const NDWI_OUTPUT_DIR = path.join(__dirname, '../uploads/ndwi');
 let initialized = false;
 let initPromise = null;
 
+// No timeout on ee.data.authenticateViaPrivateKey/ee.initialize's network
+// calls to Google, combined with server.js disabling Node's own request
+// timeout, meant a stuck auth call hung the caller forever with no visible
+// error. This bounds it — and resets initPromise on any failure (timeout or
+// real) so the next call gets a fresh attempt instead of being stuck reusing
+// a dead promise.
+const EE_INIT_TIMEOUT_MS = 25000;
+
 function initEE() {
   if (initialized) return Promise.resolve();
   if (initPromise) return initPromise;
 
-  initPromise = new Promise((resolve, reject) => {
+  const authPromise = new Promise((resolve, reject) => {
     if (!fs.existsSync(KEY_PATH)) {
       reject(new Error(
         `Earth Engine service account key not found at ${KEY_PATH}. ` +
@@ -63,6 +71,18 @@ function initEE() {
       },
       (err) => reject(new Error(`Earth Engine authentication failed: ${err}`))
     );
+  });
+
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(
+      `Earth Engine initialization timed out after ${EE_INIT_TIMEOUT_MS / 1000}s — the server may be unable ` +
+      `to reach Google's Earth Engine API (network/egress issue), or the request is unusually slow. Try again in a moment.`
+    )), EE_INIT_TIMEOUT_MS);
+  });
+
+  initPromise = Promise.race([authPromise, timeoutPromise]).catch((err) => {
+    initPromise = null;
+    throw err;
   });
 
   return initPromise;

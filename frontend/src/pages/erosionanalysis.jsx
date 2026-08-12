@@ -852,9 +852,6 @@ export default function ErosionAnalysis() {
                           <>
                             <div className="ea-popup-rate">
                               LRR: {segment.erosionRate?.toFixed(2)} {segment.unit}
-                              {segment.lrrConfidence != null && (
-                                <span className="ea-popup-confidence"> (confidence {(segment.lrrConfidence * 100).toFixed(0)}%)</span>
-                              )}
                             </div>
                             <div className="ea-popup-years">
                               <svg className="ea-popup-calendar-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

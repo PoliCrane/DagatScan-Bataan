@@ -6,7 +6,10 @@ const TERMINAL_LABELS = {
   complete: { title: "Batch complete", icon: "✓" },
   complete_with_errors: { title: "Batch complete (with skips)", icon: "!" },
   failed: { title: "Batch failed", icon: "✕" },
+  cancelled: { title: "Batch cancelled", icon: "⊘" },
 };
+
+const DATA_UPLOAD_PATH = "/admin/data-upload";
 
 /**
  * Floating progress card for the "Generate All Years" NDWI batch job.
@@ -15,7 +18,7 @@ const TERMINAL_LABELS = {
  * resumes it after a hard refresh.
  */
 export default function NdwiBatchWidget() {
-  const { status, running, minimized, dismiss, toggleMinimized } = useNdwiBatch();
+  const { status, running, minimized, dismiss, toggleMinimized, cancelBatch } = useNdwiBatch();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,18 +29,24 @@ export default function NdwiBatchWidget() {
   const percent = Math.round((doneCount / totalYears) * 100);
   const terminal = TERMINAL_LABELS[status.status];
 
+  // The inline panel on Data Upload itself already shows full progress —
+  // the floating widget would be redundant clutter there, so it's always
+  // shown minimized (as the small pill) on that page specifically,
+  // regardless of the manual minimize toggle. Full card everywhere else.
+  const isOnDataUploadPage = location.pathname === DATA_UPLOAD_PATH;
+  const effectiveMinimized = minimized || isOnDataUploadPage;
+
   const handleViewDetails = () => {
-    if (location.pathname !== "/admin/data-upload") {
-      navigate("/admin/data-upload");
-    }
+    if (!isOnDataUploadPage) navigate(DATA_UPLOAD_PATH);
   };
 
-  if (minimized) {
+  if (effectiveMinimized) {
     return (
       <button
         type="button"
         className="ndwi-widget-pill"
         onClick={toggleMinimized}
+        disabled={isOnDataUploadPage}
         title="NDWI generation progress"
       >
         <img src="/NDWI.png" alt="" className="ndwi-widget-pill-icon" />
@@ -53,8 +62,16 @@ export default function NdwiBatchWidget() {
           <img src="/NDWI.png" alt="" className="ndwi-widget-header-icon" />
           <span>{terminal ? terminal.title : "NDWI generation"}</span>
         </div>
-        <button type="button" className="ndwi-widget-close" onClick={dismiss} aria-label="Dismiss">
-          ×
+        {/* While running: X minimizes (the batch keeps going in the
+            background). Once finished: nothing left to cancel, so X goes
+            back to dismissing the card entirely. */}
+        <button
+          type="button"
+          className="ndwi-widget-close"
+          onClick={running ? toggleMinimized : dismiss}
+          aria-label={running ? "Minimize" : "Dismiss"}
+        >
+          {running ? "–" : "×"}
         </button>
       </div>
 
@@ -78,10 +95,16 @@ export default function NdwiBatchWidget() {
       </div>
 
       <div className="ndwi-widget-actions">
-        <button type="button" className="ndwi-widget-btn-outline" onClick={toggleMinimized}>
-          Minimize
-        </button>
-        <button type="button" className="ndwi-widget-btn-solid" onClick={handleViewDetails}>
+        {running ? (
+          <button type="button" className="ndwi-widget-btn-outline ndwi-widget-btn-cancel" onClick={cancelBatch}>
+            Cancel
+          </button>
+        ) : (
+          <button type="button" className="ndwi-widget-btn-outline" onClick={toggleMinimized}>
+            Minimize
+          </button>
+        )}
+        <button type="button" className="ndwi-widget-btn-solid" onClick={handleViewDetails} disabled={isOnDataUploadPage}>
           View details
         </button>
       </div>

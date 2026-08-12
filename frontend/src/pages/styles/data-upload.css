@@ -852,6 +852,24 @@
   flex-shrink: 0;
 }
 
+.ndwi-batch-panel-cancel-btn {
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1.5px solid #fca5a5;
+  color: #dc2626;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ndwi-batch-panel-cancel-btn:hover {
+  background: #fef2f2;
+}
+
 .ndwi-batch-panel-skipped {
   margin: 14px 0 0;
   padding-left: 18px;

@@ -342,6 +342,24 @@
   color: #b54708;
 }
 
+/* Area-level LRR confidence — flagged red below 50% so a low-confidence
+   area's rows are easy to spot at a glance (the fix is reuploading a year
+   for that area, .dm-reupload-btn in the same row). */
+.dm-confidence-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.dm-confidence-badge.low {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 .dm-empty-row td {
   text-align: center;
   color: #98a2b3;

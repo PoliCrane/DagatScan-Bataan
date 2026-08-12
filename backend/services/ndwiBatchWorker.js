@@ -18,6 +18,7 @@ const pool = require("../db");
 const { generateNDWIGeoTIFF } = require("./earthEngineService");
 const { processSatelliteImageFile } = require("../routes/uploadManagement");
 const { invalidateMunicipalityCache } = require("./cacheService_FK_Version");
+const { logAction } = require("./auditLog");
 
 const MIN_YEAR = 2015;
 
@@ -56,8 +57,18 @@ async function runNdwiBatch(jobId) {
 
   const completed = [];
   const failed = [];
+  let cancelled = false;
 
   for (const year of years) {
+    // Checked before starting each year rather than mid-year — a year
+    // already generating/processing can't be cleanly interrupted, so the
+    // earliest a cancel can take effect is the next one.
+    const cancelCheck = await pool.query(`SELECT cancel_requested FROM ndwi_batch_jobs WHERE id = $1`, [jobId]);
+    if (cancelCheck.rows[0]?.cancel_requested) {
+      cancelled = true;
+      break;
+    }
+
     await updateJob(jobId, { current_year: year });
 
     let client;
@@ -107,9 +118,35 @@ async function runNdwiBatch(jobId) {
     }
   }
 
-  const finalStatus = failed.length === 0 ? "complete" : completed.length > 0 ? "complete_with_errors" : "failed";
+  const finalStatus = cancelled
+    ? "cancelled"
+    : failed.length === 0 ? "complete" : completed.length > 0 ? "complete_with_errors" : "failed";
   await updateJob(jobId, { status: finalStatus, current_year: null, completed_at: new Date() });
   console.log(`NDWI batch job ${jobId} finished: ${finalStatus} (${completed.length} succeeded, ${failed.length} failed)`);
+
+  // Neither processSatelliteImageFile nor this worker logged anything before
+  // — only the old manual-upload route handler did, and this path never
+  // goes through it. One entry per batch (not per-year) to avoid flooding
+  // Audit Trail with up to 12 rows for a single "Generate All Years" click.
+  if (completed.length > 0 || failed.length > 0) {
+    try {
+      const userResult = await pool.query(`SELECT username, roles FROM users WHERE id = $1`, [job.requested_by]);
+      const user = userResult.rows[0];
+      if (user) {
+        logAction(null, {
+          actor: { id: job.requested_by, username: user.username, roles: user.roles },
+          action: "ndwi_batch_completed",
+          category: "data",
+          severity: "normal",
+          targetType: "ndwi_batch_jobs",
+          targetId: jobId,
+          details: { municipality: municipalityName, completed: completed.length, failed: failed.length, years: completed, status: finalStatus },
+        });
+      }
+    } catch (err) {
+      console.error(`NDWI batch job ${jobId}: audit log failed:`, err.message);
+    }
+  }
 }
 
 module.exports = { runNdwiBatch, MIN_YEAR };

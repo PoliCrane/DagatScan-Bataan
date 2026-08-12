@@ -28,6 +28,14 @@ const formatRole = (role) => {
   return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
+// thumbnail_url is either a durable, already-absolute Supabase Storage URL,
+// or (fallback, local dev / not-yet-synced) a root-relative local path that
+// needs the backend's own origin prefixed.
+const resolveThumbUrl = (thumbnailUrl) => {
+  if (!thumbnailUrl) return null;
+  return thumbnailUrl.startsWith("http") ? thumbnailUrl : `${API_BASE}${thumbnailUrl}`;
+};
+
 export default function DataManagement() {
   const navigate = useNavigate();
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DATA_MANAGEMENT, dataManagementSteps);
@@ -153,22 +161,28 @@ export default function DataManagement() {
 
   // First fetch per area/year is a live multi-second Earth Engine query;
   // loading state is scoped to this row's button so the table stays usable.
+  // Backend now times out its own Earth Engine init after 25s — this is
+  // defense-in-depth so the button never hangs forever even if something
+  // else in the chain gets stuck.
   const handleViewSatelliteImagery = async (dataset) => {
     setLoadingImageryId(dataset.id);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
         `${API_BASE}/api/admin/uploads/${dataset.id}/satellite-imagery`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal }
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Failed to fetch satellite imagery");
 
       window.open(`${API_BASE}${data.url}`, "_blank", "noopener,noreferrer");
     } catch (err) {
-      await showError(err.message);
+      await showError(err.name === "AbortError" ? "Request timed out — please try again." : err.message);
       console.error("Error fetching satellite imagery:", err);
     } finally {
+      clearTimeout(timeoutId);
       setLoadingImageryId(null);
     }
   };
@@ -204,6 +218,7 @@ export default function DataManagement() {
           coastlineName: dataset.coastal_area,
           municipality: dataset.municipality,
           specificArea: dataset.coastal_area,
+          isReupload: true,
         }),
       });
       const data = await response.json();
@@ -412,13 +427,14 @@ export default function DataManagement() {
                   <th>Uploaded By</th>
                   <th>Upload Date</th>
                   <th>Status</th>
+                  <th>Confidence</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.length === 0 ? (
                   <tr className="dm-empty-row">
-                    <td colSpan={7}>
+                    <td colSpan={8}>
                       {datasets.length === 0
                         ? "No datasets have been uploaded yet."
                         : "No datasets match the selected filters."}
@@ -427,7 +443,7 @@ export default function DataManagement() {
                 ) : (
                   pageRows.map((d) => {
                     const uploaded = formatUploadDate(d.created_at);
-                    const thumb = d.thumbnail_url ? `${API_BASE}${d.thumbnail_url}` : null;
+                    const thumb = resolveThumbUrl(d.thumbnail_url);
                     return (
                       <tr key={d.id} className={`dm-row ${!d.active ? "inactive" : ""}`}>
                         <td>
@@ -464,6 +480,18 @@ export default function DataManagement() {
                           <span className={`dm-status-badge ${d.active ? "active" : "inactive"}`}>
                             {d.active ? "Active" : "Inactive"}
                           </span>
+                        </td>
+                        <td>
+                          {d.confidence != null ? (
+                            <span
+                              className={`dm-confidence-badge ${parseFloat(d.confidence) < 0.5 ? "low" : ""}`}
+                              title="Area-level LRR regression confidence — same value for every year of this area"
+                            >
+                              {Math.round(parseFloat(d.confidence) * 100)}%
+                            </span>
+                          ) : (
+                            <span className="dm-confidence-badge">—</span>
+                          )}
                         </td>
                         <td>
                           <div className="action-icons">

@@ -921,7 +921,7 @@ const NDWI_MIN_YEAR = 2015;
 // floating NdwiBatchWidget (components/NdwiBatchWidget.jsx), which shows a
 // compact version of the same tracked job anywhere else in the app.
 function NdwiBatchPanel({ batch }) {
-  const { status, running } = batch;
+  const { status, running, cancelBatch } = batch;
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - NDWI_MIN_YEAR + 1 }, (_, i) => NDWI_MIN_YEAR + i);
   const failedByYear = new Map((status.failedYears || []).map((f) => [f.year, f.reason]));
@@ -972,10 +972,15 @@ function NdwiBatchPanel({ batch }) {
       </div>
 
       {running ? (
-        <p className="ndwi-batch-panel-note">
-          <span className="ndwi-batch-panel-note-icon">✓</span>
-          You can safely navigate to another page. Processing will continue in the background.
-        </p>
+        <>
+          <p className="ndwi-batch-panel-note">
+            <span className="ndwi-batch-panel-note-icon">✓</span>
+            You can safely navigate to another page. Processing will continue in the background.
+          </p>
+          <button type="button" className="ndwi-batch-panel-cancel-btn" onClick={cancelBatch}>
+            Cancel batch
+          </button>
+        </>
       ) : status.failedYears?.length > 0 && (
         <ul className="ndwi-batch-panel-skipped">
           {status.failedYears.map((f) => (

@@ -982,9 +982,14 @@ router.get("/", async (req, res) => {
     // can_deactivate: only true for satellite uploads with an area_id — rows without
     // one are superseded re-uploads whose data no longer exists anywhere.
     // has_bounds: whether a true-color Earth Engine fetch is possible for this area/year.
+    // confidence: coastal_areas.lrr_confidence — a per-AREA value (how well
+    // the area's overall regression fits), not per-year, so every row for
+    // the same area shows the same number. Surfaced so an admin can spot a
+    // low-confidence area and reupload a year to improve its fit.
     let query = `SELECT uh.*,
                         m.name AS municipality,
                         ca.name AS coastal_area,
+                        ca.lrr_confidence AS confidence,
                         u.username AS uploaded_by,
                         u.roles AS uploaded_by_role,
                         (uh.area_id IS NOT NULL AND uh.upload_type = 'Satellite_Image') AS can_deactivate,
@@ -1043,7 +1048,10 @@ router.get("/", async (req, res) => {
     res.json({
       uploads: result.rows.map((row) => ({
         ...row,
-        thumbnail_url: computeThumbnailUrl(row.file_path),
+        // Prefers the durable Supabase URL (survives a Render redeploy) —
+        // falls back to the local path for dev, or the ~5-minute window
+        // before storageSync.js catches up on a freshly-generated thumbnail.
+        thumbnail_url: row.thumbnail_storage_url || computeThumbnailUrl(row.file_path),
       })),
       pagination: {
         total: countResult.rows[0].total,
