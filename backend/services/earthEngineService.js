@@ -4,14 +4,18 @@
  * Queries Sentinel-2 imagery for a bounding box/year, computes NDWI,
  * and exports it as a downloadable single-band GeoTIFF.
  *
- * Auth: service account JSON key file, path from EE_SERVICE_ACCOUNT_KEY_PATH
- * env var, defaulting to backend/config/ee-service-account.json.
+ * Auth: service account JSON key, loaded via loadPrivateKey() below —
+ * either the raw key JSON in EE_SERVICE_ACCOUNT_KEY_JSON (for hosts with no
+ * file-mounting, e.g. Railway), or a file at EE_SERVICE_ACCOUNT_KEY_PATH
+ * (e.g. Render's Secret Files), defaulting to
+ * backend/config/ee-service-account.json.
  *
  * Setup (one-time, done by the admin operating this server):
  *  1. Create a GCP project, enable the Earth Engine API
  *  2. Register the project for Earth Engine access (signup.earthengine.google.com)
  *  3. Create a service account + JSON key, grant it Earth Engine access
- *  4. Place the key at backend/config/ee-service-account.json
+ *  4. Either place the key at backend/config/ee-service-account.json, or set
+ *     its contents directly as EE_SERVICE_ACCOUNT_KEY_JSON
  */
 
 const ee = require('@google/earthengine');
@@ -21,6 +25,25 @@ const https = require('https');
 
 const KEY_PATH = process.env.EE_SERVICE_ACCOUNT_KEY_PATH ||
   path.join(__dirname, '../config/ee-service-account.json');
+
+// Render mounts the key as a Secret File on disk (KEY_PATH above). Railway
+// has no equivalent file-mounting feature, only env vars — so on Railway the
+// raw key JSON is set directly as EE_SERVICE_ACCOUNT_KEY_JSON instead. Tried
+// first since it's the cheaper check; falls through to the file path so
+// Render's existing setup is untouched.
+function loadPrivateKey() {
+  if (process.env.EE_SERVICE_ACCOUNT_KEY_JSON) {
+    return JSON.parse(process.env.EE_SERVICE_ACCOUNT_KEY_JSON);
+  }
+  if (!fs.existsSync(KEY_PATH)) {
+    throw new Error(
+      `Earth Engine service account key not found at ${KEY_PATH}. ` +
+      `Set EE_SERVICE_ACCOUNT_KEY_JSON (raw key JSON) or EE_SERVICE_ACCOUNT_KEY_PATH ` +
+      `(path to the key file), or place the key at backend/config/ee-service-account.json.`
+    );
+  }
+  return JSON.parse(fs.readFileSync(KEY_PATH, 'utf8'));
+}
 
 const NDWI_OUTPUT_DIR = path.join(__dirname, '../uploads/ndwi');
 
@@ -51,19 +74,11 @@ function initEE() {
   if (initPromise) return initPromise;
 
   const authPromise = new Promise((resolve, reject) => {
-    if (!fs.existsSync(KEY_PATH)) {
-      reject(new Error(
-        `Earth Engine service account key not found at ${KEY_PATH}. ` +
-        `Set EE_SERVICE_ACCOUNT_KEY_PATH or place the key at backend/config/ee-service-account.json.`
-      ));
-      return;
-    }
-
     let privateKey;
     try {
-      privateKey = JSON.parse(fs.readFileSync(KEY_PATH, 'utf8'));
+      privateKey = loadPrivateKey();
     } catch (e) {
-      reject(new Error(`Failed to parse Earth Engine service account key: ${e.message}`));
+      reject(new Error(`Failed to load Earth Engine service account key: ${e.message}`));
       return;
     }
 
