@@ -23,7 +23,7 @@ export function buildDataUploadSteps(setUploadType) {
       placement: "center",
       title: "Welcome to Data Upload",
       content:
-        "The Data Upload page allows administrators to generate NDWI (Normalized Difference Water Index) satellite imagery for coastal erosion analysis. Enter a bounding box, municipality, and coastline name, then generate a single year — the image is automatically analyzed and saved, with no separate upload step required. You can continue this guide by clicking the 'Next' button or close it at any time. To reopen the guide, simply click the Information (i) icon available on the page.",
+        "The Data Upload page allows administrators to generate NDWI (Normalized Difference Water Index) satellite imagery for coastal erosion analysis. Enter a bounding box, municipality, and coastline name, then generate a single year or all available years at once — each image is automatically analyzed and saved, with no separate upload step required. You can continue this guide by clicking the 'Next' button or close it at any time. To reopen the guide, simply click the Information (i) icon available on the page.",
     },
     {
       target: "#ndwi-generator-fields",
@@ -40,6 +40,14 @@ export function buildDataUploadSteps(setUploadType) {
       before: scrollNdwiTargetIntoView(setUploadType, "#generate-ndwi-btn"),
       content:
         "Enter a Year, then click Generate This Year. The image is generated and automatically analyzed for shoreline data in one step — a confirmation message appears once it's done.",
+    },
+    {
+      target: "#generate-ndwi-all-years-btn",
+      placement: "top",
+      title: "Generate All Years",
+      before: scrollNdwiTargetIntoView(setUploadType, "#generate-ndwi-all-years-btn"),
+      content:
+        "Click Generate All Years to process every available year (2015 to present) for this area in one go. This runs in the background — a progress bar shows how many years are complete, and a summary appears once the batch finishes, including any years that were skipped and why. Feeding more years into the system makes the projected Linear Regression Rate (LRR) more statistically reliable.",
     },
     {
       target: "body",

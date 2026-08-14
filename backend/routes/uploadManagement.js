@@ -15,9 +15,24 @@ const { getOrCreateMunicipalityId } = require("../services/municipalities");
 const { generateThumbnail, thumbnailPathFor } = require("../services/thumbnailGenerator");
 const { extractGeoreference } = require("../services/imageGeoreference");
 const { logAction } = require("../services/auditLog");
+const { scheduleSync } = require("../services/storageSync");
 // Router is mounted behind verifyToken + verifyAdmin in server.js; the two
 // mutating routes below additionally require superadmin, applied per-route.
 const { verifySuperadmin } = require("../middleware/auth");
+
+// Triggers a debounced Supabase Storage sync after any successful mutating
+// request on this router, instead of relying solely on a timed poll — see
+// storageSync.js. Coarse-grained on purpose: cheaper to occasionally
+// schedule a sync that finds nothing pending than to track every individual
+// insert site (this file alone has 9 of them).
+router.use((req, res, next) => {
+  if (req.method !== "GET") {
+    res.on("finish", () => {
+      if (res.statusCode < 400) scheduleSync();
+    });
+  }
+  next();
+});
 const {
   parseGeoJSON,
   parseCSV,

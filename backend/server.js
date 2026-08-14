@@ -31,6 +31,7 @@ const { verifyToken, verifyAdmin, verifySuperadmin } = require("./middleware/aut
 const { uploadRequestLetter } = require("./config/multer");
 const { loginLimiter, passwordResetLimiter, accountRequestLimiter } = require("./middleware/rateLimiters");
 const { logAction } = require("./services/auditLog");
+const { syncPendingFilesToStorage, scheduleSync } = require("./services/storageSync");
 
 const app = express();
 // Render sits one reverse-proxy hop in front of this app and sets
@@ -151,6 +152,7 @@ app.post(
         [username, email, municipality_id, contact_number, position, req.file.filename, additional_remarks || null]
       );
 
+      scheduleSync();
       res.json({
         message: "Account request submitted. An administrator will review it before you can log in.",
         requestId: newRequest.rows[0].id,
@@ -927,17 +929,22 @@ const httpServer = app.listen(PORT, () => {
   initCNNModel().catch(err => console.warn('[CNN] Pre-warm skipped:', err.message));
 
   // Uploaded files (GeoJSON/satellite images/request letters) get mirrored
-  // to Supabase Storage on a timer rather than inline during upload — see
-  // services/storageSync.js for why. Skipped entirely when Supabase isn't
-  // configured (e.g. local dev without those env vars set).
+  // to Supabase Storage — see services/storageSync.js for why. Primarily
+  // event-driven now (scheduleSync(), called from the upload routes and the
+  // batch worker) rather than polled, so a host with scale-to-zero (e.g.
+  // Railway Serverless) can actually sleep between uploads instead of a
+  // constant timer resetting its idle clock. This is just a daily
+  // safety-net sweep for anything a scheduleSync() call might have missed —
+  // 24h is far above any sleep-trigger threshold, so it doesn't defeat the
+  // point. Skipped entirely when Supabase isn't configured (e.g. local dev
+  // without those env vars set).
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    const { syncPendingFilesToStorage } = require('./services/storageSync');
-    const SYNC_INTERVAL_MS = 5 * 60 * 1000;
+    const SAFETY_NET_INTERVAL_MS = 24 * 60 * 60 * 1000;
     setTimeout(() => {
       syncPendingFilesToStorage().catch(err => console.error('[storageSync] Initial sync failed:', err.message));
       setInterval(() => {
-        syncPendingFilesToStorage().catch(err => console.error('[storageSync] Sync failed:', err.message));
-      }, SYNC_INTERVAL_MS);
+        syncPendingFilesToStorage().catch(err => console.error('[storageSync] Safety-net sync failed:', err.message));
+      }, SAFETY_NET_INTERVAL_MS);
     }, 10000);
   }
 

@@ -124,6 +124,16 @@ const describeLog = (log) => {
           : rawFallbackTarget(log),
         detail: d.year ? `Year ${d.year} reuploaded` : rawFallbackDetail(d),
       };
+    case "ndwi_batch_completed":
+      return {
+        target: d.municipality || rawFallbackTarget(log),
+        detail:
+          d.completed !== undefined
+            ? `${d.completed} year${d.completed === 1 ? "" : "s"} generated${d.failed ? `, ${d.failed} skipped` : ""}${
+                d.status === "cancelled" ? " — cancelled" : ""
+              }`
+            : rawFallbackDetail(d),
+      };
     case "shoreline_zones_bulk_deleted":
       return {
         target: d.municipality || rawFallbackTarget(log),

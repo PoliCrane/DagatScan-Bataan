@@ -169,6 +169,15 @@
   cursor: not-allowed;
 }
 
+.ndwi-widget-btn-cancel {
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.ndwi-widget-btn-cancel:hover {
+  background: #fef2f2;
+}
+
 .ndwi-widget-pill {
   position: fixed;
   /* Same clearance as .ndwi-widget-card above, and for the same reason. */

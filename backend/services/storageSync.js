@@ -117,4 +117,21 @@ async function syncPendingFilesToStorage() {
   return { synced, failed };
 }
 
-module.exports = { syncPendingFilesToStorage };
+// Event-driven trigger for upload-completing routes, instead of relying
+// solely on a blind poll — debounced so several near-simultaneous uploads
+// (e.g. a batch run) collapse into one sync call rather than one per
+// request. Also matters for hosts with scale-to-zero (e.g. Railway
+// Serverless): a 5-minute poll forever would generate outbound traffic
+// often enough to keep the service from ever sleeping.
+let debounceTimer = null;
+const DEBOUNCE_MS = 8000;
+
+function scheduleSync() {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    syncPendingFilesToStorage().catch((err) => console.error("[storageSync] Scheduled sync failed:", err.message));
+  }, DEBOUNCE_MS);
+}
+
+module.exports = { syncPendingFilesToStorage, scheduleSync };

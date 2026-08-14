@@ -8,9 +8,25 @@ const { generateNDWIGeoTIFF } = require("../services/earthEngineService");
 const { processSatelliteImageFile } = require("./uploadManagement");
 const { invalidateMunicipalityCache } = require("../services/cacheService_FK_Version");
 const { logAction } = require("../services/auditLog");
+const { scheduleSync } = require("../services/storageSync");
+const { createJob, getJob, requestCancel, runNdwiBatch } = require("../services/ndwiBatchWorker");
 const { verifyToken, verifyAdmin } = require("../middleware/auth");
 
 const MIN_YEAR = 2015; // Sentinel-2 launch year
+
+// See uploadManagement.js for why this is router-level instead of per-route.
+// Covers the single-year route directly. The batch POST route responds
+// immediately (before any year is actually processed), so it doesn't cover
+// the batch's real work — ndwiBatchWorker.js calls scheduleSync() itself,
+// per year, from inside the background loop.
+router.use((req, res, next) => {
+  if (req.method !== "GET") {
+    res.on("finish", () => {
+      if (res.statusCode < 400) scheduleSync();
+    });
+  }
+  next();
+});
 
 function parseBounds(body) {
   const { lonMin, latMin, lonMax, latMax } = body;
@@ -113,6 +129,61 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
     console.error("NDWI generation error:", err);
     res.status(500).json({ error: err.message || "NDWI generation failed" });
   }
+});
+
+// Kicks off a multi-year batch (2015-current year) for the same bbox/area,
+// fire-and-forget — responds immediately with a job id rather than blocking
+// for however long the whole batch takes (potentially over an hour). Job
+// state lives in-memory (ndwiBatchWorker.js), not a DB table.
+router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const { municipality, specificArea } = req.body;
+    const { bounds, error: boundsError } = parseBounds(req.body);
+    if (boundsError) return res.status(400).json({ error: boundsError });
+
+    if (!municipality || !specificArea) {
+      return res.status(400).json({ error: "municipality and specificArea are required" });
+    }
+
+    const { id: jobId, totalYears } = createJob({
+      bounds, specificArea, municipality, requestedBy: req.user,
+    });
+
+    res.json({ jobId, totalYears });
+
+    // Not awaited — the batch runs in the background after this response.
+    runNdwiBatch(jobId).catch((err) => {
+      console.error(`NDWI batch job ${jobId} crashed:`, err.message);
+    });
+  } catch (err) {
+    console.error("NDWI batch start error:", err);
+    res.status(500).json({ error: err.message || "Failed to start NDWI batch" });
+  }
+});
+
+// Signals ndwiBatchWorker.js's loop to stop before starting its next year —
+// can't interrupt a year already mid-processing, only pre-empt the next one.
+router.post("/generate-ndwi-batch/:jobId/cancel", verifyToken, verifyAdmin, (req, res) => {
+  const ok = requestCancel(Number(req.params.jobId));
+  if (!ok) {
+    return res.status(404).json({ error: "Batch job not found or not currently running" });
+  }
+  res.json({ ok: true });
+});
+
+// Polled by the frontend to show batch progress.
+router.get("/generate-ndwi-batch/:jobId", verifyToken, verifyAdmin, (req, res) => {
+  const job = getJob(Number(req.params.jobId));
+  if (!job) {
+    return res.status(404).json({ error: "Batch job not found" });
+  }
+  res.json({
+    status: job.status,
+    totalYears: job.totalYears,
+    completedYears: job.completedYears,
+    failedYears: job.failedYears,
+    currentYear: job.currentYear,
+  });
 });
 
 module.exports = router;

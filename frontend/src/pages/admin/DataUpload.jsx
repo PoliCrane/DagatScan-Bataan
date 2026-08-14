@@ -305,6 +305,30 @@ export default function DataUpload() {
     }
   };
 
+  const handleGenerateAllYears = async () => {
+    setNdwiError(null);
+
+    const { error, bounds } = validateAndParseNdwiInputs();
+    if (error) {
+      setNdwiError(error);
+      return;
+    }
+    const { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } = bounds;
+
+    try {
+      await ndwiGeneration.startBatch({
+        lonMin: lonMinParsed,
+        latMin: latMinParsed,
+        lonMax: lonMaxParsed,
+        latMax: latMaxParsed,
+        municipality: ndwiMunicipality,
+        specificArea: ndwiCoastlineName,
+      });
+    } catch (err) {
+      setNdwiError(err.message || "Failed to start batch generation");
+    }
+  };
+
   const handleUpload = async () => {
     const validation = validateForm();
     if (!validation.valid) {
@@ -470,7 +494,7 @@ export default function DataUpload() {
               </div>
 
               <p className="placeholder-secondary" style={{ margin: '0 0 16px' }}>
-                Generate NDWI imagery from Google Earth Engine using a bounding box, then generate a single year (2015–{new Date().getFullYear()}) — it's analyzed and saved automatically, no manual upload step needed.
+                Generate NDWI imagery from Google Earth Engine using a bounding box, then generate a single year or all available years (2015–{new Date().getFullYear()}) at once — each is analyzed and saved automatically, no manual upload step needed.
               </p>
 
               <div className="form-grid" id="ndwi-generator-fields">
@@ -563,10 +587,19 @@ export default function DataUpload() {
                   className="btn-upload"
                   id="generate-ndwi-btn"
                   onClick={handleGenerateNDWI}
-                  disabled={ndwiGeneration.singleYear.generating}
+                  disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running}
                 >
                   <img src="/generateNDWI.png" alt="" className="btn-icon" />
                   {ndwiGeneration.singleYear.generating ? "Generating..." : "Generate & Upload Selected Year"}
+                </button>
+                <button
+                  className="btn-upload"
+                  id="generate-ndwi-all-years-btn"
+                  onClick={handleGenerateAllYears}
+                  disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running}
+                >
+                  <img src="/generateNDWI.png" alt="" className="btn-icon" />
+                  {ndwiGeneration.running ? "Generating All Years..." : `Generate & Upload All Years (2015–${new Date().getFullYear()})`}
                 </button>
               </div>
 
@@ -605,6 +638,8 @@ export default function DataUpload() {
                   </div>
                 </div>
               )}
+
+              {ndwiGeneration.status && <NdwiBatchPanel batch={ndwiGeneration} />}
             </div>
             )}
 
@@ -890,6 +925,83 @@ export default function DataUpload() {
         </div>
       </div>
     </AdminLayout>
+  );
+}
+
+const NDWI_MIN_YEAR = 2015;
+
+// Inline "Generate All Years" progress panel — the fuller counterpart to the
+// floating NdwiGenerationWidget (components/NdwiGenerationWidget.jsx), which
+// shows a compact version of the same tracked job anywhere else in the app.
+function NdwiBatchPanel({ batch }) {
+  const { status, running, cancelBatch } = batch;
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - NDWI_MIN_YEAR + 1 }, (_, i) => NDWI_MIN_YEAR + i);
+  const failedByYear = new Map((status.failedYears || []).map((f) => [f.year, f.reason]));
+  const completedSet = new Set(status.completedYears || []);
+  const doneCount = completedSet.size + failedByYear.size;
+  const percent = Math.round((doneCount / (status.totalYears || 1)) * 100);
+
+  return (
+    <div className="ndwi-batch-panel" style={{ marginTop: '12px' }}>
+      <div className="ndwi-batch-panel-top">
+        <div className="ndwi-batch-panel-percent">{percent}%</div>
+        <div>
+          <p className="ndwi-batch-panel-headline">
+            {doneCount} of {status.totalYears} years processed
+          </p>
+          <p className="ndwi-batch-panel-subtext">
+            {running
+              ? status.currentYear
+                ? `Currently processing satellite imagery for ${status.currentYear}`
+                : "Starting…"
+              : status.failedYears?.length
+                ? `${status.completedYears.length} succeeded, ${status.failedYears.length} skipped`
+                : "All years processed successfully."}
+          </p>
+        </div>
+      </div>
+
+      <div className="progress-bar-container" style={{ margin: '12px 0' }}>
+        <div className="progress-bar-fill" style={{ width: `${percent}%` }} />
+      </div>
+
+      <div className="ndwi-batch-panel-timeline">
+        {years.map((year) => {
+          const state = completedSet.has(year)
+            ? "done"
+            : failedByYear.has(year)
+              ? "failed"
+              : running && status.currentYear === year
+                ? "current"
+                : "pending";
+          return (
+            <div key={year} className="ndwi-batch-panel-timeline-item" title={failedByYear.get(year) || undefined}>
+              <span className={`ndwi-batch-panel-dot ndwi-batch-panel-dot-${state}`} />
+              <span className="ndwi-batch-panel-year">{year}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {running ? (
+        <>
+          <p className="ndwi-batch-panel-note">
+            <span className="ndwi-batch-panel-note-icon">✓</span>
+            You can safely navigate to another page. Processing will continue in the background.
+          </p>
+          <button type="button" className="ndwi-batch-panel-cancel-btn" onClick={cancelBatch}>
+            Cancel batch
+          </button>
+        </>
+      ) : status.failedYears?.length > 0 && (
+        <ul className="ndwi-batch-panel-skipped">
+          {status.failedYears.map((f) => (
+            <li key={f.year}><strong>{f.year}:</strong> {f.reason}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
