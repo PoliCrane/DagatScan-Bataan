@@ -1,17 +1,7 @@
 import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 
-// .reports-table and .btn-print-report only render once the zones fetch in
-// Reports.jsx resolves (and, for the print button, once at least one row
-// survives the current filters) — unlike dataUploadSteps.js's switchTab
-// hook, there's no state to flip here, just a fetch to wait out, so this
-// polls the DOM directly instead of needing Reports.jsx to expose its
-// loading state to this file.
-//
-// Once found, scroll it into view ourselves before resolving — same reason
-// as dataUploadSteps.js's switchTab: leaving that scroll to Joyride risks
-// the spotlight hole landing at the target's final coordinates before the
-// page has actually scrolled there, showing blank space instead of the
-// real table/button.
+// polls the DOM until an element renders, then scrolls it into view ourselves before resolving
+// (leaving the scroll to Joyride risks the spotlight landing before the page actually scrolls there)
 const waitForElement = (selector, timeout = 5000) => () =>
   new Promise((resolve) => {
     const start = Date.now();

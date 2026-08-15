@@ -1,19 +1,10 @@
-/**
- * Static Map Renderer
- *
- * Server-side raster map generation for embedding in PDFs: stitches real
- * Esri World Imagery satellite tiles (the same source used for the
- * satellite toggle on the Coastal Monitoring / Erosion Analysis pages) and
- * overlays shoreline vector lines on top — no headless browser required.
- * Falls back to null (caller draws a plain background instead) if tiles
- * can't be fetched, e.g. no internet access.
- */
+// Server-side raster map for PDFs: stitches Esri World Imagery tiles and overlays shoreline
+// lines, no headless browser required. Falls back to null if tiles can't be fetched.
 
 const sharp = require("sharp");
 
 const TILE_SIZE = 256;
-// Esri's tile REST API uses {z}/{y}/{x} ordering (note: swapped from the
-// {z}/{x}/{y} XYZ convention used by OSM and most other tile servers).
+// Esri's tile API uses {z}/{y}/{x} ordering, swapped from the standard {z}/{x}/{y} XYZ convention.
 const TILE_SERVER = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile";
 const USER_AGENT = "DagatScan-Bataan/1.0 (+coastal-erosion-monitoring-system)";
 
@@ -26,10 +17,7 @@ function lonLatToPixel(lon, lat, zoom) {
 }
 
 function chooseZoom(bounds, targetWidth, targetHeight) {
-  // Pixel span grows with zoom, so search from coarse to fine and stop at
-  // the first (lowest, fewest-tiles) zoom that already meets the target
-  // resolution — searching the other direction would always land on the
-  // maximum zoom instead.
+  // search coarse to fine, stop at the first zoom meeting the target resolution (fewest tiles)
   for (let zoom = 8; zoom <= 18; zoom++) {
     const [x1, y1] = lonLatToPixel(bounds.west, bounds.north, zoom);
     const [x2, y2] = lonLatToPixel(bounds.east, bounds.south, zoom);
@@ -47,11 +35,7 @@ async function fetchTile(z, x, y) {
   return Buffer.from(await response.arrayBuffer());
 }
 
-/**
- * Fetches and stitches every OSM tile covering `bounds` at `zoom` into one
- * canvas, returning the canvas plus the global pixel coordinate of its
- * top-left corner so callers can place overlays in the same space.
- */
+// Stitches every tile covering bounds at zoom into one canvas; returns the canvas plus its top-left pixel origin.
 async function stitchTiles(bounds, zoom) {
   const [xMinF, yMinF] = lonLatToPixel(bounds.west, bounds.north, zoom);
   const [xMaxF, yMaxF] = lonLatToPixel(bounds.east, bounds.south, zoom);
@@ -64,8 +48,7 @@ async function stitchTiles(bounds, zoom) {
   const tilesWide = tileXMax - tileXMin + 1;
   const tilesHigh = tileYMax - tileYMin + 1;
 
-  // Small bboxes stay well under a handful of tiles; cap defensively so a
-  // malformed/huge bounds value can't trigger hundreds of tile requests.
+  // cap defensively so a malformed/huge bounds value can't trigger hundreds of tile requests
   if (tilesWide * tilesHigh > 64) {
     throw new Error(`Refusing to stitch ${tilesWide * tilesHigh} tiles — bounds too large for this zoom`);
   }
@@ -106,16 +89,11 @@ async function stitchTiles(bounds, zoom) {
   };
 }
 
-/**
- * Renders a static basemap (real OSM tiles) cropped to `bounds`, with
- * shoreline polylines and an erosion-area fill overlaid on top, scaled to
- * the requested output size. Returns a PNG buffer, or null on any failure
- * (e.g. offline) so the caller can fall back to a plain drawn background.
- *
- * @param {{west:number,south:number,east:number,north:number}} bounds
- * @param {Array<{coords:[number,number][], color:string, width?:number, dashed?:boolean}>} lines
- * @param {{points:[number,number][], color:string}} [fillRibbon]
- */
+// Renders a basemap cropped to bounds with shoreline lines and an erosion-area fill overlaid,
+// scaled to the output size. Returns a PNG buffer, or null on failure (e.g. offline).
+// @param {{west,south,east,north}} bounds
+// @param {Array<{coords, color, width?, dashed?}>} lines
+// @param {{points, color}} [fillRibbon]
 async function renderShorelineMap({ bounds, lines, fillRibbon, outputWidth, outputHeight }) {
   const zoom = chooseZoom(bounds, outputWidth, outputHeight);
   const { canvasBuffer, canvasWidth, canvasHeight, originX, originY } = await stitchTiles(bounds, zoom);
@@ -132,11 +110,8 @@ async function renderShorelineMap({ bounds, lines, fillRibbon, outputWidth, outp
   const cropWidth = Math.max(1, Math.min(canvasWidth - cropLeft, Math.ceil(Math.abs(cropX2 - cropX1))));
   const cropHeight = Math.max(1, Math.min(canvasHeight - cropTop, Math.ceil(Math.abs(cropY2 - cropY1))));
 
-  // Draw overlay lines at full canvas resolution (guaranteed to match
-  // canvasBuffer's own dimensions exactly) and crop the composited result
-  // afterwards, rather than sizing the SVG to the crop box up front — sharp
-  // requires the overlay's rasterized size to exactly equal the base image,
-  // and pre-crop SVG sizing was prone to off-by-one mismatches.
+  // overlay is drawn at full canvas resolution then cropped after - sharp requires the overlay's
+  // size to exactly match the base image, and pre-crop sizing was prone to off-by-one mismatches
   const svgParts = [];
   if (fillRibbon && fillRibbon.points && fillRibbon.points.length > 2) {
     const pts = fillRibbon.points
@@ -158,11 +133,8 @@ async function renderShorelineMap({ bounds, lines, fillRibbon, outputWidth, outp
   }
   const svg = `<svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">${svgParts.join("")}</svg>`;
 
-  // Each stage is materialized to its own buffer rather than chained in one
-  // pipeline — chaining composite().extract().resize() directly in a single
-  // sharp pipeline intermittently throws "Image to composite must have same
-  // dimensions or smaller" even when the inputs verifiably match; splitting
-  // the pipeline avoids it.
+  // each stage uses its own buffer instead of one chained pipeline - chaining
+  // composite().extract().resize() intermittently throws a dimension-mismatch error even when inputs match
   const overlaid = await sharp(canvasBuffer).composite([{ input: Buffer.from(svg), top: 0, left: 0 }]).png().toBuffer();
   const cropped = await sharp(overlaid)
     .extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight })

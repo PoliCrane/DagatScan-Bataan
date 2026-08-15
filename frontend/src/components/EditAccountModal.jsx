@@ -14,12 +14,9 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // A superadmin's own role isn't editable through this modal (out of
-  // scope — see server.js's /role route, which still technically allows a
-  // superadmin caller to assign it, just not exposed here).
+  // superadmin's own role isn't editable through this modal
   const isSuperadminAccount = account?.roles === "superadmin";
-  // Driven by the LIVE selection, not the account's original role, so the
-  // municipality field appears/disappears as the role dropdown changes.
+  // driven by the live selection so the field appears/disappears as the role dropdown changes
   const showMunicipalityField = formData.roles === "municipal";
 
   useEffect(() => {
@@ -32,9 +29,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
     }
   }, [account, isOpen]);
 
-  // Fetched unconditionally on open (not gated on the account's current
-  // role) so the list is already ready if the superadmin switches the role
-  // dropdown to Municipal mid-edit, instead of a flash of an empty select.
+  // fetched unconditionally on open so the list is ready if the role dropdown switches to Municipal mid-edit
   useEffect(() => {
     if (isOpen && municipalities.length === 0) {
       getMunicipalities()
@@ -54,7 +49,6 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
   const handleSave = async () => {
     setError("");
 
-    // Validation
     if (!formData.username.trim()) {
       setError("Username is required");
       return;
@@ -66,10 +60,8 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
 
     const roleChanged = !isSuperadminAccount && formData.roles !== account.roles;
 
-    // Close modal before showing confirmation dialog
     onClose();
 
-    // Step 1: Ask for confirmation
     const confirmed = await confirmAction(
       roleChanged
         ? `Update username to <strong>${formData.username}</strong> and change role to <strong>${formData.roles}</strong>?<br/><small>Current: ${account.username} (${account.roles})</small>`
@@ -80,16 +72,12 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
 
     setLoading(true);
 
-    // Step 2: Show loading dialog
     await showLoading("Updating account...", 2000);
 
     try {
       const token = localStorage.getItem("token");
 
-      // Role change (+ the municipality_id consistency that comes with it)
-      // goes through the dedicated /role route first — /edit's own
-      // municipality_id handling can only set a new value or keep the
-      // existing one, it can't clear it, so that logic has to live there.
+      // role changes go through the dedicated /role route — /edit's own municipality_id handling can't clear a value, only set/keep one
       if (roleChanged) {
         const roleResponse = await fetch(`${API_BASE_URL}/admin/users/${account.id}/role`, {
           method: "PUT",
@@ -109,9 +97,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
         }
       }
 
-      // Username (+ municipality_id, but only when the role didn't just
-      // change above — avoids a redundant duplicate write of something
-      // /role already set).
+      // only include municipality_id if /role didn't already set it above
       const editBody = { username: formData.username };
       if (showMunicipalityField && !roleChanged) {
         editBody.municipality_id = formData.municipality_id;
@@ -133,7 +119,6 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
         return;
       }
 
-      // Step 3: Show success
       await showSuccess(`Account updated successfully!<br/><small>Username: ${formData.username}</small>`);
       onSuccess();
       handleCancel();

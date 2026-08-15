@@ -1,12 +1,7 @@
-/**
- * Coastal Areas helpers.
- * `coastal_areas` is the entity for a municipality's named coastline
- * segments (e.g. "Bagac Bay"); shoreline_zones/satellite_imagery reference
- * it via area_id. Shared across write paths so area_id resolves consistently.
- */
+// coastal_areas holds a municipality's named coastline segments (e.g. "Bagac Bay");
+// shoreline_zones/satellite_imagery reference it via area_id.
 
-// Read-only lookup: municipality_id + area name -> coastal_areas.id, or null
-// if none exists. Case-insensitive.
+// Case-insensitive lookup: municipality_id + area name -> coastal_areas.id, or null.
 async function findAreaId(client, municipalityId, areaName) {
   const name = (areaName || "Main Coastline").trim() || "Main Coastline";
   const result = await client.query(
@@ -16,9 +11,8 @@ async function findAreaId(client, municipalityId, areaName) {
   return result.rows[0]?.id ?? null;
 }
 
-// Resolve a named coastline area to its coastal_areas.id, creating it on
-// first sight (falls back to "Main Coastline"). ON CONFLICT DO UPDATE is a
-// no-op write that makes RETURNING id work on both insert and existing paths.
+// Resolve a named coastline area to its coastal_areas.id, creating it on first sight.
+// ON CONFLICT DO UPDATE is a no-op write so RETURNING id works on both insert and existing rows.
 async function resolveAreaId(client, municipalityId, areaName) {
   const name = (areaName || "Main Coastline").trim() || "Main Coastline";
   const result = await client.query(

@@ -1,16 +1,8 @@
-/**
- * Satellite Image Quality Assessment & Metrics Calculation
- * 
- * Compares detected coastlines with reference data (GeoJSON, previous years)
- * to extract erosion metrics similar to GeoJSON uploads
- */
+// Compares detected coastlines with reference data (GeoJSON, previous years) to extract erosion metrics.
 
 const fs = require('fs');
 
-/**
- * Compare satellite-detected coastline with reference coastline
- * Calculates erosion rate and accuracy metrics
- */
+// Compares detected coastline against reference; computes erosion rate and accuracy metrics.
 async function compareWithReferenceCoastline(
   detectedCoastline,
   referenceCoastline,
@@ -46,20 +38,17 @@ async function compareWithReferenceCoastline(
       return pixelToGeo(point.x, point.y, georeference);
     });
 
-    // Calculate perpendicular distances between reference and detected lines
     const distances = calculatePerpendularDistances(
       referenceCoastline,
       geoDetectedCoastline
     );
 
-    // Calculate erosion metrics
     const erosionMetrics = calculateErosionFromDistances(
       distances,
       referenceYear,
       currentYear
     );
 
-    // Quality assessment
     const quality = assessQuality(distances, erosionMetrics);
 
     return {
@@ -79,9 +68,6 @@ async function compareWithReferenceCoastline(
   }
 }
 
-/**
- * Convert pixel coordinates to geographic
- */
 function pixelToGeo(pixelX, pixelY, georeference) {
   const { xUpperLeft, yUpperLeft, pixelWidth, pixelHeight } = georeference;
 
@@ -91,12 +77,8 @@ function pixelToGeo(pixelX, pixelY, georeference) {
   return [latitude, longitude];
 }
 
-/**
- * Unit tangent vector at a point along a coastline, using its neighbors.
- * Mirrors the frontend's offsetCoastlineForPrediction() tangent calculation
- * (erosionanalysis.jsx) so the sign convention used here for measuring
- * retreat/advance matches the direction the UI actually offsets lines in.
- */
+// Unit tangent at a point along a coastline. Sign convention must match the
+// frontend's offsetCoastlineForPrediction() (erosionanalysis.jsx) or retreat/advance flips.
 function unitTangentAt(coastline, index) {
   const point = coastline[index];
   let tangent;
@@ -115,10 +97,7 @@ function unitTangentAt(coastline, index) {
   return len === 0 ? [0, 0] : [tangent[0] / len, tangent[1] / len];
 }
 
-/**
- * Total arc length of a coastline (in km), and the cumulative length up to
- * each point — used to find a point's fractional position along the line.
- */
+// Total arc length (km) plus cumulative length to each point, for fractional-position lookups.
 function cumulativeArcLengths(coastline) {
   const lengths = [0];
   let total = 0;
@@ -129,10 +108,7 @@ function cumulativeArcLengths(coastline) {
   return { lengths, total };
 }
 
-/**
- * Interpolate the point on `coastline` at the given fraction (0..1) of its
- * total arc length.
- */
+// Interpolates the point on coastline at a given fraction (0..1) of its arc length.
 function pointAtFraction(coastline, fraction, arc) {
   if (coastline.length === 1 || arc.total === 0) return coastline[0];
 
@@ -149,24 +125,9 @@ function pointAtFraction(coastline, fraction, arc) {
   return coastline[coastline.length - 1];
 }
 
-/**
- * Calculate retreat/advance distance from each reference point to its
- * corresponding point on the detected line.
- *
- * Correspondence is by POSITION ALONG THE LINE (arc-length fraction), not
- * raw nearest-point-in-space. Nearest-point matching breaks down whenever
- * one year's traced coastline has a different shape/kink than another's
- * (e.g. an extra loop from unstable water/land classification) — a single
- * misshapen stretch can make points snap to a completely wrong "nearest"
- * match and produce wildly inflated distances. Matching by relative position
- * along the coast is robust to that as long as both lines are traced across
- * the same physical stretch of shoreline in the same direction, which is
- * the case here since traces are bounded by where the coastline exits the
- * image frame (see extractCoastlineFromMask in imageCNNDetection.js).
- *
- * Positive distance = retreat (erosion)
- * Negative distance = advance (accretion)
- */
+// Matches points by position along the line (arc-length fraction), not nearest-point-in-space -
+// nearest-point matching breaks when one year's trace has a different shape/kink, snapping points
+// to a wrong match and inflating distances. Positive = retreat (erosion), negative = advance (accretion).
 function calculatePerpendularDistances(referenceCoastline, detectedCoastline) {
   const distances = [];
 
@@ -177,13 +138,8 @@ function calculatePerpendularDistances(referenceCoastline, detectedCoastline) {
     const fraction = refArc.total > 0 ? refArc.lengths[idx] / refArc.total : 0;
     const correspondingPoint = pointAtFraction(detectedCoastline, fraction, detArc);
 
-    // Signed distance: project (correspondingPoint - refPoint) onto the
-    // seaward normal at refPoint, using the exact same tangent/normal
-    // convention as the frontend's offsetCoastlineForPrediction(). That
-    // function treats POSITIVE offset as seaward and NEGATIVE as landward
-    // (erosion), so a corresponding point that lands landward of the
-    // reference — i.e. the coast retreated — must report as POSITIVE here
-    // per this function's documented convention, requiring the sign flip.
+    // project onto the seaward normal, matching the frontend's convention (positive=seaward);
+    // sign is flipped since positive here means retreat
     const tangent = unitTangentAt(referenceCoastline, idx);
     const normal = [-tangent[1], tangent[0]]; // seaward, per frontend convention
     const delta = [correspondingPoint[0] - refPoint[0], correspondingPoint[1] - refPoint[1]];
@@ -200,9 +156,7 @@ function calculatePerpendularDistances(referenceCoastline, detectedCoastline) {
   return distances;
 }
 
-/**
- * Haversine formula: Distance between two lat/lng points (in km)
- */
+// Haversine distance between two lat/lng points, in km.
 function haversineDistance([lat1, lng1], [lat2, lng2]) {
   const R = 6371; // Earth radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -219,9 +173,7 @@ function haversineDistance([lat1, lng1], [lat2, lng2]) {
   return R * c;
 }
 
-/**
- * Calculate erosion rate and related metrics from distance measurements
- */
+// Computes erosion rate and related metrics from distance measurements.
 function calculateErosionFromDistances(distances, referenceYear, currentYear) {
   if (distances.length === 0) {
     return {
@@ -238,8 +190,7 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
     };
   }
 
-  // Separate retreat (positive) from advance (negative) — for the informational
-  // averageRetreatMeters/averageAdvanceMeters/percentage fields only.
+  // retreat (positive) vs advance (negative), for the informational average/percentage fields only
   const retreatDistances = distances
     .filter((d) => d.distanceMeters > 0)
     .map((d) => d.distanceMeters);
@@ -258,15 +209,9 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
       ? advanceDistances.reduce((a, b) => a + b, 0) / advanceDistances.length
       : 0;
 
-  // The actual erosion rate is derived from the MEDIAN signed distance, not
-  // the mean of separated retreat/advance groups. A mean is extremely
-  // sensitive to a handful of badly-matched points from a single defective
-  // trace (e.g. a self-intersecting loop from unstable water/land
-  // classification in one year's image) — those points can drag an average
-  // to tens of meters/year even though real coastal erosion essentially
-  // never exceeds ~5 m/year. The median is robust to that: as long as fewer
-  // than half the points are corrupted, it reflects the genuine, consistent
-  // shift most points agree on.
+  // Erosion rate uses the MEDIAN signed distance, not the mean - a mean is skewed hard by a
+  // handful of badly-matched points from a defective trace; the median stays reliable unless
+  // over half the points are corrupted.
   const netChange = calculateMedian(distances.map((d) => d.distanceMeters));
   const erosionRate = netChange / yearsDifference; // meters per year
 
@@ -274,15 +219,9 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
   const stdDev = calculateStdDev(distances.map((d) => d.distanceMeters));
   const confidence = Math.max(0, 1 - stdDev / Math.abs(erosionRate + 0.1));
 
-  // Plausibility gate: real-world coastal erosion essentially never exceeds
-  // ~5 m/year even in severe cases (per the CVI classification: >5 m/year is
-  // already the top "Very High" bracket). A rate many times that isn't a
-  // record-setting erosion event — it's a sign that one of the two traces
-  // being compared has a shape defect (e.g. a self-intersecting loop from
-  // unstable water/land classification) that even the median can't fully
-  // absorb once more than half the points are affected. Refuse to store a
-  // number this implausible rather than silently reporting garbage; the
-  // caller should flag the source image for re-detection/re-upload instead.
+  // Plausibility gate: real coastal erosion rarely exceeds ~5 m/year (CVI "Very High" ceiling).
+  // A rate many times that means a defective trace, not real erosion - refuse to store it
+  // rather than report garbage; caller should flag the image for re-upload.
   const PLAUSIBLE_MAX_RATE = 20; // m/year — generous ceiling, ~4x "Very High"
   if (Math.abs(erosionRate) > PLAUSIBLE_MAX_RATE) {
     return {
@@ -307,9 +246,7 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
   };
 }
 
-/**
- * Calculate median — robust to outliers, unlike the mean.
- */
+// Median - robust to outliers, unlike the mean.
 function calculateMedian(values) {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -317,9 +254,6 @@ function calculateMedian(values) {
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
-/**
- * Calculate standard deviation
- */
 function calculateStdDev(values) {
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
   const variance =
@@ -327,9 +261,7 @@ function calculateStdDev(values) {
   return Math.sqrt(variance);
 }
 
-/**
- * Assess overall quality of satellite imagery & detection
- */
+// Assesses detection quality: confidence, point count, outliers.
 function assessQuality(distances, erosionMetrics) {
   const issues = [];
   let overallQuality = 'High';
@@ -387,13 +319,9 @@ function assessQuality(distances, erosionMetrics) {
   };
 }
 
-/**
- * Detect cloud cover and other atmospheric interference
- */
+// Detects cloud cover / atmospheric interference. Not implemented - returns a placeholder.
 async function detectCloudCover(imagePath) {
   try {
-    // This would require spectral analysis or ML model
-    // Simplified: return placeholder
     return {
       cloudPercentage: 0,
       canBeUsed: true,
@@ -408,13 +336,9 @@ async function detectCloudCover(imagePath) {
   }
 }
 
-/**
- * Extract zone-specific metrics
- * Similar to GeoJSON feature-by-feature processing
- */
+// Splits a coastline into zones, similar to GeoJSON feature-by-feature processing.
 function extractZoneMetrics(coastlineSegments, erosionMetrics) {
-  // Divide coastline into manageable zones (e.g., 5km segments)
-  const zoneLength = 5; // kilometers
+  const zoneLength = 5; // km
   const zones = [];
 
   let currentZoneStart = 0;

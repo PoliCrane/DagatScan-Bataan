@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-// Log unhandled rejections/exceptions instead of failing silently.
+// log unhandled rejections instead of dying silently
 process.on("unhandledRejection", (reason) => {
   console.error("Unhandled promise rejection:", reason);
 });
@@ -8,7 +8,7 @@ process.on("uncaughtException", (err) => {
   console.error("Uncaught exception — server is exiting:", err);
   process.exit(1);
 });
-// Log shutdown signals to distinguish a soft stop from a hard kill/crash.
+// log shutdown signals to tell a soft stop from a crash
 process.on("SIGTERM", () => console.log("[shutdown] received SIGTERM"));
 process.on("SIGINT", () => console.log("[shutdown] received SIGINT"));
 process.on("exit", (code) => console.log(`[shutdown] process exiting with code ${code}`));
@@ -34,31 +34,23 @@ const { logAction } = require("./services/auditLog");
 const { syncPendingFilesToStorage, scheduleSync } = require("./services/storageSync");
 
 const app = express();
-// Render sits one reverse-proxy hop in front of this app and sets
-// X-Forwarded-For — without this, express-rate-limit can't safely trust
-// that header to identify real clients and throws on every request.
+// Render sits behind a reverse proxy; trust X-Forwarded-For or rate limiting breaks
 app.set("trust proxy", 1);
-// Render (and most PaaS hosts) assign a dynamic port via this env var and
-// only route traffic there — falls back to 5000 for local dev.
+// PaaS platforms assign the port via this env var; falls back to 5000 locally
 const PORT = process.env.PORT || 5000;
 
-// No insecure fallback here on purpose — a silently-guessable default
-// would let anyone forge valid tokens if the env var were ever missing.
+// no fallback secret — a guessable default would let anyone forge tokens
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET is not set. Add it to backend/.env before starting the server.");
 }
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// 6-digit numeric code for the password-reset flow (crypto.randomInt is
-// cryptographically random, unlike Math.random). Matches the reset UI's
-// 6-box digit input in frontend/src/pages/resetpass.jsx.
+// 6-digit reset code; crypto.randomInt is cryptographically random, unlike Math.random
 function generateVerificationCode() {
   return crypto.randomInt(0, 1000000).toString().padStart(6, "0");
 }
 
-// Same 8-char + complexity policy the frontend forms already enforce
-// client-side — checked again here so it can't be bypassed by calling the
-// API directly.
+// re-checked server-side so the frontend's password rules can't be bypassed by calling the API directly
 function meetsPasswordRequirements(password) {
   return (
     typeof password === "string" &&
@@ -72,14 +64,11 @@ function meetsPasswordRequirements(password) {
 const PASSWORD_REQUIREMENTS_MESSAGE =
   "Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character";
 
-// Same regexes as frontend/src/utils/validation.js — re-checked here so
-// /request-account can't be bypassed by calling the API directly with a
-// malformed email or contact number.
+// re-checked server-side so /request-account can't be bypassed by calling the API directly
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PH_MOBILE_REGEX = /^(09\d{9}|\+639\d{9})$/;
 
-// Falls back to local dev's Vite port; set FRONTEND_URL in production
-// (e.g. your Vercel deployment's URL) — no trailing slash.
+// falls back to local Vite port; set FRONTEND_URL in production, no trailing slash
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -121,7 +110,7 @@ app.post(
         return res.status(400).json({ error: "A signed request letter (PDF) is required" });
       }
 
-      // Independent checks — run concurrently instead of sequential round trips.
+      // independent checks, run concurrently
       const [municipality, existingUser, existingRequest] = await Promise.all([
         pool.query("SELECT id FROM municipalities WHERE id = $1", [municipality_id]),
         pool.query("SELECT id FROM users WHERE email = $1 OR username = $2", [email, username]),
@@ -288,8 +277,7 @@ app.post("/forgot-password", passwordResetLimiter, async (req, res) => {
       });
     }
 
-    // Same response whether or not the email is registered, so this
-    // endpoint can't be used to enumerate which emails have accounts.
+    // same response either way, prevents email enumeration
     res.json({ message: "If that email is registered, a password reset code has been sent." });
   } catch (err) {
     console.error("Forgot password error:", err);
@@ -310,7 +298,7 @@ app.post("/reset-password", passwordResetLimiter, async (req, res) => {
       return res.status(400).json({ error: PASSWORD_REQUIREMENTS_MESSAGE });
     }
 
-    // Same generic error for every rejection branch so email registration can't be inferred.
+    // same generic error for every branch, prevents email enumeration
     const genericError = () => res.status(400).json({ error: "Invalid or expired reset code" });
 
     const userResult = await pool.query(
@@ -471,11 +459,7 @@ app.put("/admin/users/:userId/role", verifyToken, verifySuperadmin, async (req, 
       });
     }
 
-    // A municipal account must have a municipality; every other role isn't
-    // tied to one. Keeps municipality_id consistent with the NEW role
-    // instead of leaving it stale from before the change (unlike /edit's
-    // COALESCE, which can only set a new value or keep the old one — it
-    // can't clear this field, so that logic has to live here).
+    // clears municipality_id for non-municipal roles instead of leaving it stale
     let resolvedMunicipalityId = null;
     if (roles === "municipal") {
       if (!municipality_id) {
@@ -488,7 +472,6 @@ app.put("/admin/users/:userId/role", verifyToken, verifySuperadmin, async (req, 
       resolvedMunicipalityId = municipality.rows[0].id;
     }
 
-    // Fetch target user
     const targetUser = await pool.query("SELECT * FROM users WHERE id = $1", [userId]);
     if (targetUser.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
@@ -531,7 +514,6 @@ app.patch("/admin/users/:userId/deactivate", verifyToken, verifySuperadmin, asyn
       return res.status(400).json({ error: "You cannot deactivate your own account" });
     }
 
-    // Fetch target user
     const targetUser = await pool.query("SELECT * FROM users WHERE id = $1", [userId]);
     if (targetUser.rows.length === 0) {
       return res.status(404).json({ error: "User not found or already deactivated" });
@@ -578,7 +560,6 @@ app.patch("/admin/users/:userId/reactivate", verifyToken, verifySuperadmin, asyn
     const { userId } = req.params;
     const callerRole = req.user.roles;
 
-    // Fetch target user
     const targetUser = await pool.query("SELECT * FROM users WHERE id = $1", [userId]);
     if (targetUser.rows.length === 0) {
       return res.status(404).json({ error: "User not found or already active" });
@@ -633,7 +614,7 @@ app.post("/admin/create-user", verifyToken, verifySuperadmin, async (req, res) =
       return res.status(400).json({ error: PASSWORD_REQUIREMENTS_MESSAGE });
     }
 
-    // Determine allowed roles based on caller's role
+    // allowed roles depend on caller's role
     const allowedRoles = callerRole === "superadmin"
       ? ["municipal", "admin", "superadmin"]
       : ["municipal", "admin"];
@@ -645,7 +626,7 @@ app.post("/admin/create-user", verifyToken, verifySuperadmin, async (req, res) =
     }
     const userRole = roles;
 
-    // Municipality lookup and existing-user check are independent — run concurrently.
+    // independent checks, run concurrently
     let municipalityId = null;
     if (userRole === "municipal" && !req.body.municipality_id) {
       return res.status(400).json({ error: "municipality_id is required for a municipal account" });
@@ -707,7 +688,6 @@ app.put("/admin/users/:userId/edit", verifyToken, verifySuperadmin, async (req, 
       return res.status(400).json({ error: "Username is required" });
     }
 
-    // Fetch target user
     const targetUser = await pool.query("SELECT * FROM users WHERE id = $1", [userId]);
     if (targetUser.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
@@ -769,7 +749,6 @@ app.put("/admin/users/:userId/edit", verifyToken, verifySuperadmin, async (req, 
 // LIST ACCOUNT REQUESTS (Admin + Superadmin) — pending by default, or ?status=all/approved/rejected
 app.get("/admin/account-requests", verifyToken, verifySuperadmin, async (req, res) => {
   try {
-    // Defaults to pending-only (the review queue); ?status=all/approved/rejected for the rest.
     const status = req.query.status || "pending";
     const query = `
       SELECT ar.id, ar.username, ar.email, ar.municipality_id, m.name AS municipality,
@@ -847,7 +826,7 @@ app.post("/admin/account-requests/:id/approve", verifyToken, verifySuperadmin, a
     await client.query("COMMIT");
     res.json({ message: "Request approved and account created", user: newUser.rows[0] });
 
-    // Fire-and-forget — a slow/failed email must not block the response or undo the approval.
+    // fire-and-forget — a slow/failed email shouldn't block the response
     sendAccountApprovedEmail(request.email, request.username, password, request.municipality_name).catch((err) => {
       console.error(`Failed to send account-approved email to ${request.email}:`, err.message);
     });
@@ -904,7 +883,6 @@ app.post("/admin/account-requests/:id/reject", verifyToken, verifySuperadmin, as
   }
 });
 
-// Import and use API routes
 const shorelineDataRouter = require("./routes/shorelineData");
 const uploadManagementRouter = require("./routes/uploadManagement");
 const ndwiGenerationRouter = require("./routes/ndwiGeneration");
@@ -912,8 +890,7 @@ const reportsRouter = require("./routes/reports");
 const auditLogRouter = require("./routes/auditLog");
 
 app.use("/api/shoreline", shorelineDataRouter);
-// Upload management is admin-only; verifyToken/verifyAdmin required here since
-// mounting auth on the bare "/api" would also block unauthenticated /api/reports and /api/health.
+// admin-only; can't mount auth on bare /api since that would also block /api/reports and /api/health
 app.use("/api/admin/uploads", verifyToken, verifyAdmin, uploadManagementRouter);
 app.use("/api", ndwiGenerationRouter);
 app.use("/api/reports", reportsRouter);
@@ -928,16 +905,7 @@ const httpServer = app.listen(PORT, () => {
   const { initCNNModel } = require('./services/imageCNNDetection');
   initCNNModel().catch(err => console.warn('[CNN] Pre-warm skipped:', err.message));
 
-  // Uploaded files (GeoJSON/satellite images/request letters) get mirrored
-  // to Supabase Storage — see services/storageSync.js for why. Primarily
-  // event-driven now (scheduleSync(), called from the upload routes and the
-  // batch worker) rather than polled, so a host with scale-to-zero (e.g.
-  // Railway Serverless) can actually sleep between uploads instead of a
-  // constant timer resetting its idle clock. This is just a daily
-  // safety-net sweep for anything a scheduleSync() call might have missed —
-  // 24h is far above any sleep-trigger threshold, so it doesn't defeat the
-  // point. Skipped entirely when Supabase isn't configured (e.g. local dev
-  // without those env vars set).
+  // daily safety-net sync for anything scheduleSync() missed; skipped if Supabase isn't configured
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     const SAFETY_NET_INTERVAL_MS = 24 * 60 * 60 * 1000;
     setTimeout(() => {
@@ -950,13 +918,11 @@ const httpServer = app.listen(PORT, () => {
 
 });
 
-// Satellite uploads run CNN training synchronously (~10 min, pure-JS CPU backend);
-// disable Node's default timeouts so they don't abort mid-training.
+// satellite uploads run CNN training synchronously (up to ~10 min); disable default timeouts so they don't get aborted
 httpServer.requestTimeout = 0;
 httpServer.headersTimeout = 0;
 httpServer.timeout = 0;
 
-// Keep-alive: tfjs-node's native binding can drop the event-loop ref count after
-// startup, letting the process exit; an un-refed interval prevents that.
+// tfjs-node's native binding can drop the event-loop ref count after startup; this interval keeps the process alive
 httpServer.on("close", () => console.error("[server] httpServer closed unexpectedly"));
 setInterval(() => {}, 60_000);

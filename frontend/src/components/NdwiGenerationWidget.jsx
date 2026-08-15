@@ -11,32 +11,21 @@ const TERMINAL_LABELS = {
 
 const DATA_UPLOAD_PATH = "/admin/data-upload";
 
-/**
- * Floating progress card for NDWI generation — both the "Generate All
- * Years" batch job and single-year "Generate This Year". Rendered once,
- * app-wide (see App.jsx), so it stays visible across page navigation — both
- * are tracked by NdwiGenerationContext, which also resumes the batch (but
- * not single-year, which has no server-side job to resume) after a hard
- * refresh.
- */
+// Floating progress card for NDWI generation (batch + single-year). Rendered
+// once app-wide so it stays visible across page navigation.
 export default function NdwiGenerationWidget() {
   const { status, running, minimized, dismiss, toggleMinimized, cancelBatch, singleYear } = useNdwiGeneration();
   const navigate = useNavigate();
   const location = useLocation();
 
   const showBatch = !!status;
-  // Single-year only gets its own widget while nothing has a fuller batch
-  // card to show, and only while actually in flight — once it finishes,
-  // DataUpload.jsx's own result card is the record of what happened.
+  // single-year widget only shows while in flight; once done, DataUpload's own result card takes over
   const showSingleYear = !showBatch && singleYear.generating;
 
   if (!showBatch && !showSingleYear) return null;
 
   const isOnDataUploadPage = location.pathname === DATA_UPLOAD_PATH;
-  // The inline panel on Data Upload itself already shows full progress —
-  // the floating widget would be redundant clutter there, so it's always
-  // shown minimized (as the small pill) on that page specifically,
-  // regardless of the manual minimize toggle. Full card everywhere else.
+  // stay minimized on the upload page since the inline panel already shows progress there
   const effectiveMinimized = minimized || isOnDataUploadPage;
 
   const handleViewDetails = () => {
@@ -66,7 +55,7 @@ export default function NdwiGenerationWidget() {
             <img src="/NDWI.png" alt="" className="ndwi-widget-header-icon" />
             <span>NDWI generation</span>
           </div>
-          {/* No server-side job to cancel for single-year — X only minimizes. */}
+          {/* no server-side job to cancel for single-year — X only minimizes */}
           <button type="button" className="ndwi-widget-close" onClick={toggleMinimized} aria-label="Minimize">
             –
           </button>
@@ -118,9 +107,7 @@ export default function NdwiGenerationWidget() {
           <img src="/NDWI.png" alt="" className="ndwi-widget-header-icon" />
           <span>{terminal ? terminal.title : "NDWI generation"}</span>
         </div>
-        {/* While running: X minimizes (the batch keeps going in the
-            background). Once finished: nothing left to cancel, so X goes
-            back to dismissing the card entirely. */}
+        {/* while running, X minimizes; once finished, X dismisses */}
         <button
           type="button"
           className="ndwi-widget-close"

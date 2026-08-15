@@ -1,13 +1,7 @@
 /**
- * Builds one clickable segment per real analyzed shoreline area — either one
- * entry per distinct satellite-detected `specific_area`, or (when no
- * satellite areas exist) a single segment covering the whole polygon-derived
- * coastline. Shared by the Coastal Monitoring and Erosion Analysis pages so
- * both show the exact same segments for a municipality.
- *
- * Each segment's risk is classified from its OWN erosion rate (not a single
- * municipality-wide risk label), so a segment's polyline/marker color always
- * reflects that segment's current shoreline — not some other area's trend.
+ * Builds one clickable segment per analyzed shoreline area — one per
+ * satellite-detected `specific_area`, or a single polygon-derived segment
+ * if none exist. Each segment's risk is classified from its own erosion rate.
  */
 import { calculateRiskLevel } from "../api/segmentLoader";
 
@@ -18,8 +12,7 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
   return areas.map((area, index) => {
     const shoreline = area.coastlinePoints;
     const hasSufficientData = area.hasSufficientData ?? false;
-    // Prefer this area's own regression-based LRR; only fall back to the
-    // municipality-wide rate when the area itself lacks a computed one.
+    // prefer the area's own LRR, fall back to municipality-wide rate
     const erosionRate = area.lrrRate ?? fallbackErosionRate ?? 0;
     const yearsAvailable = area.yearsAvailable || [];
 
@@ -36,9 +29,7 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
       year: area.year,
       yearsAvailable,
       hasSufficientData,
-      // Sufficient-data segments show lrrConfidence/year/source as their own
-      // stat rows instead (SegmentsPanel.jsx, coastalmonitoring.jsx) — this
-      // stays reserved for the actionable insufficient-data warning.
+      // reserved for the insufficient-data warning message
       description: hasSufficientData
         ? null
         : `Only ${yearsAvailable.length} year${yearsAvailable.length === 1 ? "" : "s"} on record — upload another year to enable trend analysis`,
@@ -46,12 +37,7 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
   });
 }
 
-/**
- * Fetches the satellite-detected coastline area(s) for a municipality, and
- * falls back to a single "Main Coastline" area (using the polygon-derived
- * coastline + a fetched municipality-wide LRR) when no satellite-analyzed
- * area exists yet.
- */
+// fetches satellite-detected areas, or falls back to a single "Main Coastline" area from the polygon + municipality-wide LRR
 export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyShorelineData) {
   try {
     const satRes = await fetch(
@@ -67,8 +53,7 @@ export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyS
     console.warn(`Could not fetch satellite coastline for ${municipality}:`, err.message);
   }
 
-  // No satellite-analyzed area yet — fall back to the polygon-derived
-  // coastline as a single area, gated on real year count.
+  // no satellite area yet — fall back to the polygon-derived coastline
   if (!fallbackShoreline || fallbackShoreline.length < 2) {
     return { segments: [], satelliteAreas: [] };
   }

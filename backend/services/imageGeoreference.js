@@ -1,14 +1,8 @@
-/**
- * Satellite Image Georeferencing
- * Converts pixel coordinates to geographic coordinates
- */
+// Converts pixel coordinates to geographic coordinates.
 
 const fs = require('fs');
 
-/**
- * Derive a {north, south, east, west} bounding box from the normalised
- * upper-left/pixel-size fields, given the image's actual dimensions.
- */
+// Derives a {north, south, east, west} bounding box from upper-left/pixel-size fields.
 function boundsFromUpperLeft({ xUpperLeft, yUpperLeft, pixelWidth, pixelHeight }, width, height) {
   return {
     west: xUpperLeft,
@@ -18,31 +12,23 @@ function boundsFromUpperLeft({ xUpperLeft, yUpperLeft, pixelWidth, pixelHeight }
   };
 }
 
-/**
- * Extract georeference info from image file
- * Supports:
- * - GeoTIFF with embedded georeferencing
- * - World files (.tfw, .jgw, .pgw)
- * - Manual georeferencing via metadata
- */
+// Extracts georeference info: embedded GeoTIFF, world files (.tfw/.jgw/.pgw), or manual metadata bounds.
 async function extractGeoreference(imagePath, metadata = {}) {
   try {
     const extension = imagePath.toLowerCase().split('.').pop();
 
-    // Try to read world file (same name, different extension)
+    // same filename, different extension
     const worldFileResult = await readWorldFile(imagePath);
     if (worldFileResult) {
       const { width, height } = await getImageDimensions(imagePath);
       return {
         valid: true,
         method: 'worldfile',
-        // `.bounds` must be present — callers branch on it to know whether
-        // pixel coords need normalizing against the detection grid.
+        // bounds must be present - callers branch on it for pixel-coord normalization
         georeference: { ...worldFileResult, bounds: boundsFromUpperLeft(worldFileResult, width, height) },
       };
     }
 
-    // For GeoTIFF, try to extract embedded georeferencing
     if (['tif', 'tiff'].includes(extension)) {
       const geoTiffResult = await extractGeoTIFFMetadata(imagePath);
       if (geoTiffResult) {
@@ -60,9 +46,7 @@ async function extractGeoreference(imagePath, metadata = {}) {
       const { north, south, east, west } = metadata.bounds;
       const { width, height } = await getImageDimensions(imagePath);
 
-      // Derive worldfile-equivalent fields so pixelToGeo() works the same
-      // way regardless of whether georeferencing came from a world file
-      // or manually-entered bounds.
+      // worldfile-equivalent fields so pixelToGeo() works the same regardless of source
       return {
         valid: true,
         method: 'manual_bounds',
@@ -90,11 +74,8 @@ async function extractGeoreference(imagePath, metadata = {}) {
   }
 }
 
-/**
- * Get image width/height, handling both regular images (via sharp) and
- * single-band float32 GeoTIFFs like NDWI exports (via geotiff), which sharp's
- * underlying libvips cannot parse ("samples out of range").
- */
+// Gets image width/height. Regular images via sharp; single-band float32 GeoTIFFs
+// (e.g. NDWI exports) via geotiff - sharp's libvips can't parse those ("samples out of range").
 async function getImageDimensions(imagePath) {
   const ext = imagePath.toLowerCase().split('.').pop();
   if (['tif', 'tiff'].includes(ext)) {
@@ -111,16 +92,8 @@ async function getImageDimensions(imagePath) {
   return sharp(imagePath).metadata();
 }
 
-/**
- * Read and parse world file (.tfw, .jgw, .pgw, etc.)
- * Format (6 lines):
- * pixel width (meters/degrees)
- * rotation (typically 0)
- * rotation
- * pixel height (negative, meters/degrees)
- * x coordinate of upper-left corner
- * y coordinate of upper-left corner
- */
+// Reads a world file (.tfw/.jgw/.pgw). 6 lines: pixel width, rotation, rotation,
+// pixel height (negative), upper-left x, upper-left y.
 async function readWorldFile(imagePath) {
   try {
     const basePath = imagePath.substring(0, imagePath.lastIndexOf('.'));
@@ -143,7 +116,7 @@ async function readWorldFile(imagePath) {
           yRotation: lines[2],
           xUpperLeft: lines[4],
           yUpperLeft: lines[5],
-          crs: 'EPSG:4326', // Usually WGS84 for geographic coordinates
+          crs: 'EPSG:4326', // assumes WGS84
         };
       }
     }
@@ -155,10 +128,7 @@ async function readWorldFile(imagePath) {
   }
 }
 
-/**
- * Reads embedded GeoTIFF georeferencing (ModelTransformation/tiepoint tags)
- * — the file's own authoritative extent, preferred over hand-typed bounds.
- */
+// Reads embedded GeoTIFF georeferencing (ModelTransformation/tiepoint tags); preferred over hand-typed bounds.
 async function extractGeoTIFFMetadata(imagePath) {
   try {
     const GeoTIFFLib = require('geotiff');
@@ -170,8 +140,7 @@ async function extractGeoTIFFMetadata(imagePath) {
 
     const [west, south, east, north] = bbox;
 
-    // Reject anything that isn't plausible WGS84 degrees (e.g. a projected
-    // CRS like UTM) rather than silently producing wrong coordinates.
+    // reject anything that isn't plausible WGS84 degrees (e.g. UTM) instead of producing wrong coords
     const looksLikeDegrees =
       west >= -180 && east <= 180 && south >= -90 && north <= 90 && east > west && north > south;
     if (!looksLikeDegrees) {
@@ -199,8 +168,8 @@ async function extractGeoTIFFMetadata(imagePath) {
 
 // Convert pixel coordinates to [latitude, longitude].
 function pixelToGeo(pixelX, pixelY, georeference) {
-  // 'worldfile' and 'manual_bounds' georeferences are both normalized to the
-  // same fields by extractGeoreference(), so this works for either.
+  // worldfile and manual_bounds are both normalized to the same fields, so this works for either
+
   if (georeference && georeference.xUpperLeft !== undefined && georeference.pixelWidth !== undefined) {
     const { xUpperLeft, yUpperLeft, pixelWidth, pixelHeight } = georeference;
 

@@ -1,13 +1,5 @@
-// Shared municipality resolution helper. Every write path that ingests data
-// tagged with a municipality name resolves it to municipalities.id here,
-// creating the row on first sight, so resolution logic stays in one place.
-
-/**
- * Resolve a municipality name to its id, creating the row if needed.
- * Case-insensitive.
- * @param {import('pg').Pool | import('pg').PoolClient} db - pool, or a
- *   transaction client inside a BEGIN/COMMIT block.
- */
+// Resolves a municipality name to municipalities.id, creating the row on first sight.
+// Case-insensitive. @param db - pool, or a transaction client inside BEGIN/COMMIT.
 async function getOrCreateMunicipalityId(db, municipalityName) {
   const existing = await db.query(
     `SELECT id FROM municipalities WHERE LOWER(name) = LOWER($1)`,

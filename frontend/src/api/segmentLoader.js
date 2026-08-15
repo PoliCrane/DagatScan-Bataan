@@ -1,24 +1,14 @@
-/**
- * Segment Loader Service
- * Fetches real erosion data from database and creates segment definitions
- * Falls back to hardcoded segments if database data unavailable
- */
+// Fetches real erosion data from the database and builds segment definitions.
+// Falls back to hardcoded segments if database data is unavailable.
 
 import { classifyErosionRisk, getRiskColor } from "../utils/segmentData";
 
 import { API_BASE_URL } from "../config/api";
-// Re-exported so existing imports (e.g. areaSegments.js) keep working
-// unchanged — segmentData.js is the single source of truth for classification.
+// re-exported for existing imports; segmentData.js is the source of truth for classification
 export const calculateRiskLevel = classifyErosionRisk;
 export { getRiskColor };
 
-/**
- * Fetch zones from database and convert to segments
- * Uses actual GeoJSON geometries stored in database (no artificial coastline division)
- * @param {string} municipality - Municipality name
- * @param {number} year - Optional specific year to fetch (defaults to latest)
- * @returns {Promise<array>} - Array of segments with real coordinates from stored geometries
- */
+// fetches zones from the database and converts to segments using their stored GeoJSON geometry
 export const fetchMunicipalitySegments = async (municipality, year = null) => {
   try {
     let url = `${API_BASE_URL}/api/shoreline/municipality/${encodeURIComponent(municipality)}/zones`;
@@ -51,9 +41,7 @@ export const fetchMunicipalitySegments = async (municipality, year = null) => {
     const segments = zones
       .filter(zone => zone.geojsonData && zone.geojsonData.geometry) // Only include zones with geometry
       .map((zone) => {
-        // Calculate risk from erosionRate (don't trust stored riskLevel which may be wrong).
-        // Pass the raw value through (not coerced to 0) so a null/undefined
-        // rate (baseline years) correctly classifies as NO_DATA.
+        // recompute risk from erosionRate (don't trust stored riskLevel); raw value passed through so null/undefined classifies as NO_DATA
         const calculatedRisk = classifyErosionRisk(zone.erosionRate);
 
         // Extract coordinates from stored GeoJSON geometry

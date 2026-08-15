@@ -9,17 +9,12 @@ const { classifyErosionRisk, RISK_COLORS, RISK_LABELS } = require("../services/r
 
 const router = express.Router();
 
-// Same fixed shoreline colors as the Erosion Analysis page's legend
-// (frontend/src/components/ErosionLegend.jsx) so the PDF map matches the
-// live app exactly, independent of risk level.
+// Same fixed shoreline colors as the Erosion Analysis legend (ErosionLegend.jsx) so the PDF matches the live app.
 const PREVIOUS_SHORELINE_COLOR = "#FFEA00";
 const CURRENT_SHORELINE_COLOR = "#FF3131";
 const EROSION_AREA_COLOR = "#fc4c00";
 
-/**
- * Bounding box (with padding) from one or more [lon, lat] coordinate
- * arrays — used when no stored satellite image bounds are available.
- */
+// Bounding box (with padding) from [lon, lat] coordinate arrays; used when no stored image bounds exist.
 function bboxFromCoordinateSets(coordinateSets, paddingRatio = 0.2) {
   const points = coordinateSets.flat();
   let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
@@ -34,10 +29,7 @@ function bboxFromCoordinateSets(coordinateSets, paddingRatio = 0.2) {
   return { west: minLon - lonPad, east: maxLon + lonPad, south: minLat - latPad, north: maxLat + latPad };
 }
 
-/**
- * Projects one or more [lon, lat] coordinate arrays into a pixel box,
- * preserving aspect ratio and inverting latitude (north = up).
- */
+// Projects [lon, lat] coordinate arrays into a pixel box, preserving aspect ratio, north = up.
 function projectCoordinateSets(coordinateSets, box) {
   const points = coordinateSets.flat();
   let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
@@ -77,10 +69,7 @@ function buildInterpretation({ specificArea, baselineYear, year, erosionRate, ri
   return `The selected coastal area (${specificArea})${fromTo} ${trend}. Based on the calculated erosion rate of ${Math.abs(erosionRate).toFixed(2)} m/year, the area is classified as ${riskLabel}.`;
 }
 
-/**
- * GET /api/reports/:zoneId/pdf
- * Streams a generated PDF assessment report for a single shoreline zone record
- */
+// Streams a generated PDF assessment report for a single shoreline zone record.
 router.get("/:zoneId/pdf", async (req, res) => {
   try {
     const { zoneId } = req.params;
@@ -114,8 +103,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
     const riskLevel = classifyErosionRisk(erosionRate);
     const specificArea = row.specific_area || `Zone ${row.id}`;
 
-    // Baseline zone (earliest year on record) is the "previous shoreline"; run
-    // concurrently with the independent satellite imagery lookup below.
+    // baseline zone (earliest year) is the "previous shoreline"; run concurrently with the imagery lookup
     const [baselineResult, imageryResult] = await Promise.all([
       pool.query(
         `SELECT year, geojson_data
@@ -134,9 +122,8 @@ router.get("/:zoneId/pdf", async (req, res) => {
     const currentCoords = extractCoordinatesFromGeoJSON(row.geojson_data);
     const baselineCoords = baselineRow ? extractCoordinatesFromGeoJSON(baselineRow.geojson_data) : null;
 
-    // Prefer the georeferenced bounds of the actual satellite image on file
-    // for this area/year (so the basemap lines up with what was analyzed);
-    // fall back to a padded box around the shoreline coordinates.
+    // prefer the actual satellite image's bounds so the basemap lines up with what was
+    // analyzed; fall back to a padded box around the shoreline coordinates
     let mapBounds = null;
     if (imageryResult.rows[0]?.bounds) {
       mapBounds = imageryResult.rows[0].bounds;
@@ -221,8 +208,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
           outputHeight: mapBox.h * 2,
         });
       } catch (mapErr) {
-        // Likely offline / OSM tile server unreachable — fall back to the
-        // plain vector-only rendering below instead of failing the report.
+        // likely offline/tile server unreachable - fall back to plain vector rendering instead of failing
         console.warn("Static basemap render failed, falling back to plain background:", mapErr.message);
       }
     }

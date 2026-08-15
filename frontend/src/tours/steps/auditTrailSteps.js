@@ -2,9 +2,7 @@ import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 import { scrollTargetIntoView } from "../scrollTargetIntoView";
 import { scrollTargetIntoViewNearest } from "../scrollTargetIntoViewNearest";
 
-// .at-severity-badge only renders once the audit-logs fetch in
-// AuditTrail.jsx resolves and at least one entry exists — same reasoning
-// as reportsSteps.js's waitForElement.
+// polls the DOM until an element renders (e.g. after the audit-logs fetch resolves), then scrolls it into view
 const waitForElement = (selector, timeout = 5000) => () =>
   new Promise((resolve) => {
     const start = Date.now();
@@ -45,12 +43,7 @@ export const auditTrailSteps = [
       "Use the Search box to find an entry by actor, action, or target. The Category and Severity filters narrow the log further, and Reset Filters clears everything back to the full list.",
   },
   {
-    // Targets just the table header, not .at-table-container itself — the
-    // container can grow to 25 rows tall (PAGE_SIZE in AuditTrail.jsx) and
-    // easily exceeds the viewport, which made Floater (its boundary is
-    // document.body, see joyrideTheme.js) place this step's tooltip outside
-    // the visible area. The header is a short element that's always near
-    // the top of the table regardless of row count.
+    // targets the table header, not the container — the container can grow to 25 rows and push the tooltip off-screen
     target: ".at-table thead",
     placement: "bottom",
     title: "Activity Log",

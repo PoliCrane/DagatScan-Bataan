@@ -1,10 +1,7 @@
 import useIsMobile from "../hooks/useIsMobile";
 import "./MobileBlockOverlay.css";
 
-// Sits outside <BrowserRouter> in App.jsx so it covers every route, public
-// and admin alike, with no dependency on routing state. No dismiss action —
-// this is a firm block, not a warning banner: the map/table-heavy admin
-// tooling this system wraps isn't usable on a phone-sized screen.
+// no dismiss action — the map/table-heavy admin tooling isn't usable on a phone-sized screen
 export default function MobileBlockOverlay() {
   const isMobile = useIsMobile();
 

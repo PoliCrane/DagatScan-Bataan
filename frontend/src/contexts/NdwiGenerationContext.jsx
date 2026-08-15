@@ -8,21 +8,12 @@ const POLL_INTERVAL_MS = 3000;
 const NdwiGenerationContext = createContext(null);
 
 /**
- * Tracks in-flight NDWI generation app-wide (mounted in App.jsx, above the
- * router) — both single-year ("Generate This Year") and the multi-year
- * "Generate All Years" batch — so progress survives navigating away from
- * Data Upload, and a second click from another page can't start a
- * duplicate request on top of one still running.
- *
- * The batch job's server-side state lives in-memory on the backend (see
- * ndwiBatchWorker.js), not a DB table — this context mirrors the active job
- * id to localStorage so polling can resume after a hard refresh, same as
- * before, but a server restart loses the job's progress-tracking wrapper
- * (the actual processed years are already safely saved regardless).
- *
- * Single-year generation has no server-side job to poll — it's one direct
- * request/response — so it's tracked separately below (singleYear) and
- * doesn't survive a hard refresh, unlike the batch.
+ * Tracks in-flight NDWI generation app-wide (mounted in App.jsx above the
+ * router) so progress survives page navigation. Batch job state lives
+ * in-memory on the backend; the active job id is mirrored to localStorage
+ * so polling resumes after a hard refresh. Single-year generation is a
+ * direct request/response with no server-side job, tracked separately
+ * (singleYear) and doesn't survive a refresh.
  */
 export function NdwiGenerationProvider({ children }) {
   const [jobId, setJobId] = useState(() => {
@@ -50,9 +41,7 @@ export function NdwiGenerationProvider({ children }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
-        // Job not found (server restarted, or a stale id from a previous
-        // session) or no longer authorized — nothing useful to track, stop
-        // quietly.
+        // job not found or no longer authorized — stop quietly
         clearPolling();
         localStorage.removeItem(STORAGE_KEY);
         setJobId(null);
@@ -67,7 +56,7 @@ export function NdwiGenerationProvider({ children }) {
         setRunning(false);
       }
     } catch {
-      // Transient network hiccup — keep polling, next tick retries.
+      // network hiccup — next tick retries
     }
   }, [clearPolling]);
 
@@ -77,8 +66,7 @@ export function NdwiGenerationProvider({ children }) {
     intervalRef.current = setInterval(() => pollOnce(id), POLL_INTERVAL_MS);
   }, [clearPolling, pollOnce]);
 
-  // Resume tracking a job that was still running when the page was last
-  // closed/refreshed.
+  // resume tracking a job still running when the page was last closed
   useEffect(() => {
     if (jobId) beginPolling(jobId);
     return clearPolling;
@@ -110,10 +98,7 @@ export function NdwiGenerationProvider({ children }) {
     return data;
   }, [beginPolling]);
 
-  // Runs the actual fetch here (not in DataUpload.jsx) so it lives in this
-  // provider's closure — mounted once in App.jsx, above the router, so the
-  // request keeps running and updating shared state no matter which page
-  // is active when it resolves.
+  // fetch lives here (not in DataUpload.jsx) so it keeps running and updating shared state regardless of active page
   const startSingleYear = useCallback(async (payload) => {
     setSingleYear({ generating: true, year: payload.year, result: null, error: null });
     try {
@@ -143,10 +128,8 @@ export function NdwiGenerationProvider({ children }) {
     }
   }, []);
 
-  // Best-effort — doesn't optimistically flip local state, the next poll
-  // tick (already running every 3s) reflects whatever the server actually
-  // did. Can only pre-empt the *next* year the worker was about to start,
-  // not one already mid-processing.
+  // best-effort; doesn't flip local state, the next poll tick reflects the real server state.
+  // can only pre-empt the next year, not one already mid-processing
   const cancelBatch = useCallback(async () => {
     if (!jobId) return;
     const token = localStorage.getItem("token");
@@ -156,7 +139,7 @@ export function NdwiGenerationProvider({ children }) {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch {
-      // Transient network hiccup — the next poll tick will show the real state regardless.
+      // network hiccup — next poll tick shows the real state
     }
   }, [jobId]);
 

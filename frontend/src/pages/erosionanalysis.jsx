@@ -22,14 +22,11 @@ import { erosionAnalysisSteps } from "../tours/steps/erosionAnalysisSteps";
 import { API_BASE_URL } from "../config/api";
 // Colors match ErosionLegend's meaning-based palette (current/previous/predicted).
 const CURRENT_SHORELINE_COLOR = "#FF3131";
-// Matches the "Erosion Area" legend swatch and the same shaded ribbon used
-// in the generated PDF report's map (backend/routes/reports.js).
+// Matches the "Erosion Area" legend swatch and the PDF report map's shaded ribbon.
 const EROSION_AREA_COLOR = "#fc4c00";
-// Shown instead of EROSION_AREA_COLOR for accretion (positive erosion rate) —
-// teal-green, distinct from the municipal boundary outline's blue family.
+// Shown instead of EROSION_AREA_COLOR for accretion (positive erosion rate)
 const ACCRETION_AREA_COLOR = "#66CDAA";
-// Muted color for segments that don't have 2+ years of data yet — visible but
-// clearly not interactive for Compare/Predict, so the area stays discoverable.
+// Muted color for segments without 2+ years of data — visible but not interactive
 const LOCKED_SEGMENT_COLOR = "#9CA3AF";
 
 function MapController({ geoJsonData, bataanBounds, selectedMunicipality, municipalityBounds, satelliteBounds }) {
@@ -58,8 +55,7 @@ function MapController({ geoJsonData, bataanBounds, selectedMunicipality, munici
   return null;
 }
 
-// Municipality/segment clicks stop propagation, so any click reaching here
-// is truly outside everything — back out to the full Bataan overview.
+// Municipality/segment clicks stop propagation, so a click reaching here is outside everything
 function MapClickOutsideHandler({ onOutsideClick }) {
   useMapEvents({
     click: () => onOutsideClick(),
@@ -85,26 +81,22 @@ export default function ErosionAnalysis() {
   const [predictedYear, setPredictedYear] = useState(null);
   const [predictedShoreline, setPredictedShoreline] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
-  // Derived from the same per-segment EPR data used to draw the predicted
-  // shoreline, so the card never disagrees with the map.
+  // Derived from the same per-segment EPR data used to draw the predicted shoreline
   const [predictionResult, setPredictionResult] = useState(null);
 
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.EROSION_ANALYSIS, erosionAnalysisSteps);
 
-  // Comparison state. *IsEstimated arrays flag whether each shoreline is real
-  // uploaded geometry (measured) or an EPR-offset approximation (estimated).
+  // *IsEstimated arrays flag whether a shoreline is real uploaded geometry or an EPR-offset approximation
   const [comparedYear, setComparedYear] = useState(null);
   const [comparedShoreline, setComparedShoreline] = useState(null);
   const [comparedIsEstimated, setComparedIsEstimated] = useState([]);
   const [selectedYearComparison, setSelectedYearComparison] = useState(null);
   const [selectedYearShoreline, setSelectedYearShoreline] = useState(null);
   const [selectedYearIsEstimated, setSelectedYearIsEstimated] = useState([]);
-  // Per-segment erosion rate for the compared pair, used only to pick the
-  // change-area ribbon color (erosion vs. accretion) — not displayed directly.
+  // Per-segment erosion rate for the compared pair, used only for the change-area ribbon color
   const [comparedSegmentErosionRate, setComparedSegmentErosionRate] = useState([]);
 
-  // Shoreline segment selection — lets the user restrict compare/predict to
-  // one stretch of coast instead of the entire current shoreline
+  // Lets the user restrict compare/predict to one stretch of coast instead of the whole shoreline
   const [shorelineSegments, setShorelineSegments] = useState([]);
   const [selectedSegmentId, setSelectedSegmentId] = useState(null);
 
@@ -115,7 +107,6 @@ export default function ErosionAnalysis() {
         const data = await response.json();
         setGeoJsonData(data);
 
-        // Calculate bounds from GeoJSON to fit ONLY Bataan
         const geoJsonLayer = L.geoJSON(data);
         const bounds = geoJsonLayer.getBounds();
         setBataanBounds(bounds);
@@ -127,8 +118,7 @@ export default function ErosionAnalysis() {
     loadGeoJson();
   }, []);
 
-  // Satellite-detected measured waterline(s) — one entry per distinct
-  // analyzed area (specific_area), separate from the polygon-based simulation
+  // One entry per distinct analyzed area (specific_area), separate from the polygon-based simulation
   const [satelliteAreas, setSatelliteAreas] = useState([]);
   const [satelliteBounds, setSatelliteBounds] = useState(null);
 
@@ -144,7 +134,7 @@ export default function ErosionAnalysis() {
     }
 
     try {
-      // Find all features for this municipality (handles multiple polygons/islands)
+      // Handles multiple polygons/islands per municipality
       const municipalityFeatures = geoJsonData.features.filter(
         (feature) => feature.properties?.MUNICIPALI?.toUpperCase() === selectedMunicipality.toUpperCase()
       );
@@ -154,7 +144,7 @@ export default function ErosionAnalysis() {
         return;
       }
 
-      // Filter to only Polygon features and find the largest one (main landmass)
+      // Find the largest Polygon feature (main landmass)
       const polygonFeatures = municipalityFeatures.filter(f => f.geometry?.type === "Polygon");
       let mainFeature = polygonFeatures[0];
 
@@ -168,18 +158,15 @@ export default function ErosionAnalysis() {
         });
       }
 
-      // Calculate bounds for this municipality
       const muniGeoJsonLayer = L.geoJSON(mainFeature);
       const muniBounds = muniGeoJsonLayer.getBounds();
       setMunicipalityBounds(muniBounds);
 
-      // Always extract the polygon coastline as fallback baseline
+      // Polygon coastline is the fallback baseline; satellite coastline loads separately below
       const rawCoastline = extractCoastline(geoJsonData, selectedMunicipality);
       const smoothedCoastline = rawCoastline.length > 0 ? smoothCoastline(rawCoastline, 1) : [];
 
       (async () => {
-        // Polygon coastline is the base for offset simulation; satellite
-        // coastline loads separately as the "Current Measured Shoreline".
         if (smoothedCoastline.length === 0) {
           console.warn(`No polygon coastline found for ${selectedMunicipality}`);
           setCoastlinePoints([]);
@@ -191,14 +178,13 @@ export default function ErosionAnalysis() {
 
         setCoastlinePoints(smoothedCoastline);
 
-        // 404 with a valid body means "no satellite data" — branch on
-        // hasSatelliteCoastline, not res.ok, or stale areas stick on screen.
+        // 404 with a valid body means "no satellite data" — branch on hasSatelliteCoastline, not res.ok
         try {
           const satRes = await fetch(`${API_BASE_URL}/api/shoreline/satellite-coastline/${encodeURIComponent(selectedMunicipality)}`);
           const satData = await satRes.json();
           if (satData.hasSatelliteCoastline && satData.areas?.length > 0) {
             setSatelliteAreas(satData.areas);
-            // Compute bounds across all analyzed areas so MapController can zoom to them
+            // Bounds across all analyzed areas, for MapController to zoom to
             const allPoints = satData.areas.flatMap(a => a.coastlinePoints);
             const lats = allPoints.map(p => p[0]);
             const lngs = allPoints.map(p => p[1]);
@@ -214,7 +200,6 @@ export default function ErosionAnalysis() {
           setSatelliteBounds(null);
         }
 
-        // Fetch yearly erosion data using polygon coastline as base
         const yearly = await getShorelineData(selectedMunicipality, smoothedCoastline, {
           startYear: 2015,
           endYear: 2026,
@@ -253,8 +238,7 @@ export default function ErosionAnalysis() {
     }
   }, [selectedMunicipality, geoJsonData]);
 
-  // One segment per analyzed satellite area, or a single fallback segment
-  // for the whole polygon coastline when none exist.
+  // One segment per analyzed satellite area, or a fallback segment for the whole polygon coastline
   useEffect(() => {
     if (!selectedMunicipality) {
       setShorelineSegments([]);
@@ -271,8 +255,7 @@ export default function ErosionAnalysis() {
       } else {
         const fallbackShoreline = yearlyShorelineData[yearlyShorelineData.length - 1]?.shoreline;
         if (fallbackShoreline && fallbackShoreline.length >= 2) {
-          // Fallback: whole polygon coastline as one area. Use the real LRR
-          // regression (not just the latest erosion_rate) when enough years exist.
+          // Fallback: whole polygon coastline as one area, using the LRR regression when 2+ years exist
           const hasSufficientData = yearlyShorelineData.length >= 2;
           let lrrRate = null;
           let lrrConfidence = null;
@@ -320,13 +303,11 @@ export default function ErosionAnalysis() {
     };
   }, [selectedMunicipality, satelliteAreas, yearlyShorelineData, municipalityStats]);
 
-  // Handle municipality click
   const handleMunicipalityClick = (feature) => {
     const municipalityName = feature.properties?.MUNICIPALI;
     setSelectedMunicipality(municipalityName);
   };
 
-  // Handle back to overview
   const handleBackToOverview = () => {
     setSelectedMunicipality(null);
     setCoastlinePoints([]);
@@ -348,14 +329,12 @@ export default function ErosionAnalysis() {
     setSelectedSegmentId(null);
   };
 
-  // Handle end simulation - revert to default state
   const handleEndSimulation = () => {
     setPredictedYear(null);
     setPredictedShoreline(null);
     setPredictionResult(null);
   };
 
-  // Handle end comparison - revert to default state
   const handleEndComparison = () => {
     setComparedYear(null);
     setComparedShoreline(null);
@@ -366,8 +345,7 @@ export default function ErosionAnalysis() {
     setComparedSegmentErosionRate([]);
   };
 
-  // Real uploaded geometry for an exact year, when it exists, so Compare can
-  // show measured data instead of an EPR-offset guess.
+  // Real uploaded geometry for an exact year, so Compare can show measured data instead of an EPR-offset guess
   const fetchRealAreaGeometryForYear = async (year) => {
     try {
       const res = await fetch(
@@ -386,8 +364,7 @@ export default function ErosionAnalysis() {
     }
   };
 
-  // Same /shoreline-estimate endpoint as Predict, walking backward instead
-  // of forward; used as fallback when no real geometry exists for the year.
+  // Same /shoreline-estimate endpoint as Predict, walking backward; fallback when no real geometry exists
   const fetchYearEstimates = async (targetYear, selectedSegment, baseYear) => {
     try {
       const areaParam = selectedSegment ? `&area=${encodeURIComponent(selectedSegment.name)}` : "";
@@ -407,9 +384,7 @@ export default function ErosionAnalysis() {
     }
   };
 
-  // Compares the selected segment, or all sufficient-data segments if none
-  // selected. Prefers real uploaded geometry for the exact year, falling
-  // back to the EPR-offset estimate.
+  // Compares the selected segment, or all sufficient-data segments; prefers real geometry over EPR-offset estimate
   const handleCompare = async (pastYear, selectedYear) => {
     const selectedSegment = shorelineSegments.find((s) => s.id === selectedSegmentId);
 
@@ -448,7 +423,7 @@ export default function ErosionAnalysis() {
         pastShoreline.push(realPast);
         pastEstimated.push(false);
       } else {
-        // Past year should be MORE seaward (more land), so use POSITIVE offset
+        // Past year is more seaward (more land) — positive offset
         const rate = pastEstimateByArea[seg.name]?.erosionRate ?? seg.erosionRate;
         pastShoreline.push(offsetCoastlineForPrediction(seg.shoreline, rate * (currentYear - pastYear)));
         pastEstimated.push(true);
@@ -474,9 +449,7 @@ export default function ErosionAnalysis() {
     setComparedSegmentErosionRate(segmentErosionRates);
   };
 
-  // Predicts the selected segment, or all sufficient-data segments if none
-  // selected. EPR/retreat numbers come from the /shoreline-estimate endpoint;
-  // only the line-offset geometry is computed client-side.
+  // EPR/retreat numbers come from the /shoreline-estimate endpoint; only the line-offset geometry is client-side
   const handlePredictSimulate = async (baseYear, predictionYear) => {
     setIsSimulating(true);
 
@@ -498,8 +471,7 @@ export default function ErosionAnalysis() {
       return;
     }
 
-    // Base year: the selected segment's own year, or (with nothing selected)
-    // the most recent year among all target areas.
+    // Base year: the selected segment's own year, or the most recent year among all target areas
     const baseCoastlineYear = selectedSegment
       ? (selectedSegment.year || new Date().getFullYear())
       : Math.max(...targetSegments.map((s) => s.year || new Date().getFullYear()));
@@ -518,14 +490,12 @@ export default function ErosionAnalysis() {
       return;
     }
 
-    // Match each target segment to its persisted retreat/rate by area name.
     const byArea = {};
     estimate.segments.forEach((s) => {
       byArea[s.area] = s;
     });
 
-    // Offsets each segment by its own EPR rate (not a municipality-wide
-    // number); negative offset = inland = erosion.
+    // Offsets each segment by its own EPR rate; negative offset = inland = erosion
     const predictedCoastline = targetSegments.map((seg) => {
       const segEstimate = byArea[seg.name];
       const erosionRate = segEstimate ? segEstimate.erosionRate : seg.erosionRate;
@@ -554,16 +524,12 @@ export default function ErosionAnalysis() {
     setIsSimulating(false);
   };
 
-  // Helper function to offset coastline for prediction
   /**
-   * Detect if coastline is clockwise or counterclockwise using signed area
-   * Returns 1 for counterclockwise, -1 for clockwise
+   * Detects coastline winding via signed area (shoelace formula). Returns 1 for CCW, -1 for CW.
    */
   const detectCoastlineOrientation = (coastlinePoints) => {
     if (!coastlinePoints || coastlinePoints.length < 3) return 1;
 
-    // Calculate signed area (shoelace formula) 
-    // In geographic coords [lat, lon]: area = sum((lon_i * lat_j - lon_j * lat_i))
     let signedArea = 0;
     for (let i = 0; i < coastlinePoints.length; i++) {
       const j = (i + 1) % coastlinePoints.length;
@@ -577,22 +543,18 @@ export default function ErosionAnalysis() {
   };
 
   /**
-   * Offset coastline with correct direction detection
-   * Positive offsetMeters = seaward (more land / outward)
-   * Negative offsetMeters = inland (erosion / inward)
+   * Positive offsetMeters = seaward (more land), negative = inland (erosion)
    */
   const offsetCoastlineForPrediction = (coastlinePoints, offsetMeters) => {
     if (!coastlinePoints || coastlinePoints.length < 2) return [];
 
     const offsetDegrees = offsetMeters / 111000; // Convert meters to degrees
 
-    // Detect coastline orientation to ensure consistent normal direction
     const orientation = detectCoastlineOrientation(coastlinePoints);
 
     const offsetPoints = coastlinePoints.map((point, index) => {
       let tangent = [0, 0];
 
-      // Calculate tangent vector (direction of coastline travel)
       if (index === 0) {
         tangent = [
           coastlinePoints[1][0] - point[0],
@@ -618,18 +580,15 @@ export default function ErosionAnalysis() {
         ];
       }
 
-      // Normalize tangent
       const tangentLength = Math.sqrt(tangent[0] * tangent[0] + tangent[1] * tangent[1]);
       if (tangentLength === 0) return point;
 
       tangent[0] /= tangentLength;
       tangent[1] /= tangentLength;
 
-      // Calculate perpendicular (normal) vector based on orientation
-      // Both CCW and CW use left perpendicular to point seaward (outward)
+      // Left perpendicular points seaward regardless of CCW/CW winding
       const normal = [-tangent[1], tangent[0]];
 
-      // Apply offset in the normal direction
       const newPoint = [
         point[0] + normal[0] * offsetDegrees,
         point[1] + normal[1] * offsetDegrees,
@@ -641,8 +600,7 @@ export default function ErosionAnalysis() {
     return offsetPoints;
   };
 
-  // Places markers at a configurable fraction along the line (not the
-  // midpoint) so overlapping year lines don't stack badges on top of each other.
+  // Marker position at a fraction along the line, not the midpoint, so overlapping year lines don't stack badges
   const pointAtFraction = (line, fraction) => {
     if (!line || line.length === 0) return null;
     const idx = Math.min(line.length - 1, Math.floor(line.length * fraction));
@@ -653,8 +611,7 @@ export default function ErosionAnalysis() {
     ? bataanBounds.getCenter()
     : [14.657, 120.500];
 
-  // Compare/Predict need 2+ years of data on the selected segment, or on at
-  // least one segment if none is selected.
+  // Compare/Predict need 2+ years of data on the selected segment, or on at least one if none selected
   const effectiveSelectedSegment = shorelineSegments.find((s) => s.id === selectedSegmentId);
   const canAnalyze = effectiveSelectedSegment
     ? effectiveSelectedSegment.hasSufficientData
@@ -756,8 +713,7 @@ export default function ErosionAnalysis() {
                 }
 
                 layer.on("click", (e) => {
-                  // Stop propagation so clicking a municipality polygon (selected
-                  // or not) never reaches the map's outside-click deselect handler.
+                  // Stops the click from reaching the map's outside-click deselect handler
                   L.DomEvent.stopPropagation(e);
                   if (isLocked) return;
                   if (!selectedMunicipality) {
@@ -777,8 +733,7 @@ export default function ErosionAnalysis() {
             />
           )}
 
-          {/* Current shoreline, one segment per analyzed area. Hidden during
-              compare — the compare tool draws its own line in the same red. */}
+          {/* Current shoreline, one segment per analyzed area. Hidden during compare. */}
           {selectedMunicipality && !comparedYear && shorelineSegments.map((segment) => {
             const isSelected = segment.id === selectedSegmentId;
             const segmentColor = segment.hasSufficientData ? CURRENT_SHORELINE_COLOR : LOCKED_SEGMENT_COLOR;
@@ -800,8 +755,7 @@ export default function ErosionAnalysis() {
             );
           })}
 
-          {/* Segment markers. Locked (insufficient-data) segments render muted
-              but still selectable. Hidden during compare, like the shoreline above. */}
+          {/* Segment markers. Locked segments render muted but still selectable. Hidden during compare. */}
           {selectedMunicipality && !comparedYear && shorelineSegments.map((segment) => {
             const isSelected = segment.id === selectedSegmentId;
             const segmentColor = segment.hasSufficientData ? CURRENT_SHORELINE_COLOR : LOCKED_SEGMENT_COLOR;
@@ -885,11 +839,9 @@ export default function ErosionAnalysis() {
             );
           })}
 
-          {/* Render current shoreline and predicted shoreline when municipality is selected */}
           {selectedMunicipality && yearlyShorelineData.length > 0 && (
             <>
-              {/* Shaded change-area ribbon between compared/selected shorelines,
-                  colored by erosion vs accretion. Renders first, below both lines. */}
+              {/* Change-area ribbon between compared/selected shorelines, colored by erosion vs accretion. Renders below both lines. */}
               {comparedShoreline && comparedYear && selectedYearShoreline && selectedYearComparison &&
                 comparedShoreline.map((compLine, i) => {
                   const currLine = selectedYearShoreline[i];
@@ -912,7 +864,7 @@ export default function ErosionAnalysis() {
                   );
                 })}
 
-              {/* Past-year compared shoreline(s), yellow. Renders second (underneath). */}
+              {/* Past-year compared shoreline(s), yellow, underneath */}
               {comparedShoreline && comparedYear && comparedShoreline.map((line, i) => (
                 <Polyline
                   key={`compared-${i}`}
@@ -923,7 +875,7 @@ export default function ErosionAnalysis() {
                 />
               ))}
 
-              {/* Selected-year compared shoreline(s), red. Renders third (on top). */}
+              {/* Selected-year compared shoreline(s), red, on top */}
               {selectedYearShoreline && selectedYearComparison && selectedYearShoreline.map((line, i) => (
                 <Polyline
                   key={`selected-year-${i}`}
@@ -934,8 +886,7 @@ export default function ErosionAnalysis() {
                 />
               ))}
 
-              {/* Year markers on the compare lines; the base segment marker is
-                  hidden during compare since it doesn't update per-year. */}
+              {/* Year markers on the compare lines; base segment marker is hidden during compare */}
               {comparedShoreline && comparedYear && comparedShoreline.map((line, i) => {
                 const pos = pointAtFraction(line, 0.3);
                 if (!pos) return null;
@@ -986,9 +937,7 @@ export default function ErosionAnalysis() {
                 );
               })}
 
-              {/* Shaded change-area ribbon between the current and predicted shoreline,
-                  colored by erosion vs accretion — same construction as the compare
-                  ribbon above. Renders first, below the predicted line/marker. */}
+              {/* Change-area ribbon between current and predicted shoreline, below the predicted line/marker */}
               {predictedShoreline && predictedYear && predictedShoreline.map((seg) => {
                 const currLine = shorelineSegments.find((s) => s.id === seg.id)?.shoreline;
                 const predLine = seg.shoreline;
@@ -1010,7 +959,7 @@ export default function ErosionAnalysis() {
                 );
               })}
 
-              {/* Predicted shoreline(s), green, one per target segment. Renders last (on top). */}
+              {/* Predicted shoreline(s), green, one per target segment, on top */}
               {predictedShoreline && predictedYear && predictedShoreline.map((seg) => (
                 <Polyline
                   key={`predicted-${seg.id}`}

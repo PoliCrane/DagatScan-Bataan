@@ -1,16 +1,8 @@
 /**
  * Erosion risk classification — single source of truth for the frontend.
- *
- * Scheme follows MGB's published "Coastal susceptibility / Physical
- * vulnerability rating criteria" (Table 1, Temporal changes in shoreline
- * position, meters/yr): 5 tiers driven by erosion_rate (m/year, negative =
- * erosion/retreat, positive = accretion/growth).
- *
- * Kept as an ordered first-match tier table so adding/adjusting a tier later
- * is a one-line change, not a rewrite of every call site. The backend has
- * its own copy (backend/services/riskClassification.js) — no shared package
- * between the two runtimes, so after editing either file's thresholds, run
- * `node backend/verify-risk-tiers-sync.js` to confirm they still agree.
+ * Tiers follow MGB's published shoreline-change rating criteria (Table 1, m/year).
+ * Backend has its own copy (backend/services/riskClassification.js) — run
+ * `node backend/verify-risk-tiers-sync.js` after editing either file's thresholds.
  */
 
 const RISK_TIERS = [

@@ -1,9 +1,7 @@
 import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 import { scrollTargetIntoViewNearest } from "../scrollTargetIntoViewNearest";
 
-// .icon-edit-btn/.status-toggle-btn only render once the accounts/requests
-// fetch in UserManagement.jsx resolves and at least one row exists — same
-// reasoning as reportsSteps.js's waitForElement.
+// polls the DOM until an element renders (e.g. after the accounts fetch resolves), then scrolls it into view
 const waitForElement = (selector, timeout = 5000) => () =>
   new Promise((resolve) => {
     const start = Date.now();

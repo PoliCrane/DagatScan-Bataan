@@ -21,8 +21,7 @@ export default function DataUpload() {
     }
   }, [navigate]);
 
-  // Satellite Image Upload is hidden (not deleted) — the system's scope is
-  // now NDWI-only auto-generation. Flip to true to bring the card back.
+  // Satellite upload is hidden (not deleted) — flip to true to bring it back
   const SHOW_SATELLITE_UPLOAD = false;
 
   const [uploadType, setUploadType] = useState("ndwi");
@@ -33,8 +32,7 @@ export default function DataUpload() {
   const [uploadResults, setUploadResults] = useState([]);
   const dataUploadSteps = useMemo(() => buildDataUploadSteps(setUploadType), [setUploadType]);
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DATA_UPLOAD, dataUploadSteps);
-  // Two phases: "uploading" (real byte progress, capped at 90%) then
-  // "processing" (indeterminate — server-side analysis has no byte signal).
+  // "uploading" caps at 90% byte progress; "processing" is indeterminate (server has no byte signal)
   const [uploadPhase, setUploadPhase] = useState("idle");
 
   // NDWI Generator fields
@@ -44,16 +42,10 @@ export default function DataUpload() {
   const [ndwiLatMax, setNdwiLatMax] = useState("");
   const [ndwiYear, setNdwiYear] = useState(new Date().getFullYear().toString());
   const [ndwiCoastlineName, setNdwiCoastlineName] = useState("");
-  // Validation errors only (checked before any request is sent) — the
-  // actual generation's in-flight/result/error state lives in
-  // NdwiGenerationContext (ndwiGeneration.singleYear) instead, below.
+  // Only pre-request validation errors; generation state lives in NdwiGenerationContext below
   const [ndwiError, setNdwiError] = useState(null);
 
-  // Single-year generation is tracked app-wide by NdwiGenerationContext (see
-  // contexts/NdwiGenerationContext.jsx) so its progress survives navigating
-  // away from this page — see the floating widget in App.jsx for the
-  // persistent view of the same state, and so a second click from another
-  // page can't start a duplicate request on top of one still running.
+  // Tracked app-wide so progress survives navigating away and a second click can't start a duplicate request
   const ndwiGeneration = useNdwiGeneration();
 
   // Location & Metadata Fields
@@ -91,9 +83,7 @@ export default function DataUpload() {
     (_, i) => (2026 - i).toString()
   ).sort();
 
-  // NDWI Generator's own municipality selector — the card has no location
-  // concept today, so the Coastline Name dropdown needs one to know which
-  // municipality's coastal_areas to offer.
+  // NDWI card has no location concept of its own, so this feeds the Coastline Name dropdown
   const [ndwiMunicipality, setNdwiMunicipality] = useState("");
 
   const extractGeoJSONProperties = (file) => {
@@ -159,8 +149,7 @@ export default function DataUpload() {
     reader.readAsText(file);
   };
 
-  // Accepts decimal degrees, symbol-based DMS, or raw concatenated DMS with
-  // no separators (e.g. pasted from sources that strip °'" marks).
+  // Accepts decimal degrees, symbol-based DMS, or raw concatenated DMS with no separators
   const parseDMSOrDecimal = (value) => {
     if (!value) return null;
     const str = value.trim();
@@ -247,8 +236,7 @@ export default function DataUpload() {
     return { valid: errors.length === 0, errors };
   };
 
-  // Shared bounds/municipality/coastline-name validation + parsing for both
-  // the single-year and "all years" NDWI generation actions.
+  // Shared validation/parsing for both single-year and "all years" NDWI generation
   const validateAndParseNdwiInputs = () => {
     if (!ndwiLonMin || !ndwiLatMin || !ndwiLonMax || !ndwiLatMax) {
       return { error: "All bounds fields are required" };
@@ -402,8 +390,7 @@ export default function DataUpload() {
           const response = JSON.parse(xhr.responseText);
           setUploadResults(response.uploads || []);
 
-          // Leave image bounds filled in — reuploading another year for the
-          // same scene needs them again. "Clear" button wipes them if needed.
+          // Leave image bounds filled in — reuploading another year for the same scene needs them again
           setDatasetFile(null);
           setSatelliteFile(null);
           if (datasetInputRef.current) datasetInputRef.current.value = "";
@@ -451,7 +438,6 @@ export default function DataUpload() {
           </p>
         </div>
 
-        {/* Main Upload Section */}
         <div className="upload-main-section">
           <div className="upload-type-toggle">
             <button
@@ -463,10 +449,8 @@ export default function DataUpload() {
               NDWI Generator
             </button>
             {/*
-              Satellite Image Upload is hidden (not deleted) — the system's
-              scope is now NDWI-only auto-generation, feeding LRR/EPR directly
-              off Earth Engine imagery. Re-enable by uncommenting this button
-              and the matching card block below.
+              Satellite Image Upload hidden — NDWI-only scope now. Uncomment to bring back,
+              plus the matching card block below.
               <button
                 type="button"
                 className={`toggle-btn ${uploadType === "satellite" ? "active" : ""}`}
@@ -643,7 +627,7 @@ export default function DataUpload() {
             </div>
             )}
 
-            {/* Satellite Image Upload — hidden via SHOW_SATELLITE_UPLOAD, see declaration above */}
+            {/* Satellite Image Upload — hidden via SHOW_SATELLITE_UPLOAD */}
             {SHOW_SATELLITE_UPLOAD && uploadType === "satellite" && (
             <div className="upload-card">
               <div className="upload-card-header">
@@ -755,12 +739,10 @@ export default function DataUpload() {
                 </div>
               </div>
 
-              {/* Location & Metadata Section */}
               <div className="location-metadata-section">
                 <p className="upload-section-label">Location Details</p>
 
                 <div className="form-grid">
-                  {/* Municipality */}
                   <div className="form-group">
                     <label className="form-label">Municipality *</label>
                     <select
@@ -777,7 +759,6 @@ export default function DataUpload() {
                     </select>
                   </div>
 
-                  {/* Specific Area */}
                   <div className="form-group">
                     <label className="form-label">Specific Area *</label>
                     <AreaNameField
@@ -787,7 +768,6 @@ export default function DataUpload() {
                     />
                   </div>
 
-                  {/* Year */}
                   <div className="form-group">
                     <label className="form-label">Year of Data *</label>
                     <select
@@ -803,7 +783,6 @@ export default function DataUpload() {
                     </select>
                   </div>
 
-                  {/* Data Quality */}
                   <div className="form-group">
                     <label className="form-label">Data Quality</label>
                     <select
@@ -820,7 +799,6 @@ export default function DataUpload() {
                 </div>
               </div>
 
-              {/* Upload Progress */}
               {uploading && (
                 <div className="upload-progress-section">
                   <div className="progress-info">
@@ -845,7 +823,6 @@ export default function DataUpload() {
                 </div>
               )}
 
-              {/* Upload Results */}
               {uploadResults.length > 0 && (
                 <div className="upload-results-section">
                   <h3 className="results-title">Upload Results</h3>
@@ -889,7 +866,6 @@ export default function DataUpload() {
                 </div>
               )}
 
-              {/* Upload Button */}
               <div className="upload-actions">
                 <button
                   className="btn-upload"
@@ -930,9 +906,7 @@ export default function DataUpload() {
 
 const NDWI_MIN_YEAR = 2015;
 
-// Inline "Generate All Years" progress panel — the fuller counterpart to the
-// floating NdwiGenerationWidget (components/NdwiGenerationWidget.jsx), which
-// shows a compact version of the same tracked job anywhere else in the app.
+// Fuller progress view of the same batch job the floating widget shows elsewhere
 function NdwiBatchPanel({ batch }) {
   const { status, running, cancelBatch } = batch;
   const currentYear = new Date().getFullYear();
@@ -1005,9 +979,7 @@ function NdwiBatchPanel({ batch }) {
   );
 }
 
-// Shared by the Satellite card's "Specific Area" and the NDWI card's
-// "Coastline Name" — both need the same "pick an existing coastal_areas
-// name for this municipality, or type a new one" behavior.
+// Shared by Specific Area and Coastline Name fields — pick an existing area or type a new one
 function AreaNameField({ municipality, value, onChange, onAreaSelect }) {
   const [areas, setAreas] = useState([]);
   const [otherSelected, setOtherSelected] = useState(false);
@@ -1040,10 +1012,7 @@ function AreaNameField({ municipality, value, onChange, onAreaSelect }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [municipality]);
 
-  // Covers values set from outside this component too (e.g. GeoJSON property
-  // extraction filling in specificArea directly) — if the value isn't a
-  // known area name, show it in the editable "Others" input rather than
-  // silently discarding it from view.
+  // If the value isn't a known area name (e.g. set via GeoJSON extraction), show it in the "Others" input
   const isKnownAreaName = value !== "" && areas.some((a) => a.name === value);
   const otherMode = otherSelected || (value !== "" && !isKnownAreaName);
 
@@ -1055,8 +1024,7 @@ function AreaNameField({ municipality, value, onChange, onAreaSelect }) {
     } else {
       setOtherSelected(false);
       onChange(selected);
-      // A newly-typed ("Others") area has no bounds on file yet — only a
-      // known existing area (found in the fetched list) has one to offer.
+      // Only a known existing area has bounds on file to offer
       if (onAreaSelect) {
         const area = areas.find((a) => a.name === selected);
         if (area) onAreaSelect(area);

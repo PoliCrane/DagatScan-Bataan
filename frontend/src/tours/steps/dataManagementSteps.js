@@ -2,10 +2,7 @@ import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 import { scrollTargetIntoView } from "../scrollTargetIntoView";
 import { scrollTargetIntoViewNearest } from "../scrollTargetIntoViewNearest";
 
-// .dm-view-btn only renders once the uploads fetch in DataManagement.jsx
-// resolves and at least one dataset exists — same reasoning as
-// reportsSteps.js's waitForElement, polling the DOM instead of requiring
-// the page to expose its loading state to this file.
+// polls the DOM until an element renders (e.g. after the uploads fetch resolves), then scrolls it into view
 const waitForElement = (selector, timeout = 5000) => () =>
   new Promise((resolve) => {
     const start = Date.now();

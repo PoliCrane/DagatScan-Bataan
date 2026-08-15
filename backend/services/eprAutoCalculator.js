@@ -1,26 +1,10 @@
-/**
- * Erosion Rate Auto-Calculation Service
- * Automatically computes EPR for features missing erosionRate by comparing with previous year data
- * 
- * Usage:
- *   const { autoCalculateErosionRates } = require("./eprAutoCalculator");
- *   await autoCalculateErosionRates(dbClient, features, municipality, year);
- */
+// Computes EPR for features missing erosionRate by comparing against the previous year's data.
 
 const { calculateEPR } = require("./eprCalculator");
 const { findAreaId } = require("./coastalAreas");
 
-/**
- * Automatically calculate erosion rates and cumulative erosion for features missing them
- * Queries database for previous year data and computes EPR via haversine distance
- * Also calculates cumulative erosion from baseline (earliest available) year
- * 
- * @param {object} client - PostgreSQL client from pool.connect()
- * @param {array} features - GeoJSON features array
- * @param {string} municipality - Municipality name
- * @param {number} year - Current year
- * @returns {void} - Modifies features in-place, adding erosionRate and cumulativeErosion to properties
- */
+// Computes erosion rate and cumulative erosion (from baseline year) for features
+// missing them; modifies features in-place.
 async function autoCalculateErosionRates(client, features, municipality, year) {
   console.log(
     `\n📋 Auto-calculating EPR for ${municipality} (${year}) - ${features.length} features`
@@ -46,15 +30,13 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
 
     console.log(`  Checking ${specificArea}...`);
 
-    // Extract current coordinates from feature
     const currentCoords = extractFeatureCoordinates(feature);
     if (!currentCoords || currentCoords.length === 0) {
       console.log(`  ⚠️  ${specificArea}: No valid coordinates found`);
       continue;
     }
 
-    // No municipality on file yet, or no area on file matching this name yet
-    // — either way there's nothing previous to compare against.
+    // no municipality or matching area on file yet - nothing to compare against
     const areaId = municipalityId ? await findAreaId(client, municipalityId, specificArea) : null;
     if (!areaId) {
       console.log(`  ℹ️  ${specificArea}: No existing area on file yet`);
@@ -62,8 +44,7 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
     }
 
     try {
-      // Query for previous year data (most recent before current year)
-      // Using shoreline_zones table where data is actually being inserted
+      // most recent year before current, from shoreline_zones
       const prevData = await client.query(
         `SELECT
           sz.year,
@@ -82,14 +63,12 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
         continue;
       }
 
-      // Extract previous data
       const prevRecord = prevData.rows[0];
-      const prevYear = parseInt(prevRecord.year); // Ensure number type
+      const prevYear = parseInt(prevRecord.year);
       const prevGeoJSON = prevRecord.geojson_data;
 
       console.log(`    Previous year found: ${prevYear}`);
 
-      // Extract previous coordinates
       const prevCoords = extractCoordinatesFromGeoJSON(prevGeoJSON);
       if (!prevCoords || prevCoords.length === 0) {
         console.log(
@@ -98,21 +77,18 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
         continue;
       }
 
-      // Calculate EPR (erosion rate between consecutive years)
       try {
         const eprResult = calculateEPR(
           prevCoords,
           currentCoords,
           prevYear,
-          parseInt(year) // Ensure number type
+          parseInt(year)
         );
 
-        // Calculate cumulative erosion from baseline year
-        let cumulativeErosion = eprResult.distanceChange; // Start with current measurement
+        let cumulativeErosion = eprResult.distanceChange; // starting value; overwritten below if a baseline exists
         let baselineYear = null;
 
-        // Query for BASELINE year (earliest record)
-        // Using shoreline_zones table
+        // baseline = earliest record in shoreline_zones
         const baselineData = await client.query(
           `SELECT
             sz.year,
@@ -130,7 +106,6 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
           baselineYear = parseInt(baseline.year);
           console.log(`    📊 Baseline year found: ${baselineYear}`);
 
-          // If baseline year is different from previous year, calculate cumulative
           if (baselineYear < prevYear) {
             const baselineCoords = extractCoordinatesFromGeoJSON(baseline.geojson_data);
             if (baselineCoords && baselineCoords.length > 0) {
@@ -152,19 +127,16 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
               }
             }
           } else if (baselineYear === prevYear) {
-            // If baseline IS the previous year, cumulative = distance change
             console.log(
               `    📏 Cumulative distance: ${cumulativeErosion.toFixed(1)}m (same as distance change)`
             );
           }
         } else {
-          // No baseline found - this is first year, cumulative = distance change
           console.log(
             `    📏 No baseline found - cumulative distance: ${cumulativeErosion.toFixed(1)}m (first year)`
           );
         }
 
-        // Attach results to feature
         feature.properties.erosionRate = eprResult.erosionRate;
         feature.properties.distanceChange = eprResult.distanceChange;
         feature.properties.cumulativeErosion = cumulativeErosion;
@@ -193,13 +165,7 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
   console.log(`✅ Auto-calculation complete for ${municipality}\n`);
 }
 
-/**
- * Extract coordinates from a GeoJSON feature
- * Supports LineString, MultiLineString, Polygon, MultiPolygon
- * 
- * @param {object} feature - GeoJSON feature object
- * @returns {array|null} - Array of [lon, lat] coordinates or null
- */
+// Extracts coordinates from LineString/MultiLineString/Polygon/MultiPolygon features.
 function extractFeatureCoordinates(feature) {
   if (!feature || !feature.geometry) return null;
 
@@ -228,12 +194,7 @@ function extractFeatureCoordinates(feature) {
   return null;
 }
 
-/**
- * Extract coordinates from stored GeoJSON data (from database)
- * 
- * @param {object} geoJsonData - GeoJSON object with geometry property
- * @returns {array|null} - Array of [lon, lat] coordinates or null
- */
+// Same as extractFeatureCoordinates but for GeoJSON pulled from the database.
 function extractCoordinatesFromGeoJSON(geoJsonData) {
   if (!geoJsonData || !geoJsonData.geometry) return null;
   return extractFeatureCoordinates(geoJsonData);

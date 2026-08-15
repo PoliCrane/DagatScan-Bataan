@@ -1,10 +1,6 @@
-/**
- * End-Point Rate (EPR) erosion rate via haversine formula.
- * coords1 = earlier shoreline, coords2 = later shoreline.
- * @throws {Error} for invalid inputs
- */
+// End-Point Rate (EPR) erosion rate via haversine formula.
+// coords1 = earlier shoreline, coords2 = later shoreline.
 function calculateEPR(coords1, coords2, year1, year2) {
-  // Validate inputs
   if (!Array.isArray(coords1) || !Array.isArray(coords2)) {
     throw new Error("coords1 and coords2 must be arrays");
   }
@@ -21,7 +17,6 @@ function calculateEPR(coords1, coords2, year1, year2) {
     throw new Error("year1 and year2 must be different");
   }
 
-  // Validate coordinates
   const isValidCoord = (coord) => {
     return (
       Array.isArray(coord) &&
@@ -83,18 +78,14 @@ function calculateEPR(coords1, coords2, year1, year2) {
     return minDistance;
   }
 
-  // Calculate distances from each point in coords1 to its closest point in coords2
   const distances = coords1.map(findClosestDistance);
 
-  // Calculate average distance
   const averageDistance =
     distances.reduce((sum, dist) => sum + dist, 0) / distances.length;
 
-  // Calculate years apart
   const yearsApart = Math.abs(year2 - year1);
 
-  // Calculate erosion rate (negative because retreat is erosion)
-  // If year2 > year1, erosion rate is negative for retreat
+  // negative = retreat/erosion; sign flips based on year order
   const sign = year2 > year1 ? -1 : 1;
   const erosionRate = (sign * averageDistance) / yearsApart;
 
@@ -105,12 +96,9 @@ function calculateEPR(coords1, coords2, year1, year2) {
   };
 }
 
-/**
- * Linear Regression Rate (LRR) — fits a least-squares regression line across
- * every available year, unlike calculateEPR above (which only ever uses the
- * two endpoint years). More years generally means a more reliable rate.
- * @param {Array<{year: number, value: number}>} dataPoints - one point per year
- */
+// Linear Regression Rate (LRR): least-squares line across every available year,
+// unlike calculateEPR which only uses the two endpoint years.
+// @param {Array<{year: number, value: number}>} dataPoints - one point per year
 function calculateLRR(dataPoints) {
   if (!Array.isArray(dataPoints) || dataPoints.length < 2) {
     throw new Error("At least 2 years of data are required for regression");

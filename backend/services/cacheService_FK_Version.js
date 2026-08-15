@@ -1,27 +1,14 @@
-/**
- * Cache Processing Service - FK Version
- * Flow: Raw Data (via FK) -> Calculations -> Cache Tables -> API Response
- *
- * Eager model: derived values (coastal_areas EPR/risk,
- * municipality_analysis_cache) are recomputed and stored synchronously on
- * every write (see refreshMunicipalityDerived/invalidateMunicipalityCache/
- * invalidateAllCaches). Reads are plain SELECTs against those rows, with
- * recompute-on-read only as a fallback if a row is unexpectedly missing.
- *
- * getBataanSummary is the exception: it aggregates live from
- * municipality_analysis_cache on every read instead of its own cache table.
- */
+// Cache service: raw data -> calculations -> cache tables -> API response.
+// Derived values are recomputed and stored eagerly on every write; reads are
+// plain SELECTs, recomputing only if a row is unexpectedly missing.
+// getBataanSummary is the exception - it aggregates live, no cache table of its own.
 
 const pool = require("../db");
 const { classifyErosionRisk } = require("./riskClassification");
 const { calculateLRR } = require("./eprCalculator");
 
-/**
- * Row predicate for every derived erosion computation in this file:
- * satellite-detected data only (excludes placeholder GeoJSON/CSV/manual/seed
- * rows) and not deactivated. Centralized so it can't drift across call sites.
- * @param {string} alias - table alias with trailing dot (e.g. "sz."), or "" if unjoined.
- */
+// Row predicate for active, satellite-detected zones only (excludes GeoJSON/CSV/manual/seed rows).
+// @param {string} alias - table alias with trailing dot (e.g. "sz."), or "" if unjoined.
 function activeSatelliteZones(alias = "") {
   return `${alias}source_type LIKE 'Satellite Analysis%' AND ${alias}active`;
 }
@@ -40,10 +27,8 @@ async function getMunicipalityId(municipalityName) {
   }
 }
 
-/**
- * Line string length (km) via Haversine formula.
- * @param {Array} coordinates - [lng, lat] pairs, GeoJSON order (as stored in shoreline_zones.geojson_data)
- */
+// Line string length (km) via Haversine formula.
+// @param {Array} coordinates - [lng, lat] pairs, GeoJSON order
 function calculateLineStringLength(coordinates) {
   if (!coordinates || coordinates.length < 2) return 0;
 
@@ -69,9 +54,7 @@ function calculateLineStringLength(coordinates) {
   return totalDistance;
 }
 
-// Classifies erosion rates via classifyErosionRisk() and tallies risk-tier
-// counts. Single source of truth for municipality- and province-level
-// risk-distribution numbers.
+// Tallies risk-tier counts across erosion rates; single source of truth for risk-distribution numbers.
 function tallyRiskTiers(erosionRates) {
   const counts = { VERY_HIGH: 0, HIGH: 0, MODERATE: 0, LOW: 0, VERY_LOW: 0 };
   for (const rate of erosionRates) {
@@ -82,9 +65,7 @@ function tallyRiskTiers(erosionRates) {
   return counts;
 }
 
-// Converts tallyRiskTiers() counts to the snake_case JSONB shape stored in
-// municipality_analysis_cache.risk_distribution; also reused by
-// getBataanSummary() for its in-memory tally.
+// snake_case shape for municipality_analysis_cache.risk_distribution
 function tierCountsToStorageJson(counts) {
   return {
     very_high: counts.VERY_HIGH || 0,
@@ -107,9 +88,7 @@ function riskDistributionFromStorage(stored) {
   };
 }
 
-// Write path: recomputes a municipality's aggregate erosion metrics +
-// risk-tier distribution from shoreline_zones and stores them in
-// municipality_analysis_cache. Called eagerly via refreshMunicipalityDerived.
+// Recomputes a municipality's aggregate erosion metrics and risk distribution, stores in municipality_analysis_cache.
 async function computeAndStoreMunicipalityAnalysis(municipalityId) {
   try {
     const currentYear = new Date().getFullYear();
@@ -250,8 +229,7 @@ async function computeAndStoreMunicipalityAnalysis(municipalityId) {
   }
 }
 
-// Read path: plain SELECT against the eagerly-maintained cache row;
-// recomputes only if missing (e.g. municipality's first-ever analysis).
+// Reads the cache row; recomputes only if missing (e.g. first-ever analysis).
 async function getMunicipalityAnalysis(municipalityId) {
   try {
     const cached = await pool.query(
@@ -282,13 +260,8 @@ async function getMunicipalityAnalysis(municipalityId) {
   }
 }
 
-/**
- * Province-wide summary, aggregated live from municipality_analysis_cache
- * (at most ~12 rows) rather than a separate cache table. avg_erosion_rate is
- * the zone-count-weighted average across municipalities — equivalent to the
- * grand mean over every zone. WHERE analysis_year = $1 excludes
- * municipalities whose latest cached row isn't the current year.
- */
+// Province-wide summary, aggregated live from municipality_analysis_cache.
+// avg_erosion_rate is zone-count-weighted across municipalities.
 async function getBataanSummary() {
   try {
     const latestYear = new Date().getFullYear();
@@ -339,8 +312,7 @@ async function getBataanSummary() {
   }
 }
 
-// Same risk-distribution shape as getBataanSummary(), scoped to one
-// municipality; feeds the municipal-tier Dashboard.
+// Same shape as getBataanSummary(), scoped to one municipality.
 async function getMunicipalitySummary(municipalityId) {
   try {
     const result = await pool.query(
@@ -373,15 +345,8 @@ async function getMunicipalitySummary(municipalityId) {
   }
 }
 
-/**
- * Recomputes each of a municipality's coastal_areas' LRR regression
- * (projected_lrr, lrr_confidence, risk_level) eagerly at write time so read
- * routes can just SELECT instead of recomputing per request. Recomputes all
- * areas rather than tracking which one changed — regression is cheap and
- * municipalities have few areas. Scoped to active satellite data only
- * (activeSatelliteZones), matching municipality_analysis_cache's risk_level.
- * History is fetched in one batched query across areas; UPDATEs stay per-area.
- */
+// Recomputes LRR regression (projected_lrr, lrr_confidence, risk_level) for every
+// coastal_area under a municipality. History is fetched in one batched query; updates stay per-area.
 async function recomputeMunicipalityAreaLRR(municipalityId) {
   const areasResult = await pool.query(
     `SELECT id FROM coastal_areas WHERE municipality_id = $1`,
@@ -435,15 +400,13 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
   }
 }
 
-// Refreshes all derived values for one municipality: per-area LRR/risk and
-// its municipality_analysis_cache row.
+// Refreshes per-area LRR/risk plus the municipality_analysis_cache row.
 async function refreshMunicipalityDerived(municipalityId) {
   await recomputeMunicipalityAreaLRR(municipalityId);
   await computeAndStoreMunicipalityAnalysis(municipalityId);
 }
 
-// Refresh cache for a municipality by name. Eager: recomputes and stores
-// immediately, not just marked stale for next read.
+// Refresh cache for a municipality by name; recomputes immediately.
 async function invalidateMunicipalityCache(municipality) {
   try {
     const municipalityId = await getMunicipalityId(municipality);
@@ -460,7 +423,6 @@ async function invalidateMunicipalityCache(municipality) {
 }
 
 // Refresh derived values for every municipality (admin "invalidate all").
-// No separate province-wide step needed — getBataanSummary() aggregates live.
 async function invalidateAllCaches() {
   const { rows } = await pool.query(`SELECT id FROM municipalities`);
   for (const { id } of rows) {

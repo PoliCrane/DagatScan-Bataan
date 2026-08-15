@@ -1,13 +1,11 @@
 /**
- * Coastline utility functions for extracting and processing the outer boundary
- * from GeoJSON municipality data using turf.js
+ * Coastline utilities for extracting a municipality's outer boundary from GeoJSON via turf.js
  */
 
 import * as turf from "@turf/turf";
 
 /**
- * Extracts a municipality's coastline via topological edge hashing: edges shared with
- * a neighboring municipality's polygon are internal boundaries, unshared edges are coastline.
+ * Extracts a municipality's coastline via edge hashing: edges shared with a neighbor are internal, unshared edges are coastline.
  */
 export const extractCoastline = (geoJsonData, selectedMunicipality) => {
   // Validate inputs
@@ -22,7 +20,6 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
   }
 
   try {
-    // Get all polygon features
     const allPolygons = geoJsonData.features.filter(
       (feature) => feature.geometry && feature.geometry.type === "Polygon"
     );
@@ -32,7 +29,6 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
       return [];
     }
 
-    // Find the selected municipality features
     const selectedFeatures = allPolygons.filter(
       (feature) => feature.properties?.MUNICIPALI?.toUpperCase() === selectedMunicipality?.toUpperCase()
     );
@@ -42,7 +38,7 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
       return [];
     }
 
-    // If multiple features for same municipality (like Mariveles), use the largest
+    // Multiple features for one municipality (e.g. Mariveles) — use the largest
     let mainFeature = selectedFeatures[0];
     if (selectedFeatures.length > 1) {
       const areas = selectedFeatures.map((f) => {
@@ -55,13 +51,12 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
 
     console.log(`🔍 Topological edge detection: building edge map from ${allPolygons.length} municipalities...`);
 
-    // Build a map of all edges from all municipalities
-    // Key: normalized edge hash, Value: { count, edgeObj, municipality }
+    // Map of every edge (hash) across all municipalities to its occurrence count
     const edgeMap = buildEdgeMap(allPolygons);
 
     console.log(`  Total unique edges: ${edgeMap.size}`);
 
-    // Extract only unshared edges (count === 1) belonging to the selected municipality
+    // Keep only unshared edges (count === 1) for this municipality
     const coastlineEdges = extractUnsharedEdgesFromMap(mainFeature, selectedMunicipality, edgeMap);
 
     if (coastlineEdges.length === 0) {
@@ -69,7 +64,6 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
       return [];
     }
 
-    // Merge edges into a continuous coastline polyline
     const coastline = mergeEdgesToPolyline(coastlineEdges);
 
     if (coastline.length === 0) {
@@ -89,7 +83,6 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
 const buildEdgeMap = (polygonFeatures) => {
   const edgeMap = new Map(); // key: edgeHash, value: { count, edges: [] }
 
-  // Extract all edges from all municipalities
   polygonFeatures.forEach((feature) => {
     const municipalityName = feature.properties?.MUNICIPALI || "Unknown";
     const geometry = feature.geometry;
@@ -99,15 +92,12 @@ const buildEdgeMap = (polygonFeatures) => {
     const outerRing = geometry.coordinates[0]; // Outer ring only, not holes
     if (!Array.isArray(outerRing) || outerRing.length < 2) return;
 
-    // Create edges from consecutive vertices
     for (let i = 0; i < outerRing.length - 1; i++) {
       const [lng1, lat1] = outerRing[i];
       const [lng2, lat2] = outerRing[i + 1];
 
-      // Create normalized edge hash (direction doesn't matter)
       const edgeHash = createNormalizedEdgeHash([lat1, lng1], [lat2, lng2]);
 
-      // Track this edge
       if (!edgeMap.has(edgeHash)) {
         edgeMap.set(edgeHash, {
           count: 0,
@@ -126,7 +116,6 @@ const buildEdgeMap = (polygonFeatures) => {
     }
   });
 
-  // Log edge statistics
   let shared = 0;
   let coastal = 0;
   edgeMap.forEach((value) => {
@@ -141,17 +130,16 @@ const buildEdgeMap = (polygonFeatures) => {
 
 // Direction-independent hash so edge [A,B] matches [B,A]
 const createNormalizedEdgeHash = (coord1, coord2) => {
-  // Round to high precision to handle floating point variations
+  // High precision avoids floating-point mismatches
   const lat1 = coord1[0].toFixed(8);
   const lng1 = coord1[1].toFixed(8);
   const lat2 = coord2[0].toFixed(8);
   const lng2 = coord2[1].toFixed(8);
 
-  // Create two possible orderings
   const forward = `${lat1},${lng1}|${lat2},${lng2}`;
   const backward = `${lat2},${lng2}|${lat1},${lng1}`;
 
-  // Return the lexicographically smaller one (ensures consistency)
+  // Lexicographically smaller ordering wins, for consistency
   return forward < backward ? forward : backward;
 };
 
@@ -165,7 +153,6 @@ const extractUnsharedEdgesFromMap = (municipalityFeature, selectedMunicipality, 
   const unsharedEdges = [];
   const municipalityUpper = selectedMunicipality.toUpperCase();
 
-  // Check each edge of this municipality
   for (let i = 0; i < outerRing.length - 1; i++) {
     const [lng1, lat1] = outerRing[i];
     const [lng2, lat2] = outerRing[i + 1];
@@ -178,8 +165,7 @@ const extractUnsharedEdgesFromMap = (municipalityFeature, selectedMunicipality, 
       continue;
     }
 
-    // Keep only edges that appear exactly once (coastline edges)
-    // Edges appearing twice are shared internal boundaries
+    // count === 1 means coastline; count === 2 means shared internal boundary
     if (edgeData.count === 1) {
       unsharedEdges.push({
         start: [lat1, lng1],
@@ -201,14 +187,12 @@ const extractUnsharedEdgesFromMap = (municipalityFeature, selectedMunicipality, 
 const mergeEdgesToPolyline = (edges) => {
   if (edges.length === 0) return [];
 
-  // Build an adjacency map where keys are coordinate hashes
-  // Value: array of edge indices connected to this node
+  // adjMap: coordinate hash -> set of connected edge indices
   const { adjMap, nodeInfo } = buildAdjacencyMap(edges);
 
   console.log(`  Building polyline from ${edges.length} edges using ${adjMap.size} nodes`);
 
-  // Find all start nodes (degree 1 - only one connection)
-  // Closed loops will have no start nodes (all degree 2)
+  // Degree-1 nodes are start points; closed loops have none (all degree 2)
   const startNodes = findStartNodes(adjMap);
 
   console.log(`  Found ${startNodes.length} start/end nodes (open polylines) or 0 (closed loops)`);
@@ -216,7 +200,6 @@ const mergeEdgesToPolyline = (edges) => {
   const polylines = [];
   const visitedEdges = new Set();
 
-  // Traverse from each start node
   for (const startNodeHash of startNodes) {
     const polyline = traversePolylineFromNode(
       startNodeHash,
@@ -227,13 +210,13 @@ const mergeEdgesToPolyline = (edges) => {
     );
 
     if (polyline.length > 2) {
-      // Only keep polylines with at least 2 distinct points
+      // Drop polylines that are too short to matter
       polylines.push(polyline);
       console.log(`  Polyline segment: ${polyline.length} points`);
     }
   }
 
-  // If no start nodes found (closed loop), start from any unvisited edge
+  // No start nodes means a closed loop — start from any unvisited edge
   if (polylines.length === 0 && edges.length > 0) {
     console.log(`  Detected closed loop, starting from first edge`);
     const firstEdgeStart = hashCoordinate(edges[0].start);
@@ -251,7 +234,6 @@ const mergeEdgesToPolyline = (edges) => {
     }
   }
 
-  // Warn if not all edges were used
   if (visitedEdges.size < edges.length) {
     const unused = edges.length - visitedEdges.size;
     console.warn(
@@ -260,7 +242,6 @@ const mergeEdgesToPolyline = (edges) => {
     );
   }
 
-  // Return single polyline if only one, otherwise return array
   if (polylines.length === 1) {
     return polylines[0];
   }
@@ -278,12 +259,10 @@ const buildAdjacencyMap = (edges) => {
   const adjMap = new Map(); // hash -> Set of edge indices
   const nodeInfo = new Map(); // hash -> { coord: [lat,lng], degree: number }
 
-  // Build the graph
   edges.forEach((edge, idx) => {
     const startHash = hashCoordinate(edge.start);
     const endHash = hashCoordinate(edge.end);
 
-    // Add edge to adjacency of start node
     if (!adjMap.has(startHash)) {
       adjMap.set(startHash, new Set());
       nodeInfo.set(startHash, { coord: edge.start, degree: 0 });
@@ -291,7 +270,6 @@ const buildAdjacencyMap = (edges) => {
     adjMap.get(startHash).add(idx);
     nodeInfo.get(startHash).degree += 1;
 
-    // Add edge to adjacency of end node
     if (!adjMap.has(endHash)) {
       adjMap.set(endHash, new Set());
       nodeInfo.set(endHash, { coord: edge.end, degree: 0 });
@@ -308,8 +286,6 @@ const findStartNodes = (adjMap) => {
   const startNodes = [];
 
   adjMap.forEach((edges, nodeHash) => {
-    // Degree is how many edges connect to this node
-    // Degree 1 = end of an open polyline
     if (edges.size === 1) {
       startNodes.push(nodeHash);
     }
@@ -327,17 +303,15 @@ const traversePolylineFromNode = (
   visitedEdges
 ) => {
   const polyline = [];
-  const stack = [startNodeHash]; // DFS stack
+  const stack = [startNodeHash];
   const stackInfo = [null]; // Track which edge we used to reach each node
   let currentNode = startNodeHash;
 
-  // Start the polyline with the first node
   const firstCoord = nodeInfo.get(startNodeHash)?.coord;
   if (firstCoord) {
     polyline.push([...firstCoord]);
   }
 
-  // DFS traversal
   let iterations = 0;
   const maxIterations = edges.length * 3; // Safety limit
 
@@ -354,7 +328,6 @@ const traversePolylineFromNode = (
 
     let foundNext = false;
 
-    // Find an unvisited edge from current node
     for (const edgeIdx of connectedEdgeIndices) {
       if (visitedEdges.has(edgeIdx)) continue;
 
@@ -369,10 +342,8 @@ const traversePolylineFromNode = (
       const currentCoord = nodeInfo.get(currentHash)?.coord;
       if (!currentCoord) continue;
 
-      // Add this coordinate to the polyline
       polyline.push([...currentCoord]);
 
-      // Move to next node
       stack.push(currentHash);
       stackInfo.push(edgeIdx);
       break;
@@ -410,16 +381,14 @@ const coordinatesClose = (coord1, coord2, tolerance = 0.0001) => {
   );
 };
 
-// Arc-length-based segmentation keeps segments evenly sized regardless of point density; each can have its own erosion level
+// Arc-length segmentation keeps segments evenly sized regardless of point density
 export const segmentCoastline = (coastlinePoints, segmentLength = 10) => {
   if (coastlinePoints.length < 2) return [];
 
-  // IMPROVED: Use arc-length based segmentation for even distribution
   const segments = [];
-  const segmentDistances = []; // Track cumulative distance for each point
+  const segmentDistances = []; // cumulative distance at each point
   let cumulativeDistance = 0;
 
-  // Calculate cumulative arc-length distance from start
   segmentDistances.push(0);
   for (let i = 1; i < coastlinePoints.length; i++) {
     const distance = calculateDistance(coastlinePoints[i - 1], coastlinePoints[i]);
@@ -429,7 +398,7 @@ export const segmentCoastline = (coastlinePoints, segmentLength = 10) => {
 
   const totalLength = cumulativeDistance;
   const targetSegmentCount = Math.max(50, Math.floor(coastlinePoints.length / segmentLength));
-  const idealSegmentLength = totalLength / targetSegmentCount; // Arc-length per segment
+  const idealSegmentLength = totalLength / targetSegmentCount;
 
   let currentSegment = [];
   let currentSegmentLength = 0;
@@ -440,14 +409,13 @@ export const segmentCoastline = (coastlinePoints, segmentLength = 10) => {
     const pointDistance = segmentDistances[i];
     currentSegmentLength = pointDistance - lastSegmentDistance;
 
-    // Create segment when we've collected enough arc-length
-    // or at the end of the coastline
+    // Cut a new segment once we've built up enough arc-length, or at the end
     const shouldSegment =
       currentSegmentLength >= idealSegmentLength * 0.9 || // 90% of ideal
-      i === coastlinePoints.length - 1; // Last point
+      i === coastlinePoints.length - 1;
 
     if (shouldSegment && currentSegment.length > 0) {
-      // Calculate stable center point for coordinate-based seeding
+      // Stable center point, used for coordinate-based seeding
       const centerIdx = Math.floor(currentSegment.length / 2);
       const centerPoint = currentSegment[centerIdx];
 
@@ -475,7 +443,7 @@ export const segmentCoastline = (coastlinePoints, segmentLength = 10) => {
 export const smoothCoastline = (points, smoothingFactor = 3) => {
   if (points.length < 3) return points;
 
-  // First pass: Simplify zigzags using line simplification
+  // First pass: simplify zigzags
   const simplified = simplifyCoastline(points, 0.00005); // ~5 meters tolerance
 
   if (simplified.length < 3) return points;
@@ -488,13 +456,13 @@ export const smoothCoastline = (points, smoothingFactor = 3) => {
     const p2 = simplified[i + 1] || simplified[i];
     const p3 = simplified[i + 2] || simplified[i];
 
-    // Interpolate between p1 and p2 with higher resolution
+    // Interpolate between p1 and p2 at higher resolution
     for (let t = 0; t < smoothingFactor; t++) {
       const u = t / smoothingFactor;
       const u2 = u * u;
       const u3 = u2 * u;
 
-      // Improved Catmull-Rom matrix for smoother curves
+      // Catmull-Rom basis matrix coefficients
       const a = -0.5 * u3 + u2 - 0.5 * u;
       const b = 1.5 * u3 - 2.5 * u2 + 1;
       const c = -1.5 * u3 + 2 * u2 + 0.5 * u;
@@ -517,8 +485,7 @@ const simplifyCoastline = (points, tolerance = 0.00005) => {
   if (points.length <= 2) return points;
 
   const simplified = [];
-  
-  // Helper function to calculate perpendicular distance
+
   const perpendicularDistance = (point, lineStart, lineEnd) => {
     if (lineStart[0] === lineEnd[0] && lineStart[1] === lineEnd[1]) {
       return calculateDistance(point, lineStart) / 111320; // Convert meters to degrees
@@ -535,12 +502,11 @@ const simplifyCoastline = (points, tolerance = 0.00005) => {
     return distance;
   };
 
-  // Douglas-Peucker recursive function
   const douglasPeucker = (points, tolerance) => {
     let maxDistance = 0;
     let maxIndex = 0;
 
-    // Find the point with the maximum distance from the line
+    // Find the point farthest from the line
     for (let i = 1; i < points.length - 1; i++) {
       const distance = perpendicularDistance(points[i], points[0], points[points.length - 1]);
       if (distance > maxDistance) {
@@ -549,7 +515,6 @@ const simplifyCoastline = (points, tolerance = 0.00005) => {
       }
     }
 
-    // If max distance is greater than tolerance, recursively simplify
     if (maxDistance > tolerance) {
       const rec1 = douglasPeucker(points.slice(0, maxIndex + 1), tolerance);
       const rec2 = douglasPeucker(points.slice(maxIndex), tolerance);
@@ -620,7 +585,7 @@ export const getCoastlineLength = (coastlinePoints) => {
   return totalDistance / 1000; // Convert to km
 };
 
-// Coastal edges appear exactly once across all municipalities (not shared); same edge-hashing logic as extractCoastline
+// Coastal edges appear exactly once across all municipalities; shared edges appear twice
 export const extractCoastalEdges = (geoJsonData, municipalityFeature) => {
   if (!geoJsonData || !geoJsonData.features) {
     console.warn("Invalid GeoJSON data for coastal edge extraction");
@@ -632,7 +597,6 @@ export const extractCoastalEdges = (geoJsonData, municipalityFeature) => {
   }
 
   try {
-    // Get all polygon features for edge comparison
     const allPolygons = geoJsonData.features.filter(
       (feature) => feature.geometry && feature.geometry.type === "Polygon"
     );
@@ -641,7 +605,7 @@ export const extractCoastalEdges = (geoJsonData, municipalityFeature) => {
       return [];
     }
 
-    // Extract coastal edges from the selected municipality
+    // Handle both Polygon and MultiPolygon geometry
     const geometry = municipalityFeature.geometry;
     let polygonRings = [];
 
@@ -677,7 +641,6 @@ export const extractCoastalEdges = (geoJsonData, municipalityFeature) => {
     polygonRings.forEach((ring) => {
       if (!Array.isArray(ring) || ring.length < 2) return;
 
-      // Check each edge of this municipality
       for (let i = 0; i < ring.length - 1; i++) {
         const [lng1, lat1] = ring[i];
         const [lng2, lat2] = ring[i + 1];
@@ -685,10 +648,8 @@ export const extractCoastalEdges = (geoJsonData, municipalityFeature) => {
         const p1 = [lat1, lng1];
         const p2 = [lat2, lng2];
 
-        // Create normalized edge hash for lookup
         const edgeHash = createNormalizedEdgeHash(p1, p2);
 
-        // Check if this specific edge is coastal (count === 1)
         if (edgeCountMap.get(edgeHash) === 1) {
           coastalEdges.push({
             start: p1,
@@ -712,13 +673,11 @@ const isSegmentOnCoastalEdge = (segmentCoordinates, coastalEdges, tolerance = 50
     return false;
   }
 
-  // Check if segment's midpoint is near any coastal edge
   const midpoint = segmentCoordinates[Math.floor(segmentCoordinates.length / 2)];
 
   for (const edge of coastalEdges) {
     if (!Array.isArray(edge) || edge.length < 2) continue;
 
-    // Calculate distance from midpoint to this edge
     for (let i = 0; i < edge.length - 1; i++) {
       const edgeStart = edge[i];
       const edgeEnd = edge[i + 1];
@@ -742,7 +701,6 @@ const distanceToLineSegment = (point, lineStart, lineEnd) => {
   const lat = point[0];
   const lng = point[1];
 
-  // Convert to rough planar coordinates to calculate perpendicular distance
   const x1 = lng1 * Math.cos(lat1 * Math.PI / 180);
   const y1 = lat1;
   const x2 = lng2 * Math.cos(lat2 * Math.PI / 180);
@@ -760,14 +718,13 @@ const distanceToLineSegment = (point, lineStart, lineEnd) => {
   return dist * 111320; // Convert degrees to approximate meters
 };
 
-// Drops segments sitting on internal municipality boundaries, keeping only true coastal edges (via edge hashing)
+// Drops segments on internal municipality boundaries, keeping only true coastal ones
 export const filterSegmentsToCoastalOnly = (geoJsonData, municipalityFeature, segments) => {
   if (!geoJsonData || !municipalityFeature || !segments || segments.length === 0) {
     return segments;
   }
 
   try {
-    // Extract coastal edges using edge hashing
     const coastalEdges = extractCoastalEdges(geoJsonData, municipalityFeature);
 
     if (coastalEdges.length === 0) {
@@ -777,7 +734,6 @@ export const filterSegmentsToCoastalOnly = (geoJsonData, municipalityFeature, se
 
     console.log(`  Extracted ${coastalEdges.length} coastal edge(s) for segment filtering`);
 
-    // Filter segments: keep only those on coastal edges
     const coastalSegments = segments.filter((segment) => {
       if (!segment.shoreline || !Array.isArray(segment.shoreline)) {
         return false;

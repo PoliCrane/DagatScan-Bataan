@@ -21,8 +21,7 @@ const router = express.Router();
 /** Returns id+name for all municipalities; feeds the account-request form's municipality picker. */
 router.get("/municipalities", async (req, res) => {
   try {
-    // hasData: true once municipality_analysis_cache has a row (only exists when
-    // there's active satellite-detected shoreline_zones data for that municipality).
+    // hasData: true once municipality_analysis_cache has a row for this municipality
     const result = await pool.query(`
       SELECT m.id, m.name, (mac.municipality_id IS NOT NULL) AS "hasData"
       FROM municipalities m
@@ -93,7 +92,6 @@ router.get("/municipality/:municipality", async (req, res) => {
       });
     }
 
-    // Format response
     const data = result.rows.map((row) => ({
       year: row.year,
       erosionRate: parseFloat(row.erosion_rate),
@@ -167,11 +165,7 @@ router.get("/municipality/:municipality/year/:year", async (req, res) => {
   }
 });
 
-/**
- * Returns analyzed coastline geometry per distinct area in a municipality (most recent,
- * or ?year=YYYY for an exact year), plus each area's year history and EPR so the frontend
- * can gate Compare/Predict (needs 2+ years of data).
- */
+/** Coastline geometry per area in a municipality (latest, or ?year=YYYY), plus year history and EPR so the frontend can gate Compare/Predict (needs 2+ years). */
 router.get("/satellite-coastline/:municipality", async (req, res) => {
   try {
     const { municipality } = req.params;
@@ -206,8 +200,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
       return res.status(404).json({ hasSatelliteCoastline: false, areas: [] });
     }
 
-    // Year list only gates Compare/Predict (>=2 years); LRR is maintained on
-    // coastal_areas at write time (recomputeMunicipalityAreaLRR) and just read here.
+    // year list only gates Compare/Predict (>=2 years); LRR is precomputed and just read here
     const yearsResult = await pool.query(
       `SELECT sz.area_id, ca.name AS specific_area, CAST(sz.year AS INTEGER) as year
        FROM shoreline_zones sz
@@ -273,12 +266,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
   }
 });
 
-/**
- * LRR-offset estimate for Predict/Compare — pure read of coastal_areas' stored projected_lrr
- * (kept current by recomputeMunicipalityAreaLRR); only the per-year-pair retreat multiplication
- * happens here. ?baseYear=X&targetYear=Y&area=<specificArea> (area optional, targetYear may
- * precede baseYear); estimatedRetreat is always a positive magnitude.
- */
+/** LRR-based retreat estimate for Predict/Compare — reads stored projected_lrr and multiplies by year gap. ?baseYear=X&targetYear=Y&area=<specificArea> (area optional); estimatedRetreat is always positive. */
 router.get("/municipality/:municipality/shoreline-estimate", async (req, res) => {
   try {
     const { municipality } = req.params;
@@ -351,13 +339,9 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
 });
 
 
-/**
- * POST /api/shoreline/seed
- * Admin endpoint: Seed database with simulated sample data (for testing/initial setup)
- * Generates 10 years of realistic coastal erosion data if table is empty
- */
+/** POST /api/shoreline/seed — admin: seeds simulated erosion data for testing (skips if data already exists). */
 router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
-  // Single client inside BEGIN/COMMIT so a failure partway through the year loop rolls back entirely.
+  // single client inside BEGIN/COMMIT so a mid-loop failure rolls back entirely
   const client = await pool.connect();
   try {
     const { municipality, startYear = 2015, endYear = 2025, skipIfExists = true } = req.body;
@@ -368,10 +352,8 @@ router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
 
     await client.query("BEGIN");
 
-    // Get or create municipality ID
     const municipalityId = await getOrCreateMunicipalityId(client, municipality);
 
-    // Check if data already exists
     const existing = await client.query(
       "SELECT COUNT(*) as count FROM shoreline_zones WHERE area_id IN (SELECT id FROM coastal_areas WHERE municipality_id = $1)",
       [municipalityId]
@@ -395,8 +377,7 @@ router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
     const inserted = [];
     const areaId = await resolveAreaId(client, municipalityId, "Main Coastline");
 
-    // Generate realistic erosion values based on municipality
-    // Using seeded randomness for consistency (same municipality = same values)
+    // seeded randomness so the same municipality always gets the same values
     const seedHash = municipality.toLowerCase()
       .split("")
       .reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -407,12 +388,10 @@ router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
     let cumulativeErosion = 0;
 
     for (let year = startYear; year <= endYear; year++) {
-      // Create variation between years for realism
       const yearVariation = Math.sin(year * 0.5 + seedHash) * 0.3;
       const erosionRate = Math.max(0.1, baseRate + yearVariation);
       cumulativeErosion += erosionRate;
 
-      // Insert data into shoreline_zones table
       const result = await client.query(
         `INSERT INTO shoreline_zones
          (area_id, year, erosion_rate, cumulative_erosion, data_quality, source_type, created_by)
@@ -485,14 +464,12 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
       source_type = "Manual Entry"
     } = req.body;
 
-    // Validate required fields
     if (!municipality || !year || erosion_rate === undefined) {
       return res.status(400).json({
         error: "Missing required fields: municipality, year, erosion_rate",
       });
     }
 
-    // Validate numeric values
     const yearNum = parseInt(year);
     const rateNum = parseFloat(erosion_rate);
     const cumNum = cumulative_erosion !== undefined ? parseFloat(cumulative_erosion) : null;
@@ -503,13 +480,9 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
       });
     }
 
-    // Get or create municipality ID
     const municipalityId = await getOrCreateMunicipalityId(pool, municipality);
-
-    // Resolve (or create) this record's area, then match on area_id
     const areaId = await resolveAreaId(pool, municipalityId, specific_area);
 
-    // Check if record already exists
     const existing = await pool.query(
       `SELECT id FROM shoreline_zones
        WHERE area_id = $1
@@ -519,7 +492,6 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
 
     let result;
     if (existing.rows.length > 0) {
-      // Update existing record
       result = await pool.query(
         `UPDATE shoreline_zones
          SET erosion_rate = $1,
@@ -531,8 +503,7 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
          RETURNING id, area_id, year, erosion_rate, cumulative_erosion`,
         [rateNum, cumNum, data_quality, source_type, existing.rows[0].id]
       );
-      
-      // Invalidate cache for this municipality
+
       await invalidateMunicipalityCache(municipality);
 
       res.json({
@@ -553,7 +524,6 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
       });
       return;
     } else {
-      // Insert new record
       result = await pool.query(
         `INSERT INTO shoreline_zones
          (area_id, year, erosion_rate, cumulative_erosion, data_quality, source_type, created_by)
@@ -562,7 +532,6 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
         [areaId, yearNum, rateNum, cumNum, data_quality, source_type, req.user.id]
       );
 
-      // Invalidate cache for this municipality
       await invalidateMunicipalityCache(municipality);
 
       res.json({
@@ -609,11 +578,7 @@ router.post("/admin/insert-csv", async (req, res) => {
   });
 });
 
-/**
- * GET /api/shoreline/municipality/:municipality/latest
- * Get the latest year of data for a municipality
- * Used for dashboard cards to display most recent information
- */
+/** GET .../municipality/:municipality/latest — most recent year of data for a municipality; feeds dashboard cards. */
 router.get("/municipality/:municipality/latest", async (req, res) => {
   try {
     const { municipality } = req.params;
@@ -799,7 +764,7 @@ router.get("/municipality/:municipality/zones", async (req, res) => {
       };
     });
 
-    // Return zones array (empty if none found - no error thrown)
+    // empty array is a valid response, not an error
     res.json({
       municipality,
       zoneCount: zones.length,
@@ -822,9 +787,7 @@ router.get("/municipality/:municipality/areas", async (req, res) => {
   try {
     const { municipality } = req.params;
 
-    // bounds: the area's most recently uploaded image bounds, if any — lets
-    // the frontend pre-fill a new NDWI generation's bounds when an admin
-    // picks an existing area instead of typing coordinates from scratch.
+    // bounds: most recent uploaded image's bounds, if any — lets the frontend pre-fill NDWI generation bounds
     const result = await pool.query(
       `SELECT ca.id, ca.name,
               (SELECT bounds FROM satellite_imagery WHERE area_id = ca.id ORDER BY year DESC LIMIT 1) AS bounds
@@ -842,10 +805,7 @@ router.get("/municipality/:municipality/areas", async (req, res) => {
   }
 });
 
-/**
- * Helper: Calculate LineString length in kilometers
- * GeoJSON coordinates are in [longitude, latitude] format
- */
+/** LineString length in km; GeoJSON coordinates are [lon, lat]. */
 function calculateLineStringLength(coordinates) {
   if (!coordinates || coordinates.length < 2) return 0;
 
@@ -881,8 +841,7 @@ router.get("/municipality/:municipality/analysis", async (req, res) => {
       return res.status(404).json({ message: `Municipality not found: ${municipality}` });
     }
 
-    // Read the eagerly-maintained cache row (populated on every write, not
-    // recomputed here).
+    // reads the cache row; not recomputed here
     const cachedAnalysis = await getMunicipalityAnalysis(municipalityId);
 
     if (!cachedAnalysis) {
@@ -891,16 +850,14 @@ router.get("/municipality/:municipality/analysis", async (req, res) => {
       });
     }
 
-    // Prediction Result card is fed client-side (erosionanalysis.jsx); not included here.
+    // Prediction Result card is fed client-side, not included here
     res.json({
-      // Erosion card data (from cache)
       erosionData: {
         coastlineLength: cachedAnalysis.coastlineLength,
         affectedArea: cachedAnalysis.affectedArea,
         riskLevel: cachedAnalysis.riskLevel,
         municipalityName: municipality
       },
-      // Metadata
       metadata: {
         analysisYear: cachedAnalysis.analysisYear,
         dataYearNote: cachedAnalysis.analysisYear < currentYear ? 
@@ -918,10 +875,7 @@ router.get("/municipality/:municipality/analysis", async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/shoreline/municipality/:municipality
- * Admin endpoint: Delete all data for a municipality from shoreline_zones
- */
+/** DELETE .../municipality/:municipality — admin: deletes all shoreline_zones data for a municipality. */
 router.delete("/municipality/:municipality", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality } = req.params;
@@ -958,11 +912,7 @@ router.delete("/municipality/:municipality", verifyToken, verifyAdmin, async (re
   }
 });
 
-/**
- * POST /api/shoreline/cache/invalidate
- * Admin endpoint: Force cache invalidation for a municipality
- * Called when data is manually updated
- */
+/** POST .../cache/invalidate — admin: force cache invalidation for a municipality. */
 router.post("/cache/invalidate", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality } = req.body;
@@ -984,13 +934,10 @@ router.post("/cache/invalidate", verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-/**
- * POST /api/shoreline/cache/invalidate-all
- * Admin endpoint: Force cache invalidation for all municipalities
- */
+/** POST .../cache/invalidate-all — admin: force cache refresh for all municipalities. */
 router.post("/cache/invalidate-all", verifyToken, verifyAdmin, async (req, res) => {
   try {
-    // Eagerly refreshes every municipality's derived values, not just marks rows stale.
+    // refreshes every municipality's derived values, doesn't just mark stale
     await invalidateAllCaches();
 
     res.json({

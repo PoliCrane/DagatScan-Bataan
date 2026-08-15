@@ -77,12 +77,10 @@ export const generateShoreline_ByEPR = (
     return referenceShoreline;
   }
 
-  // Calculate total position change
-  // Negate EPR so positive erosion moves shoreline INLAND (negative offset)
+  // negate EPR so positive erosion moves shoreline inland
   const yearDifference = targetYear - referenceYear;
   const totalPositionChange = -epr * yearDifference;
 
-  // Apply perpendicular offset
   return offsetFunction(referenceShoreline, totalPositionChange);
 };
 
@@ -101,14 +99,12 @@ export const generateShoreline_EPRWithTrend = (
 
   const Δt = targetYear - referenceYear;
 
-  // Linear term: EPR × time
-  // Negate EPR so positive erosion moves shoreline INLAND (negative offset)
+  // linear term (negated so positive erosion moves shoreline inland)
   const linearChange = -epr * Δt;
 
-  // Quadratic term: 0.5 × acceleration × time²
+  // quadratic acceleration term
   const accelerationChange = 0.5 * trend * (Δt * Δt);
 
-  // Total change
   const totalChange = linearChange + accelerationChange;
 
   return offsetFunction(referenceShoreline, totalChange);

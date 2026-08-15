@@ -1,12 +1,6 @@
-/**
- * Background sync: uploads any local files not yet mirrored to Supabase
- * Storage, and records the resulting public URL back on the owning row.
- * Deliberately decoupled from the upload routes themselves (which have
- * several branchy, transactional processing paths for GeoJSON/CSV/satellite
- * files) — this runs independently on a timer (see server.js) so none of
- * that existing logic needs to change. Safe to call repeatedly; only rows
- * with a NULL storage_url and a file that still exists locally do anything.
- */
+// Background sync: uploads local files not yet mirrored to Supabase Storage, records the
+// public URL on the owning row. Runs independently on a timer (server.js), decoupled from
+// the upload routes. Safe to call repeatedly - only NULL storage_url rows with a local file do anything.
 const fs = require("fs");
 const path = require("path");
 const pool = require("../db");
@@ -21,9 +15,7 @@ function toStoragePath(localPath) {
 }
 
 async function syncPendingFilesToStorage() {
-  // Local path -> already-uploaded public URL, so a file referenced by both
-  // upload_history and satellite_imagery (the satellite upload case) only
-  // gets uploaded once per run.
+  // local path -> uploaded URL, so a file shared by upload_history and satellite_imagery is only uploaded once
   const uploadedUrlCache = new Map();
 
   async function uploadOnce(localPath) {
@@ -53,8 +45,7 @@ async function syncPendingFilesToStorage() {
     }
   }
 
-  // 2. satellite_imagery — same physical file as its upload_history row for
-  // satellite uploads, deduped via uploadedUrlCache above.
+  // 2. satellite_imagery - same physical file as its upload_history row; deduped via uploadedUrlCache
   const pendingImages = await pool.query(
     `SELECT id, image_path FROM satellite_imagery WHERE storage_url IS NULL AND image_path IS NOT NULL`
   );
@@ -70,8 +61,7 @@ async function syncPendingFilesToStorage() {
     }
   }
 
-  // 3. account_requests — signed request-letter PDFs (only a filename is
-  // stored, not a full path, so it's joined against the known directory).
+  // 3. account_requests - only a filename is stored, joined against the known directory
   const pendingLetters = await pool.query(
     `SELECT id, request_letter_filename FROM account_requests
      WHERE request_letter_url IS NULL AND request_letter_filename IS NOT NULL`
@@ -89,10 +79,8 @@ async function syncPendingFilesToStorage() {
     }
   }
 
-  // 4. upload_history thumbnails — the source .tif above is durable once
-  // synced, but the browser-viewable preview PNG (thumbnailGenerator.js)
-  // lives next to it on the same ephemeral local disk and was never covered
-  // by the sync above, so it still vanished on every Render redeploy.
+  // 4. upload_history thumbnails - the preview PNG lives on the same ephemeral disk and
+  // wasn't covered by #1, so it still vanished on every redeploy
   const pendingThumbnails = await pool.query(
     `SELECT id, file_path FROM upload_history
      WHERE thumbnail_storage_url IS NULL AND file_path IS NOT NULL AND process_status != 'Failed'`
@@ -117,12 +105,8 @@ async function syncPendingFilesToStorage() {
   return { synced, failed };
 }
 
-// Event-driven trigger for upload-completing routes, instead of relying
-// solely on a blind poll — debounced so several near-simultaneous uploads
-// (e.g. a batch run) collapse into one sync call rather than one per
-// request. Also matters for hosts with scale-to-zero (e.g. Railway
-// Serverless): a 5-minute poll forever would generate outbound traffic
-// often enough to keep the service from ever sleeping.
+// Event-driven trigger for upload routes, debounced so near-simultaneous uploads collapse into
+// one sync call. Also avoids a poll loop keeping scale-to-zero hosts (e.g. Railway) from sleeping.
 let debounceTimer = null;
 const DEBOUNCE_MS = 8000;
 

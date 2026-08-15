@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "../pages/styles/mapLegend.css";
 import { SEGMENT_COLORS, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 
-// Derived from the shared risk classification (not a second hardcoded copy)
-// so this legend can never drift out of sync with the actual map colors.
+// derived from the shared risk classification so it can't drift from the map colors
 const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
 
 export default function MapLegend() {
@@ -29,7 +28,6 @@ export default function MapLegend() {
       if (legendRef.current) legendRef.current.style.left = "calc(65px + 15px)";
     };
 
-    // Find sidebar and listen to hover events
     const findAndObserveSidebar = () => {
       const mapSidebar = document.querySelector(".map-sidebar");
       const adminSidebar = document.querySelector(".admin-sidebar");
@@ -41,7 +39,7 @@ export default function MapLegend() {
       }
     };
 
-    // Give DOM time to render before finding elements
+    // wait for the DOM to render before querying
     const timeoutId = setTimeout(findAndObserveSidebar, 100);
 
     return () => {
@@ -58,10 +56,8 @@ export default function MapLegend() {
       const currentScrollY = window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
         setIsVisible(false);
       } else {
-        // Scrolling up
         setIsVisible(true);
       }
 

@@ -1,8 +1,6 @@
 import { SEGMENT_COLORS, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 
-// Static (non-toggleable) risk-level reference for the Dashboard — a
-// simpler sibling to MapLegend.jsx, which is map-specific and manages its
-// own visibility-toggle state that doesn't apply here.
+// static (non-toggleable) risk-level reference for the Dashboard
 const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
 
 export default function RiskLevelLegendCard() {

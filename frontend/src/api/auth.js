@@ -1,9 +1,6 @@
 import { API_BASE_URL } from "../config/api";
-// Submits a municipal-account request — a pending row an admin must approve,
-// not an immediately-usable account (see server.js's /request-account).
-// Takes a FormData (carries the signed request-letter PDF alongside the
-// text fields) — no Content-Type header, the browser sets the multipart
-// boundary itself.
+// creates a pending account request an admin must approve, not a usable account
+// FormData carries the request-letter PDF — no Content-Type header, browser sets the multipart boundary
 export const requestAccount = async (formData) => {
   const res = await fetch(`${API_BASE_URL}/request-account`, {
     method: "POST",

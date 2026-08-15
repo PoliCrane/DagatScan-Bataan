@@ -1,22 +1,7 @@
-/**
- * Google Earth Engine NDWI Generation
- *
- * Queries Sentinel-2 imagery for a bounding box/year, computes NDWI,
- * and exports it as a downloadable single-band GeoTIFF.
- *
- * Auth: service account JSON key, loaded via loadPrivateKey() below —
- * either the raw key JSON in EE_SERVICE_ACCOUNT_KEY_JSON (for hosts with no
- * file-mounting, e.g. Railway), or a file at EE_SERVICE_ACCOUNT_KEY_PATH
- * (e.g. Render's Secret Files), defaulting to
- * backend/config/ee-service-account.json.
- *
- * Setup (one-time, done by the admin operating this server):
- *  1. Create a GCP project, enable the Earth Engine API
- *  2. Register the project for Earth Engine access (signup.earthengine.google.com)
- *  3. Create a service account + JSON key, grant it Earth Engine access
- *  4. Either place the key at backend/config/ee-service-account.json, or set
- *     its contents directly as EE_SERVICE_ACCOUNT_KEY_JSON
- */
+// Google Earth Engine NDWI generation: queries Sentinel-2 for a bounding box/year,
+// computes NDWI, exports as a GeoTIFF.
+// Auth: service account key via EE_SERVICE_ACCOUNT_KEY_JSON (raw JSON) or
+// EE_SERVICE_ACCOUNT_KEY_PATH / backend/config/ee-service-account.json (file).
 
 const ee = require('@google/earthengine');
 const fs = require('fs');
@@ -26,11 +11,7 @@ const https = require('https');
 const KEY_PATH = process.env.EE_SERVICE_ACCOUNT_KEY_PATH ||
   path.join(__dirname, '../config/ee-service-account.json');
 
-// Render mounts the key as a Secret File on disk (KEY_PATH above). Railway
-// has no equivalent file-mounting feature, only env vars — so on Railway the
-// raw key JSON is set directly as EE_SERVICE_ACCOUNT_KEY_JSON instead. Tried
-// first since it's the cheaper check; falls through to the file path so
-// Render's existing setup is untouched.
+// env var checked first (cheap check), falls back to the key file (Render's Secret File setup)
 function loadPrivateKey() {
   if (process.env.EE_SERVICE_ACCOUNT_KEY_JSON) {
     return JSON.parse(process.env.EE_SERVICE_ACCOUNT_KEY_JSON);
@@ -50,22 +31,12 @@ const NDWI_OUTPUT_DIR = path.join(__dirname, '../uploads/ndwi');
 let initialized = false;
 let initPromise = null;
 
-// No timeout on ee.data.authenticateViaPrivateKey/ee.initialize's network
-// calls to Google, combined with server.js disabling Node's own request
-// timeout, meant a stuck auth call hung the caller forever with no visible
-// error. This bounds it — and resets initPromise on any failure (timeout or
-// real) so the next call gets a fresh attempt instead of being stuck reusing
-// a dead promise.
+// EE's auth/init calls have no built-in timeout; bounds it so a stuck call fails instead of hanging forever.
+// initPromise resets on failure so the next call gets a fresh attempt.
 const EE_INIT_TIMEOUT_MS = 25000;
 
-// getDownloadURL/getThumbURL (Earth Engine's export-prep step) and the
-// actual file download were both discovered to have zero timeout — same
-// class of bug as EE_INIT_TIMEOUT_MS above, just further down the same call
-// chain. A stall in either hangs generateNDWIGeoTIFF/generateTrueColorImage
-// forever with nothing logged (nothing here runs inside an HTTP request
-// whose own timeout could catch it — the batch worker calls this from a
-// fire-and-forget background loop). Generous but bounded so a genuinely
-// slow-but-working export doesn't get killed unnecessarily.
+// export prep (getDownloadURL/getThumbURL) and the file download also lack a timeout;
+// bound both so a stall fails instead of hanging silently in the background worker.
 const EE_EXPORT_TIMEOUT_MS = 90000;
 const DOWNLOAD_TIMEOUT_MS = 60000;
 
@@ -114,11 +85,8 @@ function initEE() {
   return initPromise;
 }
 
-// getDownloadURL/getThumbURL are opaque Earth Engine SDK callbacks — there's
-// no request/socket handle to set a timeout on directly (unlike
-// downloadToFile below), so this just stops waiting on our side; the EE-side
-// operation may continue regardless, but the caller (a batch year, or a
-// single generation request) is freed to fail cleanly instead of hanging.
+// no socket handle to time out directly on these SDK callbacks, so this just stops
+// waiting on our side; the EE-side operation may continue regardless.
 function withTimeout(promise, ms, message) {
   return Promise.race([
     promise,
@@ -139,10 +107,7 @@ function downloadToFile(url, destPath) {
       response.pipe(file);
       file.on('finish', () => file.close(() => resolve()));
     });
-    // setTimeout here fires on socket inactivity (no data for this long),
-    // not a hard cap on total download time — destroy() aborts the
-    // in-flight connection (not just our own wait) and triggers the
-    // 'error' handler below with a clear message.
+    // fires on socket inactivity, not total download time; destroy() aborts the connection itself
     request.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
       request.destroy(new Error(`Earth Engine file download timed out after ${DOWNLOAD_TIMEOUT_MS / 1000}s`));
     });
@@ -153,8 +118,7 @@ function downloadToFile(url, destPath) {
   });
 }
 
-// Shared Sentinel-2 composite (collection/cloud filter/date range) used by
-// both NDWI and true-color generation, so they read identical source pixels.
+// shared Sentinel-2 composite so NDWI and true-color read identical source pixels
 function buildSentinelComposite(geometry, year) {
   const start = `${year}-01-01`;
   const end = `${year}-12-31`;
@@ -167,21 +131,15 @@ function buildSentinelComposite(geometry, year) {
   return collection.median();
 }
 
-/**
- * Generate an NDWI GeoTIFF for the given bounding box and year.
- * NDWI (McFeeters) = (Green - NIR) / (Green + NIR), Sentinel-2 bands B3/B8.
- * Positive = water, negative = land/vegetation.
- */
+// NDWI (McFeeters) = (Green - NIR) / (Green + NIR), Sentinel-2 bands B3/B8. Positive = water, negative = land.
 async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coastlineName }) {
   await initEE();
 
   const geometry = ee.Geometry.Rectangle([lonMin, latMin, lonMax, latMax]);
   const composite = buildSentinelComposite(geometry, year);
 
-  // McFeeters NDWI: (Green - NIR) / (Green + NIR) — strongly positive over
-  // water, negative over land/vegetation. An NDVI-like NIR-vs-RED index was
-  // not used: water's NIR-RED value sits near zero and drifts across the
-  // threshold on glint/turbidity noise.
+  // NDVI-style NIR/RED wasn't used - water's NIR-RED value sits near zero and
+  // drifts across the threshold on glint/turbidity noise.
   const green = composite.select('B3');
   const nir = composite.select('B8');
   const ndwi = green.subtract(nir).divide(green.add(nir)).rename('NDWI').clip(geometry);
@@ -193,9 +151,7 @@ async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coast
         region: geometry,
         scale: 10,
         format: 'GEO_TIFF',
-        // Without an explicit crs, Earth Engine exports in the source
-        // imagery's native UTM projection (meters); every downstream
-        // consumer assumes WGS84 degrees, so this must be pinned.
+        // pin CRS - default export uses native UTM meters, downstream consumers expect WGS84 degrees
         crs: 'EPSG:4326',
       },
       (url, err) => {
@@ -215,13 +171,8 @@ async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coast
   return { fileName, filePath };
 }
 
-/**
- * Fetch a true-color PNG for the given bounding box/year (Data Management
- * page's "Satellite Imagery" view). Same composite as NDWI, visualized as
- * RGB; min:0/max:3000/gamma:1.4 is the standard Sentinel-2 SR true-color
- * recipe. Uses getThumbURL() (server-side rendered PNG) since this is only
- * for display, unlike NDWI's raw-band download.
- */
+// True-color PNG for the "Satellite Imagery" view. min:0/max:3000/gamma:1.4
+// is the standard Sentinel-2 SR true-color recipe.
 async function generateTrueColorImage({ lonMin, latMin, lonMax, latMax, year, destPath }) {
   await initEE();
 

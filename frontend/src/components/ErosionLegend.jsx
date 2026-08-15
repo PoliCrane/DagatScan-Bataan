@@ -26,7 +26,6 @@ export default function ErosionLegend() {
       if (legendRef.current) legendRef.current.style.left = "calc(65px + 15px)";
     };
 
-    // Find sidebar and listen to hover events
     const findAndObserveSidebar = () => {
       const mapSidebar = document.querySelector(".map-sidebar");
       const adminSidebar = document.querySelector(".admin-sidebar");
@@ -38,7 +37,7 @@ export default function ErosionLegend() {
       }
     };
 
-    // Give DOM time to render before finding elements
+    // wait for the DOM to render before querying
     const timeoutId = setTimeout(findAndObserveSidebar, 100);
 
     return () => {
@@ -55,10 +54,8 @@ export default function ErosionLegend() {
       const currentScrollY = window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
         setIsVisible(false);
       } else {
-        // Scrolling up
         setIsVisible(true);
       }
 
@@ -78,7 +75,6 @@ export default function ErosionLegend() {
 
       <div className="legend-content">
         <div className="legend-columns">
-          {/* Left Column */}
           <div className="legend-column">
             {leftColumn.map((item, index) => (
               <div key={index} className="legend-item">
@@ -91,7 +87,6 @@ export default function ErosionLegend() {
             ))}
           </div>
 
-          {/* Right Column */}
           <div className="legend-column">
             {rightColumn.map((item, index) => (
               <div key={index} className="legend-item">

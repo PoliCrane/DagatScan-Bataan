@@ -1,11 +1,5 @@
-/**
- * Supabase Storage client — durable, off-disk persistence for uploaded files
- * that must survive a redeploy on hosts with an ephemeral filesystem
- * (satellite images, GeoJSON, request-letter PDFs, the CNN model's
- * weights.json). Populating these is handled by services/storageSync.js and
- * services/imageCNNDetection.js, not by this file — this is just the client
- * + low-level read/write/delete primitives.
- */
+// Supabase Storage client: off-disk persistence for uploads that must survive a redeploy on
+// ephemeral hosts. Low-level read/write/delete only - storageSync.js and imageCNNDetection.js populate it.
 require("dotenv").config();
 const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
@@ -26,12 +20,8 @@ function getClient() {
   return client;
 }
 
-/**
- * Creates the storage bucket if it doesn't already exist. Public, since
- * these files (satellite imagery, GeoJSON, request letters) were already
- * served unauthenticated via express.static locally — a public bucket
- * doesn't lower that existing security posture, just moves it.
- */
+// Creates the bucket if missing. Public - these files were already served unauthenticated
+// locally, so this doesn't lower the security posture.
 async function ensureBucketExists() {
   const supabase = getClient();
   const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -46,10 +36,7 @@ async function ensureBucketExists() {
   console.log(`✓ Created Supabase Storage bucket "${BUCKET_NAME}"`);
 }
 
-/**
- * Uploads a local file to Storage at `storagePath` (e.g. "geojson/foo.json")
- * and returns its public URL. Overwrites if something's already there.
- */
+// Uploads a local file to storagePath (e.g. "geojson/foo.json"); returns its public URL. Overwrites existing.
 async function uploadLocalFile(localFilePath, storagePath) {
   const supabase = getClient();
   const buffer = fs.readFileSync(localFilePath);

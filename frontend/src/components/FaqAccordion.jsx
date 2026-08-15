@@ -1,10 +1,7 @@
 import { useState } from "react";
 import "./FaqAccordion.css";
 
-// Generic FAQ accordion — each item expands/collapses independently
-// (tracked via a Set of open indices), unlike CoastalAwareness.jsx's
-// single-active-tab pattern where only one topic can be shown at a time.
-// Each item is { question, answer? } or { question, bullets?, note? }.
+// each item expands/collapses independently. item shape: { question, answer? } or { question, bullets?, note? }
 export default function FaqAccordion({ items }) {
   const [openIndices, setOpenIndices] = useState(() => new Set());
 

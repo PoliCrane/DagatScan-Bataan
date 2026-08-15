@@ -1,8 +1,4 @@
-/**
- * Shoreline Data Service
- * Provides unified interface for fetching real data from database
- * Automatically falls back to simulated data if database is empty
- */
+// Fetches real shoreline data from the database, falling back to simulated data if empty.
 
 import { generateYearlyShorelineData } from "../utils/fakeDataset";
 

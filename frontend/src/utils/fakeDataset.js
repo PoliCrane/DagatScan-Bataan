@@ -1,11 +1,9 @@
 /**
- * Fake dataset generation for coastal erosion analysis
- * Generates year-by-year shoreline progression showing erosion/accretion over time
+ * Fake dataset generator: year-by-year shoreline progression for erosion/accretion
  */
 
 /**
- * Coordinate-based seeded random for municipality
- * Uses only lat/lng for deterministic but natural-seeming variation
+ * Seeded random from lat/lng only, so results stay deterministic per municipality
  */
 const getMunicipalityRandom = (centerLat, centerLng) => {
   const latFactor = Math.floor(centerLat * 100000);
@@ -24,8 +22,7 @@ const getMunicipalityRandom = (centerLat, centerLng) => {
 };
 
 /**
- * Generate realistic average erosion rate for a municipality
- * Returns meters/year (negative = accretion, positive = erosion)
+ * Average erosion rate in meters/year (negative = accretion, positive = erosion)
  */
 const generateMunicipalityErosionRate = (centerLat, centerLng) => {
   const random = getMunicipalityRandom(centerLat, centerLng);
@@ -53,8 +50,7 @@ const generateYearVariation = (baseRate, year, centerLat, centerLng) => {
 };
 
 /**
- * Offset coastline points to simulate erosion/accretion
- * offset: positive = erosion (move inland), negative = accretion (move seaward)
+ * Offsets coastline points; positive offset = erosion (inland), negative = accretion (seaward)
  */
 const offsetCoastline = (coastlinePoints, offset) => {
   if (!coastlinePoints || coastlinePoints.length < 2) return [];
@@ -96,8 +92,7 @@ const offsetCoastline = (coastlinePoints, offset) => {
 };
 
 /**
- * Generate year-by-year shoreline data
- * Shows progression from past year to current year
+ * Generates year-by-year shoreline progression from startYear to endYear
  */
 export const generateYearlyShorelineData = (coastlinePoints, startYear = 2015, endYear = 2026) => {
   if (!coastlinePoints || coastlinePoints.length === 0) {
@@ -105,24 +100,20 @@ export const generateYearlyShorelineData = (coastlinePoints, startYear = 2015, e
     return [];
   }
 
-  // Calculate municipality center for consistent random seeding
+  // Municipality center, for consistent random seeding
   const centerLat = coastlinePoints.reduce((sum, p) => sum + p[0], 0) / coastlinePoints.length;
   const centerLng = coastlinePoints.reduce((sum, p) => sum + p[1], 0) / coastlinePoints.length;
 
-  // Get base erosion rate for this municipality
   const baseErosionRate = generateMunicipalityErosionRate(centerLat, centerLng);
 
   const yearlyData = [];
   let cumulativeOffset = 0; // Cumulative erosion/accretion in meters
 
   for (let year = startYear; year <= endYear; year++) {
-    // Annual variation in erosion rate
     const yearErosionRate = generateYearVariation(baseErosionRate, year, centerLat, centerLng);
 
-    // Accumulate offset
     cumulativeOffset += yearErosionRate;
 
-    // Generate offset shoreline for this year
     const yearShoreline = offsetCoastline(coastlinePoints, cumulativeOffset);
 
     yearlyData.push({
@@ -144,19 +135,16 @@ export const generateCoastlineDataset = (coastlineSegments, year = 2026) => {
 };
 
 /**
- * Generate comparison shoreline for a specific year
- * Takes the current shoreline and generates what it would have looked like in the past
+ * Generates what the shoreline would have looked like in a past year
  */
 export const generateComparisonShorelineForYear = (currentShoreline, targetYear = 2015, currentYear = 2026) => {
   if (!currentShoreline || currentShoreline.length === 0) {
     return [];
   }
 
-  // Calculate municipality center for consistent random seeding
   const centerLat = currentShoreline.reduce((sum, p) => sum + p[0], 0) / currentShoreline.length;
   const centerLng = currentShoreline.reduce((sum, p) => sum + p[1], 0) / currentShoreline.length;
 
-  // Get base erosion rate for this municipality
   const baseErosionRate = generateMunicipalityErosionRate(centerLat, centerLng);
 
   // Calculate how much erosion happened between targetYear and currentYear
@@ -168,7 +156,7 @@ export const generateComparisonShorelineForYear = (currentShoreline, targetYear 
     totalErosionAtTarget += yearErosionRate;
   }
 
-  // Reverse the erosion: if there was positive erosion (landward movement), move back seaward
+  // Reverse the erosion to move back seaward
   const reverseOffset = -totalErosionAtTarget;
 
   return offsetCoastline(currentShoreline, reverseOffset);
@@ -182,8 +170,7 @@ export const filterByErosionThreshold = (dataset, threshold) => {
 };
 
 /**
- * Interpolate erosion data for a specific coordinate
- * (useful for hover popups between segment points)
+ * Interpolates erosion data at a coordinate — used for hover popups between segment points
  */
 export const interpolateErosionDataAtPoint = (dataset, point) => {
   // Find nearest segment

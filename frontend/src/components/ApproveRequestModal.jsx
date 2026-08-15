@@ -3,9 +3,7 @@ import "../pages/styles/accountModals.css";
 import { showSuccess, showError } from "../utils/sweetAlertUtils";
 
 import { API_BASE_URL } from "../config/api";
-// The request form no longer collects a password from the applicant — the
-// admin sets the account's initial password here, at approval time (see
-// server.js's POST /admin/account-requests/:id/approve).
+// the admin sets the account's initial password here, at approval time — the request form no longer collects one from the applicant
 export default function ApproveRequestModal({ isOpen, request, onClose, onSuccess }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

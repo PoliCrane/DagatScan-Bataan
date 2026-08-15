@@ -1,10 +1,6 @@
 import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 
-// Satellite Image Upload is hidden (see SHOW_SATELLITE_UPLOAD in
-// DataUpload.jsx), so the NDWI card is the only thing ever mounted here now.
-// scrollTargetIntoView would normally handle this, but the card's fields
-// only exist once uploadType === "ndwi" is set, so this still needs to wait
-// two animation frames for React to commit before measuring/spotlighting.
+// sets uploadType to "ndwi" then waits two animation frames for React to commit before scrolling to the target
 const scrollNdwiTargetIntoView = (setUploadType, selector) => () =>
   new Promise((resolve) => {
     setUploadType("ndwi");

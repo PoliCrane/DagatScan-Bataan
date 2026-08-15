@@ -3,10 +3,7 @@ import "../pages/styles/accountModals.css";
 import { showSuccess, showError } from "../utils/sweetAlertUtils";
 
 import { API_BASE_URL } from "../config/api";
-// Restyled replacement for the old generic confirmAction() popup — matches
-// AddAccountModal/EditAccountModal/ApproveRequestModal's shared look, plus
-// an optional rejection reason (backend already accepted this field, the
-// frontend just never sent one before).
+// rejection modal with an optional reason field; backend already accepted this field, frontend just never sent it before
 export default function RejectRequestModal({ isOpen, request, onClose, onSuccess }) {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);

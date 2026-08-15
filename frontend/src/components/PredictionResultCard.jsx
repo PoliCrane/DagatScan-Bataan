@@ -8,10 +8,8 @@ export default function PredictionResultCard({
 }) {
   const cardRef = useRef(null);
 
-  // Position below the Erosion Analysis card dynamically, so it always
-  // clears that card regardless of how tall its content is. Depends on
-  // isActive/predictionData because this card returns null (no DOM node
-  // to measure/position) until those are truthy.
+  // position below the erosion analysis card dynamically since its height varies;
+  // depends on isActive/predictionData since there's no DOM node to measure until then
   useEffect(() => {
     if (!isActive || !predictionData) return;
 

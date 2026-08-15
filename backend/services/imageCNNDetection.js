@@ -245,8 +245,7 @@ let cachedModel = null;
 async function loadOrCreateModel() {
   if (cachedModel) return cachedModel;
 
-  // Don't force 'cpu' — let whichever backend loaded (native, or the JS
-  // fallback registered above) be used.
+  // don't force 'cpu' — use whichever backend loaded above
   await tf.ready();
   console.log('[Detection] tf.js backend in use:', tf.getBackend());
 
@@ -254,9 +253,7 @@ async function loadOrCreateModel() {
 
   const weightsPath = path.join(MODEL_DIR, 'weights.json');
 
-  // Weights are stateful and accumulate across uploads (see file header) —
-  // on a fresh deploy the local copy won't exist yet, so pull down whatever
-  // was last saved to Supabase Storage before falling back to a fresh model.
+  // on a fresh deploy the local copy won't exist yet — pull the last saved weights from Supabase Storage before falling back to a fresh model
   if (!fs.existsSync(weightsPath) && process.env.SUPABASE_URL) {
     try {
       const { downloadToLocalFile } = require('./supabaseStorage');
@@ -290,9 +287,8 @@ async function loadOrCreateModel() {
 async function saveModel(model) {
   try {
     if (!fs.existsSync(MODEL_DIR)) fs.mkdirSync(MODEL_DIR, { recursive: true });
-    // tfjs (browser build) has no file:// save handler in Node — serialise
-    // weights manually. Don't dispose getWeights()'s tensors; they're the
-    // model's own live parameters.
+    // tfjs's browser build has no file:// save handler in Node — serialize weights manually.
+    // Don't dispose getWeights()'s tensors, they're the model's live parameters.
     const weights = model.getWeights();
     const weightData = weights.map((w) => ({
       shape: w.shape,
@@ -317,15 +313,7 @@ async function saveModel(model) {
   }
 }
 
-/**
- * Fine-tunes the persistent CNN on this image's (pixels, pseudo-labels) pair
- * at full TRACE_SIZE, saves the updated weights, then predicts on the same
- * image and returns the thresholded mask. Falls back to the raw
- * pseudo-labels if they're degenerate (all one class).
- * Trains at full 256px rather than a downsampled size: lower resolutions
- * converge faster but their upsampled mask "blocks" are as wide as or wider
- * than this beach, so the traced boundary cuts into land regardless of loss.
- */
+/** Fine-tunes the persistent CNN on this image's (pixels, pseudo-labels) pair, saves weights, then predicts the mask used for tracing. Falls back to the raw pseudo-labels if they're degenerate (all one class). */
 async function classifyWithCNN(inputData3ch, pseudoLabels, size) {
   const positiveCount = pseudoLabels.reduce((s, v) => s + v, 0);
   if (positiveCount === 0 || positiveCount === pseudoLabels.length) {
@@ -344,11 +332,7 @@ async function classifyWithCNN(inputData3ch, pseudoLabels, size) {
       epochs,
       batchSize: 1,
       verbose: 0,
-      // fit() awaits this between every epoch — yields the event loop so
-      // other pending work (other requests' I/O callbacks) gets a chance to
-      // run instead of this ~30s staying one uninterrupted block. Doesn't
-      // make training itself non-blocking (each epoch is still ~140ms of
-      // real CPU work), just caps the longest possible freeze at one epoch.
+      // yields the event loop between epochs so other requests aren't blocked for the whole ~30s; each epoch itself (~140ms) is still blocking
       callbacks: {
         onEpochEnd: async () => {
           await new Promise((resolve) => setImmediate(resolve));
@@ -464,15 +448,10 @@ function largestConnectedComponent(mask, size) {
 }
 
 // ─── Coastline tracing at high resolution ─────────────────────────────────────
-//
-// Moore neighborhood contour tracing walks the water/land boundary as an
-// ordered path, then strips open-ocean image-edge segments to leave the
-// actual shoreline. Avoids greedy-walk ordering issues on curved bays.
+// Moore neighborhood contour tracing walks the boundary as an ordered path, then strips
+// open-ocean edge segments to leave the actual shoreline. Avoids greedy-walk issues on curved bays.
 
-/**
- * Moore neighborhood contour trace — returns an ordered list of boundary
- * pixels walking clockwise around the largest connected water region.
- */
+/** Moore neighborhood contour trace — ordered boundary pixels walking clockwise around the largest connected water region. */
 function traceContour(mask, size) {
   // Find topmost-leftmost water pixel (guaranteed to be on the outer boundary)
   let startX = -1, startY = -1;
@@ -519,11 +498,7 @@ function traceContour(mask, size) {
   return contour;
 }
 
-/**
- * Extracts the shoreline from the full contour by removing open-ocean
- * image-edge portions (contour pixels within EDGE_MARGIN of the border),
- * returning the longest contiguous non-edge run.
- */
+/** Extracts the shoreline from the full contour by stripping open-ocean edge pixels (within EDGE_MARGIN of the border), returning the longest contiguous non-edge run. */
 function extractCoastlineFromMask(mask, size) {
   const contour = traceContour(mask, size);
   console.log(`[Detection] Contour pixels traced: ${contour.length}`);
@@ -537,12 +512,11 @@ function extractCoastlineFromMask(mask, size) {
     p.x >= size - EDGE_MARGIN || p.y >= size - EDGE_MARGIN
   );
 
-  // Find ALL non-edge runs, collect the longest one (= actual shoreline)
+  // find all non-edge runs, keep the longest (the actual shoreline)
   let bestStart = 0, bestLen = 0;
   let runStart = -1, runLen = 0;
 
-  // Wrap-around: treat the contour as circular so a run spanning the
-  // array end→start is also considered.
+  // treat the contour as circular so a run spanning the array end→start counts too
   const n = contour.length;
   for (let pass = 0; pass < 2; pass++) {
     for (let i = 0; i < n; i++) {
@@ -560,7 +534,6 @@ function extractCoastlineFromMask(mask, size) {
   console.log(`[Detection] Longest non-edge contour run: ${bestLen} pts (EDGE_MARGIN=${EDGE_MARGIN}px)`);
   if (bestLen < 3) return [];
 
-  // Extract the run (handle wrap-around)
   const run = [];
   for (let i = 0; i < bestLen; i++) run.push(contour[(bestStart + i) % n]);
 
@@ -573,8 +546,7 @@ function extractCoastlineFromMask(mask, size) {
   return simplifyPoints(smoothed, 0.8);
 }
 
-// Moving-average smooth: replaces each point with the average of its k neighbors.
-// Converts staircase pixel boundary into a smooth approximation of the curve.
+// moving-average smooth — replaces each point with the average of its k neighbors
 function smoothContour(pts, k = 4) {
   return pts.map((_, i) => {
     let sx = 0, sy = 0, cnt = 0;
@@ -605,9 +577,7 @@ function ptLineDist(p, a, b) {
   return den === 0 ? 0 : num / den;
 }
 
-// Debug helper: write a binary water/land mask out as a viewable PNG
-// (white = water, black = land) so the mask can be inspected directly
-// instead of inferred from the final traced line.
+// debug helper: writes the water/land mask as a viewable PNG (white=water, black=land)
 async function dumpDebugMask(mask, size, sourceImagePath, label) {
   try {
     const debugDir = path.join(path.dirname(sourceImagePath), 'debug');
@@ -631,25 +601,19 @@ async function detectCoastlineWithCNN(imagePath) {
   try {
     console.log('[Detection] Processing:', path.basename(imagePath));
 
-    // Generate the water/land mask at TRACE_SIZE (256). The classical NDWI
-    // threshold / colour heuristic seeds pseudo-labels; the persistent CNN,
-    // fine-tuned on those labels, predicts the mask actually used for
-    // tracing below.
+    // generates the water/land mask at 256px — NDWI/colour heuristic seeds pseudo-labels, the fine-tuned CNN predicts the mask actually used for tracing
     const ndwiRaw = await tryReadSingleBandGeoTIFF(imagePath);
 
     let mask;
     if (ndwiRaw) {
       const resized256 = resizeFloatNearest(ndwiRaw.data, ndwiRaw.width, ndwiRaw.height, TRACE_SIZE, TRACE_SIZE);
 
-      // Denoise BEFORE thresholding — wave texture, sun glint, and turbidity
-      // show up as pixel-level speckle in NDWI rasters that a raw threshold
-      // bakes straight into the mask. Filtering the continuous signal first
-      // keeps that noise out of both the pseudo-labels and the CNN's input.
+      // denoise before thresholding so wave texture/glint/turbidity speckle doesn't bake into the mask or the CNN's input
       const denoised = medianFilter(resized256, TRACE_SIZE, 1);
       const pseudoLabels = ndwiMaskFromArray(denoised, 0.0);
       await dumpDebugMask(pseudoLabels, TRACE_SIZE, imagePath, 'raw-threshold');
 
-      // Normalise -1..1 -> 0..1 and replicate into 3 channels for the CNN
+      // normalise -1..1 -> 0..1 and replicate into 3 channels for the CNN
       let ndwiMin = Infinity, ndwiMax = -Infinity;
       for (let i = 0; i < denoised.length; i++) {
         if (denoised[i] < ndwiMin) ndwiMin = denoised[i];
@@ -677,12 +641,7 @@ async function detectCoastlineWithCNN(imagePath) {
         .raw()
         .toBuffer({ resolveWithObject: true });
 
-      // Denoise the raw pixels BEFORE pseudo-label generation, same
-      // rationale as the NDWI path — otherwise speckle noise (JPEG
-      // artifacts, sun glint, wave texture) gets baked into the pseudo
-      // labels themselves, and a sufficiently noisy image can defeat the
-      // morphological cleanup step entirely (verified: >5% random pixel
-      // noise routinely merges the whole mask into one region).
+      // denoise before pseudo-label generation, same rationale as the NDWI path — enough speckle noise (>5% random pixels) can merge the whole mask into one region
       const denoisedRGB = medianFilterRGB(raw256, TRACE_SIZE, 1);
 
       const pseudoFloat = generatePseudoLabels(denoisedRGB, TRACE_SIZE, TRACE_SIZE);
@@ -703,15 +662,8 @@ async function detectCoastlineWithCNN(imagePath) {
       }
     }
 
-    // Morphological cleaning — conservative radii to preserve the thin land strip.
-    // Close fills small gaps in water detection without eating into land.
-    // Open removes tiny isolated speckles only.
-    //
-    // NDWI-sourced masks use smaller radii (2/1 vs 5/2) because Sentinel-2 is
-    // only 10m/pixel natively, far coarser than the RGB satellite
-    // screenshots this pipeline was originally tuned on (~1m/pixel) — the
-    // same pixel-radius in TRACE_SIZE-space corresponds to tens of meters
-    // more real-world smoothing for NDWI data.
+    // morphological cleaning with conservative radii to preserve the thin land strip — close fills small gaps, open removes speckles
+    // NDWI masks use smaller radii (2/1 vs 5/2) since Sentinel-2 is 10m/pixel, far coarser than the ~1m/pixel imagery this was tuned on
     const closeRadius = ndwiRaw ? 2 : 5;
     const openRadius = ndwiRaw ? 1 : 2;
 
@@ -752,8 +704,7 @@ async function detectCoastlineWithCNN(imagePath) {
     };
   } catch (error) {
     console.error('[Detection] Detection error:', error.message);
-    // If the cached model is corrupted (disposed tensors), clear it so the
-    // next upload rebuilds from scratch rather than reusing a broken model.
+    // clear the cached model if corrupted so the next upload rebuilds from scratch
     cachedModel = null;
     return { valid: false, error: error.message, method: 'CNN classified trace' };
   }

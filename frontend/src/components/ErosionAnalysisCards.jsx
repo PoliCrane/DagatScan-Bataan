@@ -15,8 +15,7 @@ export default function ErosionAnalysisCards({
 }) {
   const cardsRef = useRef(null);
   const [isVisible, setIsVisible] = useState(true);
-  
-  // Erosion data state
+
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -25,7 +24,6 @@ export default function ErosionAnalysisCards({
   const refreshIntervalRef = useRef(null);
   let lastScrollY = 0;
 
-  // Fetch municipality analysis data from database
   const fetchAnalysisData = async (municipality) => {
     if (!municipality) {
       setAnalysisData(null);
@@ -46,8 +44,7 @@ export default function ErosionAnalysisCards({
 
       const data = await response.json();
       setAnalysisData(data);
-      
-      // Determine data source for display
+
       if (data.metadata?.dataYearNote) {
         setDataSource(`Database (Latest: ${data.metadata?.analysisYear})`);
       } else {
@@ -65,16 +62,13 @@ export default function ErosionAnalysisCards({
     }
   };
 
-  // Main effect: fetch data when municipality changes
   useEffect(() => {
     fetchAnalysisData(selectedMunicipality);
 
-    // Cleanup previous refresh interval
     if (refreshIntervalRef.current) {
       clearInterval(refreshIntervalRef.current);
     }
 
-    // Optional: Set up auto-refresh for new data if needed
     if (selectedMunicipality && autoRefreshInterval) {
       refreshIntervalRef.current = setInterval(() => {
         fetchAnalysisData(selectedMunicipality);
@@ -88,7 +82,7 @@ export default function ErosionAnalysisCards({
     };
   }, [selectedMunicipality, autoRefreshInterval]);
 
-  // Use database data if available, otherwise fall back to props
+  // use database data if available, otherwise fall back to props
   const baseErosionData = analysisData ? {
     municipalityName: analysisData.erosionData?.municipalityName || selectedMunicipality,
     coastlineLength: analysisData.erosionData?.coastlineLength || "0",
@@ -110,7 +104,7 @@ export default function ErosionAnalysisCards({
     dataSource: "No Data"
   });
 
-  // When one area is selected, show its own data; otherwise average across areas with sufficient data (excluding locked ones keeps the average reliable)
+  // one area selected: show its own data. otherwise: average across areas with sufficient data
   const selectedSegment = shorelineSegments.find((s) => s.id === selectedSegmentId);
   const sufficientSegments = shorelineSegments.filter((s) => s.hasSufficientData);
   let erosionData = baseErosionData;
@@ -124,7 +118,7 @@ export default function ErosionAnalysisCards({
         ...baseErosionData,
         municipalityName: `${selectedMunicipality} — ${selectedSegment.name}`,
         coastlineLength: getCoastlineLength(selectedSegment.shoreline).toFixed(2),
-        // The current shoreline's own rate, not the municipality-wide DB average
+        // this segment's own rate, not the municipality-wide DB average
         erosionRate: (selectedSegment.erosionRate ?? 0).toFixed(2),
       };
     }
@@ -147,7 +141,6 @@ export default function ErosionAnalysisCards({
     }
   }
 
-  // Calculate predictions dynamically
   const currentYear = new Date().getFullYear();
   const latestYear = analysisData?.metadata?.analysisYear || currentYear;
 
@@ -160,7 +153,6 @@ export default function ErosionAnalysisCards({
       if (cardsRef.current) cardsRef.current.style.left = "calc(65px + 15px)";
     };
 
-    // Find sidebar and listen to hover events
     const findAndObserveSidebar = () => {
       const mapSidebar = document.querySelector(".map-sidebar");
       const adminSidebar = document.querySelector(".admin-sidebar");
@@ -172,7 +164,7 @@ export default function ErosionAnalysisCards({
       }
     };
 
-    // Give DOM time to render before finding elements
+    // wait for the DOM to render before querying
     const timeoutId = setTimeout(findAndObserveSidebar, 100);
 
     return () => {
@@ -184,8 +176,7 @@ export default function ErosionAnalysisCards({
     };
   }, []);
 
-  // Position the cards below the Erosion Legend dynamically, so it always
-  // clears the legend regardless of how tall the legend's content is.
+  // position below the erosion legend dynamically since its height varies
   useEffect(() => {
     const positionCards = () => {
       const erosionLegend = document.querySelector(".erosion-legend");
@@ -198,7 +189,7 @@ export default function ErosionAnalysisCards({
       cards.style.top = `${newTop}px`;
     };
 
-    // Give the legend time to render/measure before positioning against it
+    // wait for the legend to render/measure before positioning against it
     const timeoutId = setTimeout(positionCards, 100);
     window.addEventListener("resize", positionCards);
 
@@ -213,10 +204,8 @@ export default function ErosionAnalysisCards({
       const currentScrollY = window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
         setIsVisible(false);
       } else {
-        // Scrolling up
         setIsVisible(true);
       }
 
@@ -229,7 +218,6 @@ export default function ErosionAnalysisCards({
 
   return (
     <div className={`analysis-cards-container ${isVisible ? "visible" : "hidden"}`} ref={cardsRef}>
-      {/* Erosion Analysis Card */}
       <div className="analysis-card erosion-card">
         <div className="card-header">
           <img src="/erosion.png" alt="Analysis" className="card-icon" />

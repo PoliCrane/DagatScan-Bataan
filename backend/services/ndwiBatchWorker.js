@@ -1,27 +1,9 @@
-/**
- * Background worker for multi-year NDWI batch generation, kicked off
- * fire-and-forget from POST /api/generate-ndwi-batch (routes/ndwiGeneration.js)
- * — not awaited before that route responds, so the HTTP request returns
- * immediately with a job id instead of blocking for however long the whole
- * batch takes.
- *
- * Job state lives in-memory (a Map, below), not a DB table — a deliberate
- * simplification so the batch feature doesn't need its own schema/migration
- * for the thesis documentation. Tradeoff: a job's progress doesn't survive
- * a server restart (though every year already completed by that point is
- * already safely saved via processSatelliteImageFile — only the
- * progress-tracking wrapper resets, not real data), and jobs are only
- * visible to whichever server process created them (fine for a single
- * always-on instance, not for multiple replicas).
- *
- * Loops years 2015 (Sentinel-2 launch) through the current year; for each,
- * generates an NDWI GeoTIFF via Earth Engine and feeds it directly into the
- * same processing pipeline a manual satellite upload uses
- * (uploadManagement.js's processSatelliteImageFile), skipping the
- * download/re-upload round trip entirely. A failed year (no usable
- * low-cloud pass, empty detection, an Earth Engine hiccup) is recorded and
- * skipped, not fatal to the rest of the batch.
- */
+// Background worker for multi-year NDWI batch generation, fired fire-and-forget from
+// POST /api/generate-ndwi-batch so the request doesn't block for the whole batch.
+// Job state lives in-memory (a Map, not a DB table) - progress doesn't survive a restart,
+// though completed years are already saved; jobs are only visible to the process that created them.
+// Loops years 2015 (Sentinel-2 launch) through the current year, generating an NDWI GeoTIFF per
+// year via the same pipeline a manual upload uses. A failed year is skipped, not fatal to the batch.
 const fs = require("fs");
 const pool = require("../db");
 const { generateNDWIGeoTIFF } = require("./earthEngineService");
@@ -88,9 +70,7 @@ async function runNdwiBatch(jobId) {
   let cancelled = false;
 
   for (const year of years) {
-    // Checked before starting each year rather than mid-year — a year
-    // already generating/processing can't be cleanly interrupted, so the
-    // earliest a cancel can take effect is the next one.
+    // checked before each year, not mid-year - a year in progress can't be cleanly interrupted
     if (job.cancelRequested) {
       cancelled = true;
       break;
@@ -131,11 +111,8 @@ async function runNdwiBatch(jobId) {
     job.failedYears = [...failed];
   }
 
-  // Same call the old manual-upload route makes per-upload — done once here
-  // (not per-year) since recomputing after every single year would mean up
-  // to 12 recomputes per batch for no benefit; a failure here shouldn't stop
-  // the job from being marked complete, since the shoreline data itself
-  // already landed successfully.
+  // done once per batch, not per-year, to avoid up to 12 recomputes; a failure here
+  // doesn't block completion since the shoreline data already landed
   if (completed.length > 0) {
     try {
       await invalidateMunicipalityCache(job.municipality);
@@ -152,10 +129,7 @@ async function runNdwiBatch(jobId) {
   job.completedAt = new Date();
   console.log(`NDWI batch job ${jobId} finished: ${finalStatus} (${completed.length} succeeded, ${failed.length} failed)`);
 
-  // One entry per batch (not per-year) to avoid flooding Audit Trail with
-  // up to 12 rows for a single "Generate All Years" click. req.user (the
-  // JWT payload) already has username/roles, same as the single-year
-  // route's logAction call — no extra DB lookup needed.
+  // one entry per batch, not per-year, to avoid flooding Audit Trail with up to 12 rows per click
   if (completed.length > 0 || failed.length > 0) {
     logAction(null, {
       actor: job.requestedBy,

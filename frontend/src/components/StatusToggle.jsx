@@ -1,14 +1,6 @@
-/**
- * Toggle-switch icon for an active/inactive state — replaces the old text
- * "Deactivate"/"Reactivate" buttons. Purely visual + the click handler; the
- * confirmation dialog and the actual API call live in the parent (see
- * UserManagement.jsx's handleDeactivate/handleReactivate and
- * DataManagement.jsx's handleToggleActive). Inline SVG so no image asset is
- * needed and both states can be recolored from one shape.
- *
- * Labels default to the account wording this was originally written for, so
- * existing call sites are unaffected; DataManagement passes dataset wording.
- */
+// Toggle-switch icon for active/inactive state. Purely visual + click handler;
+// confirmation and the API call live in the parent. Inline SVG so both states
+// can be recolored from one shape. Labels default to account wording.
 export default function StatusToggle({
   active,
   onToggle,

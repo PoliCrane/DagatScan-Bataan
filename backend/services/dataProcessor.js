@@ -12,12 +12,10 @@ async function parseGeoJSON(filePath) {
     const fileContent = fs.readFileSync(filePath, "utf8");
     const geojsonData = JSON.parse(fileContent);
 
-    // Validate GeoJSON format
     if (!validateGeometry(geojsonData)) {
       throw new Error("Invalid GeoJSON format");
     }
 
-    // Extract features
     const features = geojsonData.features || [];
 
     return {
@@ -35,14 +33,7 @@ async function parseGeoJSON(filePath) {
   }
 }
 
-/**
- * Calculate erosion metrics from GeoJSON features (Row-by-row storage)
- * Each feature becomes a separate database row with zone/area identifier
- * @param {array} features - GeoJSON features array
- * @param {string} municipality - Municipality name
- * @param {number} year - Year of data
- * @returns {array} - Array of individual erosion records (one per feature/zone)
- */
+// Each GeoJSON feature becomes one erosion record (one DB row per zone/area).
 function calculateErosionMetrics(features, municipality, year) {
   if (!features || features.length === 0) {
     return [];
@@ -53,7 +44,7 @@ function calculateErosionMetrics(features, municipality, year) {
   features.forEach((feature, index) => {
     const props = feature.properties || {};
 
-    // Extract erosion rate (use null for missing values, not 0)
+    // null for missing values, not 0
     let erosionRate = null;
     if (props.erosionRate !== undefined && props.erosionRate !== null && props.erosionRate !== '') {
       const parsed = parseFloat(props.erosionRate);
@@ -63,7 +54,7 @@ function calculateErosionMetrics(features, municipality, year) {
       erosionRate = isNaN(parsed) ? null : parsed;
     }
 
-    // Extract cumulative erosion (set by eprAutoCalculator or from properties, use null for missing)
+    // set by eprAutoCalculator or from properties; null if missing
     let cumulativeErosion = null;
     if (props.cumulativeErosion !== undefined && props.cumulativeErosion !== null && props.cumulativeErosion !== '') {
       const parsed = parseFloat(props.cumulativeErosion);
@@ -73,14 +64,12 @@ function calculateErosionMetrics(features, municipality, year) {
       cumulativeErosion = isNaN(parsed) ? null : parsed;
     }
 
-    // DEBUG logging
     if (cumulativeErosion === null && erosionRate !== null) {
       console.log(
         `⚠️  DEBUG ${zoneArea}: erosionRate=${erosionRate} but cumulativeErosion=null (props.cumulativeErosion=${props.cumulativeErosion})`
       );
     }
 
-    // Get zone/area name from properties
     const zoneArea = props.area || props.name || `Zone ${index + 1}`;
 
     records.push({
@@ -103,18 +92,12 @@ function calculateErosionMetrics(features, municipality, year) {
   return records;
 }
 
-/**
- * Process and store satellite image metadata
- * @param {string} filePath - Path to satellite image
- * @param {object} metadata - Image metadata
- * @returns {object} - Processed image information
- */
+// Process and store satellite image metadata.
 async function processSatelliteImage(filePath, metadata = {}) {
   try {
     const fileStats = fs.statSync(filePath);
     const fileName = path.basename(filePath);
 
-    // Extract image info
     const imageInfo = {
       filename: fileName,
       filepath: filePath,
@@ -141,11 +124,7 @@ async function processSatelliteImage(filePath, metadata = {}) {
   }
 }
 
-/**
- * Extract coordinates from GeoJSON features
- * @param {array} features - GeoJSON features
- * @returns {object} - Bounds and coordinate information
- */
+// Extract coordinate bounds and center from GeoJSON features.
 function extractCoordinateBounds(features) {
   let minLat = 90,
     maxLat = -90,
@@ -176,28 +155,18 @@ function extractCoordinateBounds(features) {
   };
 }
 
-/**
- * Helper to extract bounds from nested coordinates
- * @param {array} coords - Coordinate array (can be nested)
- * @param {function} callback - Callback for each coordinate
- */
+// Walks nested coordinate arrays, invoking callback per [lng, lat] pair.
 function extractBoundsFromCoords(coords, callback) {
   if (!coords || !Array.isArray(coords)) return;
 
   if (typeof coords[0] === "number") {
-    // This is a [lng, lat] pair
+    // coords is [lng, lat]; callback wants (lat, lng)
     callback(coords[1], coords[0]);
   } else {
-    // Recurse into nested arrays
     coords.forEach((coord) => extractBoundsFromCoords(coord, callback));
   }
 }
 
-/**
- * Validate location data
- * @param {object} locationData - Location information
- * @returns {object} - Validation result
- */
 function validateLocationData(locationData) {
   const errors = [];
 
@@ -205,7 +174,7 @@ function validateLocationData(locationData) {
     errors.push("Municipality is required");
   }
 
-  // Specific area is now optional - will be extracted from GeoJSON features if available
+  // specific_area is optional now; extracted from GeoJSON features if present
   // if (!locationData.specific_area || locationData.specific_area.trim() === "") {
   //   errors.push("Specific Area is required");
   // }
@@ -220,16 +189,7 @@ function validateLocationData(locationData) {
   };
 }
 
-/**
- * Parse and validate CSV file for shoreline data
- * Expected CSV format:
- * municipality,year,erosion_rate,cumulative_erosion,specific_area,data_quality,source_type
- * 
- * @param {string} filePath - Path to CSV file
- * @param {string} municipality - Override municipality (optional)
- * @param {number} year - Override year (optional)
- * @returns {object} - Parsed CSV data with validation status
- */
+// CSV columns: municipality,year,erosion_rate,cumulative_erosion,specific_area,data_quality,source_type
 async function parseCSV(filePath, municipality = null, year = null) {
   try {
     const fileContent = fs.readFileSync(filePath, "utf8");
@@ -239,10 +199,8 @@ async function parseCSV(filePath, municipality = null, year = null) {
       throw new Error("CSV file must have header row and at least one data row");
     }
 
-    // Parse header
     const header = lines[0].split(",").map(h => h.trim().toLowerCase());
-    
-    // Expected columns
+
     const expectedColumns = [
       "municipality",
       "year",
@@ -253,7 +211,6 @@ async function parseCSV(filePath, municipality = null, year = null) {
       "source_type"
     ];
 
-    // Validate columns (minimum required: municipality, year, erosion_rate)
     const requiredCols = ["municipality", "year", "erosion_rate"];
     const missingCols = requiredCols.filter(col => !header.includes(col));
     
@@ -261,13 +218,12 @@ async function parseCSV(filePath, municipality = null, year = null) {
       throw new Error(`Missing required columns: ${missingCols.join(", ")}`);
     }
 
-    // Parse data rows
     const records = [];
     const errors = [];
 
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (!line) continue; // Skip empty lines
+      if (!line) continue;
 
       const values = line.split(",").map(v => v.trim());
       
@@ -276,13 +232,11 @@ async function parseCSV(filePath, municipality = null, year = null) {
         continue;
       }
 
-      // Create record object
       const record = {};
       header.forEach((col, idx) => {
         record[col] = values[idx];
       });
 
-      // Validate and convert numeric values
       const muni = municipality || record.municipality;
       const yr = parseInt(year || record.year);
       const rate = parseFloat(record.erosion_rate);
@@ -340,10 +294,7 @@ async function parseCSV(filePath, municipality = null, year = null) {
   }
 }
 
-/**
- * Enhanced processSatelliteImage with full analysis pipeline
- * Integrates georeferencing, coastline detection, and metric calculation
- */
+// Full satellite image analysis pipeline: georeferencing, coastline detection, metric calculation.
 async function processSatelliteImageWithAnalysis(imagePath, metadata = {}) {
   try {
     const {
@@ -389,19 +340,10 @@ async function processSatelliteImageWithAnalysis(imagePath, metadata = {}) {
       );
     }
 
-    // Step 4: Extract zone metrics. When there's no reference to compare
-    // against (e.g. this is the first image for an area), there's no
-    // `analysis.detectedCoastline` yet, so convert the raw pixel detection
-    // to geographic coordinates ourselves rather than leaving zones in
-    // pixel-space.
-    //
-    // CNN resizes images to 128×128 before detection, so CNN pixel coords
-    // (0–128) must be normalised against the image extent via bounds, NOT
-    // scaled by the original-image pixelWidth/pixelHeight — those are based
-    // on the original (e.g. 1024×768) pixel grid and would give wildly wrong
-    // coordinates for CNN output.
-    // Points are in [0, COASTLINE_GRID_SIZE) space (currently 256px).
-    // Normalise against image extent via bounds so geo coords are correct.
+    // Step 4: extract zone metrics. No reference means no analysis.detectedCoastline yet,
+    // so convert the raw pixel detection to geo coords ourselves.
+    // CNN output is in [0, COASTLINE_GRID_SIZE) pixel space, not the original image's -
+    // normalize against bounds, not the original pixelWidth/pixelHeight.
     const georef = georeference.georeference;
     const gridSize = detection.gridSize || COASTLINE_GRID_SIZE || 256;
     const cnnPixelToGeo = (px, py) => {

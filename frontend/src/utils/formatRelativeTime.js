@@ -1,8 +1,4 @@
-/**
- * Formats a timestamp as relative time ("3 months ago") for the User
- * Management "Last Active" column. Returns "Never" for a null/undefined
- * timestamp (an account that hasn't logged in since tracking was added).
- */
+// Formats a timestamp as relative time ("3 months ago"). Returns "Never" for a null/undefined timestamp.
 export function formatRelativeTime(timestamp) {
   if (!timestamp) return "Never";
 

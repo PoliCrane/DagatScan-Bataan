@@ -22,16 +22,13 @@ export default function AnalysisToolsCards({
 
   const BASE_YEAR = new Date().getFullYear();
 
-  // Historical years for comparison — 2015 (Sentinel-2/Earth Engine's
-  // earliest available year, same MIN_YEAR used by the NDWI pipeline)
-  // through the current year, so this never needs a manual yearly edit.
+  // 2015 (Sentinel-2/Earth Engine's earliest available year) through current year
   const historicalYears = Array.from({ length: BASE_YEAR - 2015 + 1 }, (_, i) => {
     const year = 2015 + i;
     return { value: year.toString(), label: year === BASE_YEAR ? `${year} (Current)` : year.toString() };
   });
 
-  // Future years for prediction — a fixed set of common horizons past the
-  // current year (not every single year, to keep the dropdown short).
+  // fixed set of common horizons past the current year, to keep the dropdown short
   const futureYears = [1, 2, 4, 9, 14, 19, 24].map((offset) => {
     const year = BASE_YEAR + offset;
     return { value: year.toString(), label: year.toString() };
@@ -86,9 +83,6 @@ export default function AnalysisToolsCards({
       return;
     }
 
-    // Call the comparison callback with both years — handleCompare in
-    // erosionanalysis.jsx does the real work (real geometry when on file,
-    // otherwise a database-backed EPR estimate per area).
     if (onCompare) {
       onCompare(pastYearNum, selectedYearNum);
     }
@@ -115,9 +109,6 @@ export default function AnalysisToolsCards({
 
     const predYear = parseInt(predictYear);
 
-    // Generates both the visual shoreline offset AND the Prediction Result
-    // card numbers from the same per-segment EPR data — see
-    // handlePredictSimulate in erosionanalysis.jsx.
     if (onSimulate) {
       onSimulate(BASE_YEAR, predYear);
     }
@@ -150,9 +141,7 @@ export default function AnalysisToolsCards({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Position below the Satellite Toggle dynamically, so it always clears
-  // that control regardless of how tall its content is (rather than
-  // assuming the toggle is always exactly 48px tall).
+  // position below the satellite toggle dynamically instead of assuming a fixed height
   useEffect(() => {
     const positionCards = () => {
       const satelliteToggle = document.querySelector(".satellite-toggle");

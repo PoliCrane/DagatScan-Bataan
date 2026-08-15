@@ -8,12 +8,11 @@ const pool = new Pool({
   database: process.env.DB_NAME || "db_coastalerosion",
   password: process.env.DB_PASSWORD || "admin123",
   port: process.env.DB_PORT || 5432,
-  // Without this, a request made while the pool (default max: 10) is fully
-  // checked out hangs indefinitely instead of failing with a clear error.
+  // avoid hanging forever if the pool is full
   connectionTimeoutMillis: 10000,
 });
 
-// Without this, an idle-client hiccup emits an unhandled 'error' event that crashes the process.
+// prevent an idle client error from crashing the process
 pool.on("error", (err) => {
   console.error("Unexpected error on idle PostgreSQL client:", err.message);
 });

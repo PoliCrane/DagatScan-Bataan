@@ -14,11 +14,8 @@ const { verifyToken, verifyAdmin } = require("../middleware/auth");
 
 const MIN_YEAR = 2015; // Sentinel-2 launch year
 
-// See uploadManagement.js for why this is router-level instead of per-route.
-// Covers the single-year route directly. The batch POST route responds
-// immediately (before any year is actually processed), so it doesn't cover
-// the batch's real work — ndwiBatchWorker.js calls scheduleSync() itself,
-// per year, from inside the background loop.
+// Covers the single-year route directly; the batch POST responds before any year is processed,
+// so it doesn't cover the batch's real work - ndwiBatchWorker.js calls scheduleSync() itself per year.
 router.use((req, res, next) => {
   if (req.method !== "GET") {
     res.on("finish", () => {
@@ -45,10 +42,8 @@ function parseBounds(body) {
   return { bounds };
 }
 
-// Admin-only: this queries Google Earth Engine (quota-bearing) and is only
-// ever triggered from the admin Data Upload page. Generates one year's NDWI
-// GeoTIFF and immediately processes it through the same pipeline a manual
-// satellite upload uses — no download/re-upload step.
+// Admin-only: queries Earth Engine (quota-bearing). Generates one year's NDWI GeoTIFF and
+// processes it through the same pipeline a manual upload uses - no download/re-upload step.
 router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { year, coastlineName, municipality, specificArea, isReupload } = req.body;
@@ -89,12 +84,8 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
       client.release();
     }
 
-    // processSatelliteImageFile calls this for the old manual-upload route
-    // (uploadManagement.js's route handlers), but not for itself — this is
-    // the NDWI path's equivalent, so projected_lrr/confidence/risk_level
-    // actually get recomputed instead of sitting stale. Awaited (unlike the
-    // batch worker's one-shot-at-the-end call) since this route is already
-    // synchronous and a single area's recompute is fast.
+    // processSatelliteImageFile doesn't recompute this itself, so do it here to keep
+    // projected_lrr/confidence/risk_level from sitting stale. Awaited since a single area's recompute is fast.
     if (result.success) {
       try {
         await invalidateMunicipalityCache(municipality);
@@ -102,11 +93,8 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
         console.error("Cache invalidation failed after NDWI generation:", err.message);
       }
 
-      // Neither this route nor processSatelliteImageFile logged anything
-      // before — only the old manual-upload route handler did, and this
-      // path never goes through it. isReupload distinguishes a Reupload
-      // (DataManagement.jsx) from a fresh "Generate This Year" so Audit
-      // Trail can show them as distinct actions.
+      // isReupload distinguishes a Reupload from a fresh "Generate This Year" so
+      // Audit Trail can show them as distinct actions.
       logAction(null, {
         actor: req.user,
         action: isReupload ? "ndwi_reupload" : "ndwi_generated",
@@ -131,10 +119,8 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-// Kicks off a multi-year batch (2015-current year) for the same bbox/area,
-// fire-and-forget — responds immediately with a job id rather than blocking
-// for however long the whole batch takes (potentially over an hour). Job
-// state lives in-memory (ndwiBatchWorker.js), not a DB table.
+// Kicks off a multi-year batch (2015-current) fire-and-forget - responds immediately with a
+// job id instead of blocking for the whole batch (potentially over an hour). Job state is in-memory.
 router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality, specificArea } = req.body;
@@ -161,8 +147,7 @@ router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) =
   }
 });
 
-// Signals ndwiBatchWorker.js's loop to stop before starting its next year —
-// can't interrupt a year already mid-processing, only pre-empt the next one.
+// signals the batch loop to stop before its next year; can't interrupt a year already in progress
 router.post("/generate-ndwi-batch/:jobId/cancel", verifyToken, verifyAdmin, (req, res) => {
   const ok = requestCancel(Number(req.params.jobId));
   if (!ok) {

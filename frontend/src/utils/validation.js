@@ -3,7 +3,6 @@
 // Philippine mobile numbers: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX.
 const PH_MOBILE_REGEX = /^(09\d{9}|\+639\d{9})$/;
 
-// Same pattern already used in AddAccountModal.jsx.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function isValidPhilippineMobile(value) {

@@ -1,12 +1,7 @@
 const pool = require("../db");
 
-/**
- * Records one audit_log row for an admin action. Accepts an optional pg
- * client so callers already inside a transaction can log within the same
- * transaction; otherwise falls back to the shared pool. Never throws — a
- * logging failure must not break the action it's describing, so callers
- * should still fire this after the underlying mutation is already committed.
- */
+// Records one audit_log row. Pass a pg client to log inside an existing transaction.
+// Never throws - a logging failure shouldn't break the action being logged.
 async function logAction(client, { actor, action, category, severity = "normal", targetType, targetId, details }) {
   try {
     await (client || pool).query(

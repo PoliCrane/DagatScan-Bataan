@@ -5,12 +5,7 @@
 
 import Swal from "sweetalert2";
 
-/**
- * Show a confirmation dialog
- * @param {string} message - Confirmation message to display
- * @param {Object} options - Additional SweetAlert2 options
- * @returns {Promise<boolean>} - True if confirmed, false if cancelled
- */
+// confirmation dialog; resolves true if confirmed, false if cancelled
 export const confirmAction = async (message, options = {}) => {
   const result = await Swal.fire({
     title: "Are you sure?",
@@ -28,12 +23,7 @@ export const confirmAction = async (message, options = {}) => {
   return result.isConfirmed;
 };
 
-/**
- * Show a loading dialog with spinner
- * @param {string} message - Loading message to display
- * @param {number} duration - How long to show (in ms), default 3000
- * @returns {Promise<void>}
- */
+// loading dialog with spinner, auto-closes after duration ms
 export const showLoading = async (message = "Loading...", duration = 3000) => {
   Swal.fire({
     title: message,
@@ -53,12 +43,7 @@ export const showLoading = async (message = "Loading...", duration = 3000) => {
   });
 };
 
-/**
- * Show a success message
- * @param {string} message - Success message to display
- * @param {Object} options - Additional SweetAlert2 options
- * @returns {Promise<void>}
- */
+// success message
 export const showSuccess = async (message, options = {}) => {
   await Swal.fire({
     title: "Success!",
@@ -73,12 +58,7 @@ export const showSuccess = async (message, options = {}) => {
   });
 };
 
-/**
- * Show an error message
- * @param {string} message - Error message to display
- * @param {Object} options - Additional SweetAlert2 options
- * @returns {Promise<void>}
- */
+// error message
 export const showError = async (message, options = {}) => {
   await Swal.fire({
     title: "Error!",
@@ -91,12 +71,7 @@ export const showError = async (message, options = {}) => {
   });
 };
 
-/**
- * Show an info/warning message
- * @param {string} message - Message to display
- * @param {Object} options - Additional SweetAlert2 options
- * @returns {Promise<void>}
- */
+// info/warning message
 export const showInfo = async (message, options = {}) => {
   await Swal.fire({
     title: "Information",
@@ -111,11 +86,7 @@ export const showInfo = async (message, options = {}) => {
   });
 };
 
-/**
- * Show a custom dialog with multiple actions
- * @param {Object} config - Configuration object
- * @returns {Promise<string>} - The action that was clicked
- */
+// custom dialog with multiple action buttons
 export const customDialog = async ({
   title = "Dialog",
   message = "",
