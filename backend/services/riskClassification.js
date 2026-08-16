@@ -36,4 +36,20 @@ function classifyErosionRisk(erosionRate) {
   return RISK_TIERS.find((tier) => tier.test(rate)).key;
 }
 
-module.exports = { classifyErosionRisk, RISK_COLORS, RISK_LABELS };
+const STABLE_BAND_M_PER_YEAR = 0.5;
+
+function classifyShorelineStatus(erosionRate) {
+  if (erosionRate === null || erosionRate === undefined) return "NO_DATA";
+  const rate = Number(erosionRate);
+  if (Number.isNaN(rate)) return "NO_DATA";
+  if (Math.abs(rate) < STABLE_BAND_M_PER_YEAR) return "STABLE";
+  return rate < 0 ? "EROSION" : "ACCRETION";
+}
+
+module.exports = {
+  classifyErosionRisk,
+  classifyShorelineStatus,
+  STABLE_BAND_M_PER_YEAR,
+  RISK_COLORS,
+  RISK_LABELS,
+};

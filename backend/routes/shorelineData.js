@@ -15,8 +15,57 @@ const { resolveAreaId, findAreaId } = require("../services/coastalAreas");
 const { classifyErosionRisk } = require("../services/riskClassification");
 const { getOrCreateMunicipalityId } = require("../services/municipalities");
 const { logAction } = require("../services/auditLog");
+const { runHindcast, storeRun, getLatestRun } = require("../services/hindcastValidation");
 
 const router = express.Router();
+
+router.post("/validation/run", verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const { municipality } = req.body || {};
+    let municipalityId = null;
+    let scope = "all";
+    if (municipality) {
+      municipalityId = await getMunicipalityId(municipality);
+      if (!municipalityId) {
+        return res.status(404).json({ error: `Unknown municipality: ${municipality}` });
+      }
+      scope = municipality.toLowerCase();
+    }
+
+    const result = await runHindcast({ municipalityId });
+    const stored = await storeRun(scope, result);
+
+    res.json({ runId: stored.id, runAt: stored.run_at, scope, ...result });
+  } catch (err) {
+    console.error("Hindcast validation failed:", err);
+    res.status(500).json({ error: "Hindcast validation failed" });
+  }
+});
+
+router.get("/validation/latest", async (req, res) => {
+  try {
+    const { municipality } = req.query;
+    const scope = municipality ? municipality.toLowerCase() : "all";
+    let run = await getLatestRun(scope);
+    if (!run && scope !== "all") {
+      run = await getLatestRun("all");
+    }
+    if (!run) {
+      return res.status(404).json({ error: "No validation run recorded yet" });
+    }
+    res.json({
+      runId: run.id,
+      runAt: run.run_at,
+      scope: run.scope,
+      holdoutYears: run.holdout_years,
+      summary: run.summary,
+      details: run.details,
+    });
+  } catch (err) {
+    console.error("Failed to load validation run:", err);
+    res.status(500).json({ error: "Failed to load validation results" });
+  }
+});
 
 /** Returns id+name for all municipalities; feeds the account-request form's municipality picker. */
 router.get("/municipalities", async (req, res) => {
