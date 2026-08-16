@@ -105,9 +105,14 @@ export default function SegmentsPanel({
 
               {segment.cumulativeErosion !== undefined && (
                 <div className="segment-item-rate">
-                  <span>Cumulative Erosion:</span>
+                  <span>Cumulative Change:</span>
                   <span className="segment-item-rate-value">
-                    {segment.cumulativeErosion.toFixed(2)} m
+                    {Math.abs(segment.cumulativeErosion).toFixed(2)} m{" "}
+                    {segment.cumulativeErosion < 0
+                      ? "retreat"
+                      : segment.cumulativeErosion > 0
+                      ? "advance"
+                      : ""}
                   </span>
                 </div>
               )}

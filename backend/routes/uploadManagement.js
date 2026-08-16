@@ -614,7 +614,7 @@ async function recomputeAreaTimeSeries(client, areaId) {
        SET erosion_rate = $1, cumulative_erosion = $2, source_type = 'Satellite Analysis',
            data_quality = 'Estimated'
        WHERE id = $3`,
-      [metrics.erosionRatePerYear, metrics.netRetreatMeters, rows[i].id]
+      [metrics.erosionRatePerYear, metrics.netChangeMeters, rows[i].id]
     );
   }
 }

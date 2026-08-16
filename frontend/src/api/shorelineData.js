@@ -1,6 +1,7 @@
 // Fetches real shoreline data from the database, falling back to simulated data if empty.
 
 import { generateYearlyShorelineData } from "../utils/fakeDataset";
+import { offsetCoastlineSeaward } from "../utils/geometry";
 
 import { API_BASE_URL as BACKEND_URL } from "../config/api";
 const API_BASE_URL = `${BACKEND_URL}/api`;
@@ -56,42 +57,9 @@ export const getFallbackData = (
   return generateYearlyShorelineData(coastlinePoints, startYear, endYear);
 };
 
-// erosion is positive = inland, negative = accretion/seaward
-const offsetCoastlineByErosion = (coastlinePoints, erosion) => {
-  if (!coastlinePoints || coastlinePoints.length < 2) return [];
-
-  return coastlinePoints.map((point, index) => {
-    // Calculate perpendicular direction to offset
-    let normal = [0, 0];
-
-    if (index === 0) {
-      const next = coastlinePoints[1];
-      normal = [next[1] - point[1], -(next[0] - point[0])];
-    } else if (index === coastlinePoints.length - 1) {
-      const prev = coastlinePoints[index - 1];
-      normal = [point[1] - prev[1], -(point[0] - prev[0])];
-    } else {
-      const prev = coastlinePoints[index - 1];
-      const next = coastlinePoints[index + 1];
-      normal = [(next[1] - prev[1]) / 2, -((next[0] - prev[0]) / 2)];
-    }
-
-    // Normalize
-    const length = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1]);
-    if (length === 0) return point;
-
-    normal[0] /= length;
-    normal[1] /= length;
-
-    // Apply offset (1 degree ≈ 111 km)
-    const offsetDegrees = (erosion / 111000);
-
-    return [
-      point[0] + normal[0] * offsetDegrees,
-      point[1] + normal[1] * offsetDegrees,
-    ];
-  });
-};
+// cumulative change is signed seaward meters: negative = retreat, positive = advance
+const offsetCoastlineByErosion = (coastlinePoints, cumulativeChange) =>
+  offsetCoastlineSeaward(coastlinePoints, cumulativeChange || 0);
 
 // Tries the database first, falls back to simulated data when empty/unavailable
 export const getShorelineData = async (

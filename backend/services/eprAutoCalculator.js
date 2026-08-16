@@ -85,7 +85,7 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
           parseInt(year)
         );
 
-        let cumulativeErosion = eprResult.distanceChange; // starting value; overwritten below if a baseline exists
+        let cumulativeErosion = eprResult.netChange; // starting value; overwritten below if a baseline exists
         let baselineYear = null;
 
         // baseline = earliest record in shoreline_zones
@@ -116,7 +116,7 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
                   baselineYear,
                   parseInt(year)
                 );
-                cumulativeErosion = cumulativeResult.distanceChange;
+                cumulativeErosion = cumulativeResult.netChange;
                 console.log(
                   `    📏 Cumulative distance: ${cumulativeErosion.toFixed(1)}m from ${baselineYear} to ${year}`
                 );

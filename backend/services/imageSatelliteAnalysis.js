@@ -1,6 +1,7 @@
 // Compares detected coastlines with reference data (GeoJSON, previous years) to extract erosion metrics.
 
 const fs = require('fs');
+const { signedSeawardChanges, haversineMeters } = require('./geoUtils');
 
 // Compares detected coastline against reference; computes erosion rate and accuracy metrics.
 async function compareWithReferenceCoastline(
@@ -77,100 +78,21 @@ function pixelToGeo(pixelX, pixelY, georeference) {
   return [latitude, longitude];
 }
 
-// Unit tangent at a point along a coastline. Sign convention must match the
-// frontend's offsetCoastlineForPrediction() (erosionanalysis.jsx) or retreat/advance flips.
-function unitTangentAt(coastline, index) {
-  const point = coastline[index];
-  let tangent;
-
-  if (index === 0) {
-    tangent = [coastline[1][0] - point[0], coastline[1][1] - point[1]];
-  } else if (index === coastline.length - 1) {
-    tangent = [point[0] - coastline[index - 1][0], point[1] - coastline[index - 1][1]];
-  } else {
-    const prevDir = [point[0] - coastline[index - 1][0], point[1] - coastline[index - 1][1]];
-    const nextDir = [coastline[index + 1][0] - point[0], coastline[index + 1][1] - point[1]];
-    tangent = [(prevDir[0] + nextDir[0]) / 2, (prevDir[1] + nextDir[1]) / 2];
-  }
-
-  const len = Math.sqrt(tangent[0] * tangent[0] + tangent[1] * tangent[1]);
-  return len === 0 ? [0, 0] : [tangent[0] / len, tangent[1] / len];
-}
-
-// Total arc length (km) plus cumulative length to each point, for fractional-position lookups.
-function cumulativeArcLengths(coastline) {
-  const lengths = [0];
-  let total = 0;
-  for (let i = 0; i < coastline.length - 1; i++) {
-    total += haversineDistance(coastline[i], coastline[i + 1]);
-    lengths.push(total);
-  }
-  return { lengths, total };
-}
-
-// Interpolates the point on coastline at a given fraction (0..1) of its arc length.
-function pointAtFraction(coastline, fraction, arc) {
-  if (coastline.length === 1 || arc.total === 0) return coastline[0];
-
-  const target = fraction * arc.total;
-  for (let i = 0; i < arc.lengths.length - 1; i++) {
-    if (arc.lengths[i + 1] >= target) {
-      const segLen = arc.lengths[i + 1] - arc.lengths[i];
-      const segFrac = segLen === 0 ? 0 : (target - arc.lengths[i]) / segLen;
-      const [lat1, lng1] = coastline[i];
-      const [lat2, lng2] = coastline[i + 1];
-      return [lat1 + (lat2 - lat1) * segFrac, lng1 + (lng2 - lng1) * segFrac];
-    }
-  }
-  return coastline[coastline.length - 1];
-}
-
 // Matches points by position along the line (arc-length fraction), not nearest-point-in-space -
 // nearest-point matching breaks when one year's trace has a different shape/kink, snapping points
-// to a wrong match and inflating distances. Positive = retreat (erosion), negative = advance (accretion).
+// to a wrong match and inflating distances. Seaward side is resolved geographically (away from the
+// Bataan interior via geoUtils), so results are independent of trace direction.
+// Negative = retreat (erosion), positive = advance (accretion).
 function calculatePerpendularDistances(referenceCoastline, detectedCoastline) {
-  const distances = [];
-
-  const refArc = cumulativeArcLengths(referenceCoastline);
-  const detArc = cumulativeArcLengths(detectedCoastline);
-
-  referenceCoastline.forEach((refPoint, idx) => {
-    const fraction = refArc.total > 0 ? refArc.lengths[idx] / refArc.total : 0;
-    const correspondingPoint = pointAtFraction(detectedCoastline, fraction, detArc);
-
-    // project onto the seaward normal, matching the frontend's convention (positive=seaward);
-    // sign is flipped since positive here means retreat
-    const tangent = unitTangentAt(referenceCoastline, idx);
-    const normal = [-tangent[1], tangent[0]]; // seaward, per frontend convention
-    const delta = [correspondingPoint[0] - refPoint[0], correspondingPoint[1] - refPoint[1]];
-    const seawardOffsetDegrees = delta[0] * normal[0] + delta[1] * normal[1];
-    const distance = -seawardOffsetDegrees * 111000; // signed meters; +retreat / -advance
-
-    distances.push({
-      referencePoint: refPoint,
-      detectedPoint: correspondingPoint,
-      distanceMeters: distance,
-    });
-  });
-
-  return distances;
+  return signedSeawardChanges(referenceCoastline, detectedCoastline).map((change) => ({
+    referencePoint: change.referencePoint,
+    detectedPoint: change.matchedPoint,
+    distanceMeters: change.changeMeters,
+  }));
 }
 
-// Haversine distance between two lat/lng points, in km.
-function haversineDistance([lat1, lng1], [lat2, lng2]) {
-  const R = 6371; // Earth radius in km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+function haversineDistance(a, b) {
+  return haversineMeters(a, b) / 1000;
 }
 
 // Computes erosion rate and related metrics from distance measurements.
@@ -190,14 +112,14 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
     };
   }
 
-  // retreat (positive) vs advance (negative), for the informational average/percentage fields only
+  // retreat (negative) vs advance (positive), for the informational average/percentage fields only
   const retreatDistances = distances
-    .filter((d) => d.distanceMeters > 0)
-    .map((d) => d.distanceMeters);
-
-  const advanceDistances = distances
     .filter((d) => d.distanceMeters < 0)
     .map((d) => Math.abs(d.distanceMeters));
+
+  const advanceDistances = distances
+    .filter((d) => d.distanceMeters > 0)
+    .map((d) => d.distanceMeters);
 
   const avgRetreat =
     retreatDistances.length > 0
@@ -234,8 +156,8 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
 
   return {
     valid: true,
-    erosionRatePerYear: parseFloat(erosionRate.toFixed(4)), // m/year
-    netRetreatMeters: parseFloat(netChange.toFixed(2)),
+    erosionRatePerYear: parseFloat(erosionRate.toFixed(4)), // m/year, negative = erosion
+    netChangeMeters: parseFloat(netChange.toFixed(2)),
     averageRetreatMeters: parseFloat(avgRetreat.toFixed(2)),
     averageAdvanceMeters: parseFloat(avgAdvance.toFixed(2)),
     retreatPercentage: (retreatDistances.length / distances.length) * 100,

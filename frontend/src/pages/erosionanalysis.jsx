@@ -11,7 +11,7 @@ import "./index-organized.css";
 import "./styles/erosionSegmentPopup.css";
 import { extractCoastline, smoothCoastline, getCoastlineLength } from "../utils/coastlineUtils";
 import { getShorelineData } from "../api/shorelineData";
-import { generateShoreline_ByEPR } from "../utils/eprUtils";
+import { offsetCoastlineSeaward } from "../utils/geometry";
 import { buildAreaSegments } from "../utils/areaSegments";
 import { classifyErosionRisk, getRiskColor, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 import useGuidedTour from "../hooks/useGuidedTour";
@@ -423,9 +423,9 @@ export default function ErosionAnalysis() {
         pastShoreline.push(realPast);
         pastEstimated.push(false);
       } else {
-        // Past year is more seaward (more land) — positive offset
+        // Past year is more seaward (more land) when eroding — negated rate gives a positive offset
         const rate = pastEstimateByArea[seg.name]?.erosionRate ?? seg.erosionRate;
-        pastShoreline.push(offsetCoastlineForPrediction(seg.shoreline, rate * (currentYear - pastYear)));
+        pastShoreline.push(offsetCoastlineForPrediction(seg.shoreline, -rate * (currentYear - pastYear)));
         pastEstimated.push(true);
       }
 
@@ -435,7 +435,7 @@ export default function ErosionAnalysis() {
         comparisonEstimated.push(false);
       } else {
         const rate = selectedEstimateByArea[seg.name]?.erosionRate ?? seg.erosionRate;
-        comparisonShoreline.push(offsetCoastlineForPrediction(seg.shoreline, rate * (currentYear - selectedYear)));
+        comparisonShoreline.push(offsetCoastlineForPrediction(seg.shoreline, -rate * (currentYear - selectedYear)));
         comparisonEstimated.push(true);
       }
     });
@@ -505,7 +505,7 @@ export default function ErosionAnalysis() {
       return {
         id: seg.id,
         name: seg.name,
-        shoreline: offsetCoastlineForPrediction(seg.shoreline, -erosionRate * (predictionYear - baseCoastlineYear)),
+        shoreline: offsetCoastlineForPrediction(seg.shoreline, erosionRate * (predictionYear - baseCoastlineYear)),
         erosionRate,
         retreat,
       };
@@ -525,80 +525,10 @@ export default function ErosionAnalysis() {
   };
 
   /**
-   * Detects coastline winding via signed area (shoelace formula). Returns 1 for CCW, -1 for CW.
-   */
-  const detectCoastlineOrientation = (coastlinePoints) => {
-    if (!coastlinePoints || coastlinePoints.length < 3) return 1;
-
-    let signedArea = 0;
-    for (let i = 0; i < coastlinePoints.length; i++) {
-      const j = (i + 1) % coastlinePoints.length;
-      const [lat1, lon1] = coastlinePoints[i];
-      const [lat2, lon2] = coastlinePoints[j];
-      signedArea += (lon1 * lat2 - lon2 * lat1);
-    }
-
-    const orientation = signedArea >= 0 ? 1 : -1;
-    return orientation;
-  };
-
-  /**
    * Positive offsetMeters = seaward (more land), negative = inland (erosion)
    */
-  const offsetCoastlineForPrediction = (coastlinePoints, offsetMeters) => {
-    if (!coastlinePoints || coastlinePoints.length < 2) return [];
-
-    const offsetDegrees = offsetMeters / 111000; // Convert meters to degrees
-
-    const orientation = detectCoastlineOrientation(coastlinePoints);
-
-    const offsetPoints = coastlinePoints.map((point, index) => {
-      let tangent = [0, 0];
-
-      if (index === 0) {
-        tangent = [
-          coastlinePoints[1][0] - point[0],
-          coastlinePoints[1][1] - point[1]
-        ];
-      } else if (index === coastlinePoints.length - 1) {
-        tangent = [
-          point[0] - coastlinePoints[index - 1][0],
-          point[1] - coastlinePoints[index - 1][1]
-        ];
-      } else {
-        const prevDir = [
-          point[0] - coastlinePoints[index - 1][0],
-          point[1] - coastlinePoints[index - 1][1]
-        ];
-        const nextDir = [
-          coastlinePoints[index + 1][0] - point[0],
-          coastlinePoints[index + 1][1] - point[1]
-        ];
-        tangent = [
-          (prevDir[0] + nextDir[0]) / 2,
-          (prevDir[1] + nextDir[1]) / 2
-        ];
-      }
-
-      const tangentLength = Math.sqrt(tangent[0] * tangent[0] + tangent[1] * tangent[1]);
-      if (tangentLength === 0) return point;
-
-      tangent[0] /= tangentLength;
-      tangent[1] /= tangentLength;
-
-      // Left perpendicular points seaward regardless of CCW/CW winding
-      const normal = [-tangent[1], tangent[0]];
-
-      const newPoint = [
-        point[0] + normal[0] * offsetDegrees,
-        point[1] + normal[1] * offsetDegrees,
-      ];
-      
-      return newPoint;
-    });
-
-    return offsetPoints;
-  };
+  const offsetCoastlineForPrediction = (coastlinePoints, offsetMeters) =>
+    offsetCoastlineSeaward(coastlinePoints, offsetMeters);
 
   // Marker position at a fraction along the line, not the midpoint, so overlapping year lines don't stack badges
   const pointAtFraction = (line, fraction) => {
