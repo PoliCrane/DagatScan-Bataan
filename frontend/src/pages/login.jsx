@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { loginUser } from "../api/auth";
 import { useNavigate } from "react-router-dom";
-import { showLoading, showSuccess, showError, showInfo } from "../utils/sweetAlertUtils";
+import { showLoading, showSuccess, showError } from "../utils/sweetAlertUtils";
+import { useAuth } from "../contexts/useAuth";
 import "./styles/forms.css";
 
 export default function Login({ onClose, onSwitchToForgotPassword }) {
@@ -11,6 +12,7 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const auth = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,22 +28,7 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
     const res = await loginUser({ email, password });
 
     if (res.token) {
-      localStorage.setItem("token", res.token);
-      // Store actual username from database for display in navbar
-      if (res.username) {
-        localStorage.setItem("username", res.username);
-      }
-      if (res.roles) {
-        localStorage.setItem("roles", res.roles);
-      }
-      // Municipal accounts carry a home municipality — stored so Home.jsx
-      // and the request flow's dashboard can scope data without a refetch.
-      if (res.municipality) {
-        localStorage.setItem("municipality", res.municipality);
-      }
-      if (res.municipality_id) {
-        localStorage.setItem("municipality_id", res.municipality_id);
-      }
+      auth.login(res);
 
       // Show success
       await showSuccess(`Welcome back, ${res.username || 'User'}!`);

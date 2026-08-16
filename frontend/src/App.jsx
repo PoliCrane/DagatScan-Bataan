@@ -2,7 +2,9 @@ import {BrowserRouter,Routes,Route} from "react-router-dom";
 
 import MobileBlockOverlay from "./components/MobileBlockOverlay";
 import NdwiGenerationWidget from "./components/NdwiGenerationWidget";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { NdwiGenerationProvider } from "./contexts/NdwiGenerationContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/index";
 import Home from "./pages/Home";
 import MapPage from "./pages/coastalmonitoring";
@@ -27,6 +29,7 @@ return(
 
 <MobileBlockOverlay/>
 
+<AuthProvider>
 <NdwiGenerationProvider>
 <BrowserRouter>
 
@@ -34,15 +37,25 @@ return(
 
 <Route path="/" element={<Index/>}/>
 <Route path="/index" element={<Index/>}/>
-<Route path="/home" element={<Home/>}/>
+<Route path="/home" element={
+  <ProtectedRoute allowedRoles={["municipal","admin","superadmin"]}><Home/></ProtectedRoute>
+}/>
 <Route path="/coastalmonitoring" element={<MapPage/>}/>
 <Route path="/erosion-analysis" element={<ErosionAnalysis/>}/>
 <Route path="/reports" element={<Reports/>}/>
 <Route path="/coastal-awareness" element={<CoastalAwareness/>}/>
-<Route path="/admin/data-upload" element={<DataUpload/>}/>
-<Route path="/admin/data-management" element={<DataManagement/>}/>
-<Route path="/admin/user-management" element={<UserManagement/>}/>
-<Route path="/admin/audit-trail" element={<AuditTrail/>}/>
+<Route path="/admin/data-upload" element={
+  <ProtectedRoute allowedRoles={["admin","superadmin"]}><DataUpload/></ProtectedRoute>
+}/>
+<Route path="/admin/data-management" element={
+  <ProtectedRoute allowedRoles={["admin","superadmin"]}><DataManagement/></ProtectedRoute>
+}/>
+<Route path="/admin/user-management" element={
+  <ProtectedRoute allowedRoles={["superadmin"]}><UserManagement/></ProtectedRoute>
+}/>
+<Route path="/admin/audit-trail" element={
+  <ProtectedRoute allowedRoles={["superadmin"]}><AuditTrail/></ProtectedRoute>
+}/>
 <Route path="/privacy-policy" element={<PolicyPage/>}/>
 <Route path="/terms-of-service" element={<TermsOfService/>}/>
 <Route path="/contact-us" element={<ContactUs/>}/>
@@ -55,6 +68,7 @@ return(
 
 </BrowserRouter>
 </NdwiGenerationProvider>
+</AuthProvider>
 
 </>
 

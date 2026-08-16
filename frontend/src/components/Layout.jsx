@@ -3,30 +3,19 @@ import MapSidebar from "../components/MapSidebar";
 import AdminSidebar from "../components/AdminSidebar";
 import MunicipalSidebar from "../components/MunicipalSidebar";
 import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/useAuth";
 
 export default function Layout({ children }) {
   const location = useLocation();
-  const [username, setUsername] = useState("User");
-  const [sidebarTier, setSidebarTier] = useState("public");
-  const isLoggedIn = !!localStorage.getItem("token");
+  const { isLoggedIn, username: authUsername, roles } = useAuth();
+  const username = authUsername || "User";
 
-  useEffect(() => {
-    // Get username from localStorage or set default
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-
-    const userRole = localStorage.getItem("roles");
-    if (userRole === "admin" || userRole === "superadmin") {
-      setSidebarTier("admin");
-    } else if (userRole === "municipal") {
-      setSidebarTier("municipal");
-    } else {
-      setSidebarTier("public");
-    }
-  }, []);
+  const sidebarTier =
+    roles === "admin" || roles === "superadmin"
+      ? "admin"
+      : roles === "municipal"
+      ? "municipal"
+      : "public";
 
   return (
     <div className="layout-container">

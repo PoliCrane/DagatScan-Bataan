@@ -3,19 +3,17 @@ import { useNavigate } from "react-router-dom";
 import "./index-organized.css";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import AuthModals from "../components/AuthModals";
+import { useAuth } from "../contexts/useAuth";
 
 export default function Navbar({ username, isLoggedIn }){
   const navigate = useNavigate();
+  const auth = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const authModalsRef = useRef(null);
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("username");
-    localStorage.removeItem("roles");
-    localStorage.removeItem("municipality");
-    localStorage.removeItem("municipality_id");
+    auth.logout();
     navigate("/index");
   };
 

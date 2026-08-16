@@ -1,6 +1,5 @@
 import AdminLayout from "../../components/AdminLayout";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import "../styles/data-upload.css";
 import { showSuccess, showError } from "../../utils/sweetAlertUtils";
 import useGuidedTour from "../../hooks/useGuidedTour";
@@ -11,15 +10,6 @@ import { useNdwiGeneration } from "../../contexts/NdwiGenerationContext";
 
 import { API_BASE_URL } from "../../config/api";
 export default function DataUpload() {
-  const navigate = useNavigate();
-
-  // Data Upload is admin/superadmin only — normal users get redirected
-  useEffect(() => {
-    const userRole = localStorage.getItem("roles");
-    if (userRole !== "admin" && userRole !== "superadmin") {
-      navigate("/coastalmonitoring", { replace: true });
-    }
-  }, [navigate]);
 
   // Satellite upload is hidden (not deleted) — flip to true to bring it back
   const SHOW_SATELLITE_UPLOAD = false;

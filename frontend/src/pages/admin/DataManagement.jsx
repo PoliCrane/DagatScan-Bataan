@@ -1,7 +1,6 @@
 import AdminLayout from "../../components/AdminLayout";
 import StatusToggle from "../../components/StatusToggle";
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import "../index-organized.css";
 import "../styles/data-management.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
@@ -37,7 +36,6 @@ const resolveThumbUrl = (thumbnailUrl) => {
 };
 
 export default function DataManagement() {
-  const navigate = useNavigate();
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DATA_MANAGEMENT, dataManagementSteps);
 
   const [datasets, setDatasets] = useState([]);
@@ -56,14 +54,6 @@ export default function DataManagement() {
   const [page, setPage] = useState(1);
 
   const isSuperadmin = localStorage.getItem("roles") === "superadmin";
-
-  // Data Management is admin/superadmin only — everyone else is redirected.
-  useEffect(() => {
-    const userRole = localStorage.getItem("roles");
-    if (userRole !== "admin" && userRole !== "superadmin") {
-      navigate("/coastalmonitoring", { replace: true });
-    }
-  }, [navigate]);
 
   useEffect(() => {
     fetchDatasets();

@@ -5,7 +5,6 @@ import ApproveRequestModal from "../../components/ApproveRequestModal";
 import RejectRequestModal from "../../components/RejectRequestModal";
 import StatusToggle from "../../components/StatusToggle";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "../index-organized.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
 import { formatRelativeTime } from "../../utils/formatRelativeTime";
@@ -19,7 +18,6 @@ const formatJoinedDate = (isoString) =>
   new Date(isoString).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
 export default function UserManagement() {
-  const navigate = useNavigate();
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.USER_MANAGEMENT, userManagementSteps);
 
   const [superadmins, setSuperadmins] = useState([]);
@@ -42,14 +40,6 @@ export default function UserManagement() {
 
   const currentUserRole = localStorage.getItem("roles");
   const isSuperadmin = currentUserRole === "superadmin";
-
-  // User Management is superadmin-only — admins get redirected
-  useEffect(() => {
-    const userRole = localStorage.getItem("roles");
-    if (userRole !== "superadmin") {
-      navigate("/coastalmonitoring", { replace: true });
-    }
-  }, [navigate]);
 
   useEffect(() => {
     fetchUsers();

@@ -1,6 +1,5 @@
 import AdminLayout from "../../components/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import "../styles/audit-trail.css";
 import useGuidedTour from "../../hooks/useGuidedTour";
 import TourInfoButton from "../../components/tour/TourInfoButton";
@@ -175,7 +174,6 @@ const describeLog = (log) => {
 };
 
 export default function AuditTrail() {
-  const navigate = useNavigate();
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.AUDIT_TRAIL, auditTrailSteps);
 
   const [logs, setLogs] = useState([]);
@@ -190,14 +188,6 @@ export default function AuditTrail() {
   const [severity, setSeverity] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-
-  // Audit Trail is superadmin only — everyone else is redirected.
-  useEffect(() => {
-    const userRole = localStorage.getItem("roles");
-    if (userRole !== "superadmin") {
-      navigate("/coastalmonitoring", { replace: true });
-    }
-  }, [navigate]);
 
   useEffect(() => {
     const fetchStats = async () => {

@@ -1,11 +1,13 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import "./index-organized.css";
+import { useAuth } from "../contexts/useAuth";
 
 export default function IndexNavBar({ onLoginClick, onRegisterClick, onForgotPasswordClick, showMiddleNav }){
 
 const navigate = useNavigate();
 const location = useLocation();
-const token = localStorage.getItem("token");
+const auth = useAuth();
+const token = auth.token;
 
 const scrollToSection = (sectionId) => {
   if (location.pathname !== "/") {
@@ -25,7 +27,7 @@ const scrollToSection = (sectionId) => {
 };
 
 const logout = () => {
-  localStorage.removeItem("token");
+  auth.logout();
   navigate("/index");
 };
 
