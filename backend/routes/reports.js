@@ -73,6 +73,9 @@ function buildInterpretation({ specificArea, baselineYear, year, erosionRate, ri
 router.get("/:zoneId/pdf", async (req, res) => {
   try {
     const { zoneId } = req.params;
+    if (!/^\d+$/.test(zoneId)) {
+      return res.status(400).json({ error: "zoneId must be a positive integer" });
+    }
 
     const query = `
       SELECT

@@ -147,8 +147,15 @@ router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) =
   }
 });
 
+const canAccessJob = (job, user) =>
+  user.roles === "superadmin" || job.requestedBy?.id === user.id;
+
 // signals the batch loop to stop before its next year; can't interrupt a year already in progress
 router.post("/generate-ndwi-batch/:jobId/cancel", verifyToken, verifyAdmin, (req, res) => {
+  const job = getJob(Number(req.params.jobId));
+  if (!job || !canAccessJob(job, req.user)) {
+    return res.status(404).json({ error: "Batch job not found or not currently running" });
+  }
   const ok = requestCancel(Number(req.params.jobId));
   if (!ok) {
     return res.status(404).json({ error: "Batch job not found or not currently running" });
@@ -159,7 +166,7 @@ router.post("/generate-ndwi-batch/:jobId/cancel", verifyToken, verifyAdmin, (req
 // Polled by the frontend to show batch progress.
 router.get("/generate-ndwi-batch/:jobId", verifyToken, verifyAdmin, (req, res) => {
   const job = getJob(Number(req.params.jobId));
-  if (!job) {
+  if (!job || !canAccessJob(job, req.user)) {
     return res.status(404).json({ error: "Batch job not found" });
   }
   res.json({

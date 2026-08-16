@@ -618,22 +618,6 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
 });
 
 /** Redirects callers to POST /api/admin/uploads/upload — CSV handled there via multer. */
-router.post("/admin/insert-csv", async (req, res) => {
-  res.json({
-    message: "CSV upload should be done via /api/admin/uploads/upload endpoint",
-    instructions: {
-      endpoint: "POST /api/admin/uploads/upload",
-      fields: {
-        file: "CSV file (multipart)",
-        municipality: "Municipality name",
-        year: "Data year",
-        description: "Optional notes"
-      },
-      csvFormat: "municipality,year,erosion_rate,cumulative_erosion,specific_area,data_quality"
-    }
-  });
-});
-
 /** GET .../municipality/:municipality/latest — most recent year of data for a municipality; feeds dashboard cards. */
 router.get("/municipality/:municipality/latest", async (req, res) => {
   try {
@@ -1007,7 +991,7 @@ router.post("/cache/invalidate-all", verifyToken, verifyAdmin, async (req, res) 
 });
 
 /** Cache row counts. Every row is fresh by construction (recomputed synchronously on write). */
-router.get("/cache/status", async (req, res) => {
+router.get("/cache/status", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const [analysisCache, municipalityCount] = await Promise.all([
       pool.query(`SELECT COUNT(*) as count FROM municipality_analysis_cache`),
