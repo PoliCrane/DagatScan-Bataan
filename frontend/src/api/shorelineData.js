@@ -49,7 +49,7 @@ export const getFallbackData = (
   coastlinePoints,
   municipality,
   startYear = 2015,
-  endYear = 2026
+  endYear = new Date().getFullYear()
 ) => {
   console.log(
     `⚠ Using simulated data for ${municipality} (${startYear}-${endYear})`
@@ -67,7 +67,7 @@ export const getShorelineData = async (
   coastlinePoints,
   options = {}
 ) => {
-  const { startYear = 2015, endYear = 2026, useFallback = true } = options;
+  const { startYear = 2015, endYear = new Date().getFullYear(), useFallback = true } = options;
 
   // Try to fetch real data from database
   const realData = await fetchMunicipalityData(municipality, {
@@ -128,7 +128,7 @@ export const seedDatabaseWithSimulatedData = async (
   options = {}
 ) => {
   try {
-    const { startYear = 2015, endYear = 2026 } = options;
+    const { startYear = 2015, endYear = new Date().getFullYear() } = options;
 
     const response = await fetch(`${API_BASE_URL}/shoreline/seed`, {
       method: "POST",

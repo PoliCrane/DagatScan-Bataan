@@ -8,7 +8,7 @@ export const calculatePositionByEPR = (
   referencePosition,
   epr,
   targetYear,
-  referenceYear = 2026
+  referenceYear = new Date().getFullYear()
 ) => {
   if (!epr || isNaN(epr)) {
     console.warn("Invalid EPR, returning reference position");
@@ -64,7 +64,7 @@ export const generateShoreline_ByEPR = (
   referenceShoreline,
   epr,
   targetYear,
-  referenceYear = 2026,
+  referenceYear = new Date().getFullYear(),
   offsetFunction = defaultOffsetCoastline
 ) => {
   if (!referenceShoreline || referenceShoreline.length === 0) {
@@ -90,7 +90,7 @@ export const generateShoreline_EPRWithTrend = (
   epr,
   trend = 0,
   targetYear,
-  referenceYear = 2026,
+  referenceYear = new Date().getFullYear(),
   offsetFunction = defaultOffsetCoastline
 ) => {
   if (!referenceShoreline || referenceShoreline.length === 0) {
