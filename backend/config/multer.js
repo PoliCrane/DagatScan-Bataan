@@ -1,6 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
 // Define upload directories
 const uploadDir = path.join(__dirname, "../uploads");
@@ -32,11 +33,14 @@ const storage = multer.diskStorage({
     cb(null, folder);
   },
   filename: function (req, file, cb) {
-    // Generate filename with timestamp
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    const nameWithoutExt = path.basename(file.originalname, ext);
-    const filename = `${nameWithoutExt}-${timestamp}${ext}`;
+    // random name so stored files are unguessable and free of user-controlled characters;
+    // a sanitized slug of the original name is kept for admin readability
+    const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, "").slice(0, 10);
+    const slug = path
+      .basename(file.originalname, path.extname(file.originalname))
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .slice(0, 40);
+    const filename = `${slug}-${crypto.randomUUID()}${ext}`;
 
     cb(null, filename);
   },
