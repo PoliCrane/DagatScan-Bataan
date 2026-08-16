@@ -29,4 +29,14 @@ const accountRequestLimiter = rateLimit({
   message: { error: "Too many account requests. Please try again later." },
 });
 
-module.exports = { loginLimiter, passwordResetLimiter, accountRequestLimiter };
+// Generous global backstop against floods/scrapers — the map UI legitimately polls
+// job status and loads many segments, so this must stay well above normal usage.
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 2000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests. Please try again later." },
+});
+
+module.exports = { loginLimiter, passwordResetLimiter, accountRequestLimiter, apiLimiter };

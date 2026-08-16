@@ -1,4 +1,5 @@
 require("dotenv").config();
+const { escapeHtml } = require("./utils/validators");
 
 // Render's free tier blocks all outbound SMTP traffic (ports 25/465/587),
 // so email can't go through Gmail's SMTP server from there. Brevo's
@@ -31,25 +32,34 @@ const sendViaBrevo = async ({ to, subject, html }) => {
   }
 };
 
+// Shared wrapper so every message gets the same styling and all dynamic values
+// pass through escapeHtml at the call sites below.
+const emailTemplate = (heading, bodyHtml) => `
+  <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #0077B6;">${heading}</h2>
+    ${bodyHtml}
+  </div>
+`;
+
 const sendPasswordResetEmail = async (email, resetCode) => {
   try {
     await sendViaBrevo({
       to: email,
       subject: "Reset your password for DagatScan Bataan",
-      html: `
-        <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0077B6;">Reset Your Password</h2>
-          <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
+      html: emailTemplate(
+        "Reset Your Password",
+        `
+        <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
 
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-            <p style="font-size: 14px; margin: 0 0 10px 0;">Your password reset code is:</p>
-            <p style="font-size: 32px; font-weight: bold; color: #0077B6; margin: 0; letter-spacing: 5px;">${resetCode}</p>
-          </div>
-
-          <p style="color: #666;">This code will expire in 30 minutes.</p>
-          <p style="color: #999; font-size: 12px;">For security, never share this code with anyone.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Your password reset code is:</p>
+          <p style="font-size: 32px; font-weight: bold; color: #0077B6; margin: 0; letter-spacing: 5px;">${escapeHtml(resetCode)}</p>
         </div>
-      `
+
+        <p style="color: #666;">This code will expire in 30 minutes.</p>
+        <p style="color: #999; font-size: 12px;">For security, never share this code with anyone.</p>
+        `
+      )
     });
     console.log(`Password reset email sent to ${email}`);
     return true;
@@ -59,27 +69,25 @@ const sendPasswordResetEmail = async (email, resetCode) => {
   }
 };
 
-const sendAccountApprovedEmail = async (email, username, password, municipalityName) => {
+const sendAccountApprovedEmail = async (email, username, municipalityName) => {
   try {
     await sendViaBrevo({
       to: email,
       subject: "Your DagatScan Bataan account has been approved",
-      html: `
-        <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0077B6;">Account Approved</h2>
-          <p>Your DagatScan Bataan account request${municipalityName ? ` for ${municipalityName}` : ""} has been approved. You can now log in with the credentials below.</p>
+      html: emailTemplate(
+        "Account Approved",
+        `
+        <p>Your DagatScan Bataan account request${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""} has been approved.</p>
 
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-            <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
-            <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 15px 0;">${username}</p>
-            <p style="font-size: 14px; margin: 0 0 10px 0;">Password:</p>
-            <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${password}</p>
-          </div>
-
-          <p style="color: #666;">For security, please log in and change your password as soon as possible.</p>
-          <p style="color: #999; font-size: 12px;">For security, never share this password with anyone.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(username)}</p>
         </div>
-      `
+
+        <p>Your administrator will provide your initial password separately. If you do not receive it, use the <strong>Forgot Password</strong> option on the login page with this email address to set your own password.</p>
+        <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it after your first login.</p>
+        `
+      )
     });
     console.log(`Account approved email sent to ${email}`);
     return true;
@@ -94,13 +102,13 @@ const sendAccountDeactivatedEmail = async (email, username) => {
     await sendViaBrevo({
       to: email,
       subject: "Your DagatScan Bataan account has been deactivated",
-      html: `
-        <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0077B6;">Account Deactivated</h2>
-          <p>Hi ${username}, your DagatScan Bataan account has been deactivated. You will not be able to log in until it's reactivated.</p>
-          <p style="color: #666;">If you believe this is a mistake, please contact your DENR-Bataan administrator.</p>
-        </div>
-      `
+      html: emailTemplate(
+        "Account Deactivated",
+        `
+        <p>Hi ${escapeHtml(username)}, your DagatScan Bataan account has been deactivated. You will not be able to log in until it's reactivated.</p>
+        <p style="color: #666;">If you believe this is a mistake, please contact your DENR-Bataan administrator.</p>
+        `
+      )
     });
     console.log(`Account deactivated email sent to ${email}`);
     return true;
@@ -115,12 +123,12 @@ const sendAccountReactivatedEmail = async (email, username) => {
     await sendViaBrevo({
       to: email,
       subject: "Your DagatScan Bataan account has been reactivated",
-      html: `
-        <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0077B6;">Account Reactivated</h2>
-          <p>Hi ${username}, your DagatScan Bataan account has been reactivated. You can now log in again.</p>
-        </div>
-      `
+      html: emailTemplate(
+        "Account Reactivated",
+        `
+        <p>Hi ${escapeHtml(username)}, your DagatScan Bataan account has been reactivated. You can now log in again.</p>
+        `
+      )
     });
     console.log(`Account reactivated email sent to ${email}`);
     return true;
@@ -136,19 +144,19 @@ const sendBackupFailureEmail = async (errorMessage) => {
     await sendViaBrevo({
       to,
       subject: "DagatScan Bataan — daily database backup failed",
-      html: `
-        <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0077B6;">Database Backup Failed</h2>
-          <p>The scheduled daily database backup did not complete successfully.</p>
+      html: emailTemplate(
+        "Database Backup Failed",
+        `
+        <p>The scheduled daily database backup did not complete successfully.</p>
 
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-            <p style="font-size: 14px; margin: 0 0 10px 0;">Error:</p>
-            <p style="font-size: 14px; color: #a70000; margin: 0; font-family: monospace;">${errorMessage}</p>
-          </div>
-
-          <p style="color: #666;">Check the GitHub Actions run history for the full log, and confirm the next scheduled backup succeeds.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Error:</p>
+          <p style="font-size: 14px; color: #a70000; margin: 0; font-family: monospace;">${escapeHtml(errorMessage)}</p>
         </div>
-      `
+
+        <p style="color: #666;">Check the GitHub Actions run history for the full log, and confirm the next scheduled backup succeeds.</p>
+        `
+      )
     });
     console.log(`Backup failure alert sent to ${to}`);
     return true;
