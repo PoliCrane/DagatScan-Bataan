@@ -1,5 +1,8 @@
-// End-Point Rate (EPR) erosion rate via haversine formula.
-// coords1 = earlier shoreline, coords2 = later shoreline.
+const { signedSeawardChanges, median } = require("./geoUtils");
+
+// End-Point Rate (EPR): signed seaward-normal change between two shorelines.
+// coords1 = earlier shoreline, coords2 = later shoreline, both [lon, lat].
+// Negative rate = erosion (retreat), positive = accretion (advance).
 function calculateEPR(coords1, coords2, year1, year2) {
   if (!Array.isArray(coords1) || !Array.isArray(coords2)) {
     throw new Error("coords1 and coords2 must be arrays");
@@ -40,59 +43,31 @@ function calculateEPR(coords1, coords2, year1, year2) {
     throw new Error("coords2 contains invalid coordinates");
   }
 
-  // Haversine distance between two [lon, lat] points, in meters.
-  function haversineDistance(coord1, coord2) {
-    const [lon1, lat1] = coord1;
-    const [lon2, lat2] = coord2;
-
-    const R = 6371000; // Earth's radius in meters
-    const phi1 = (lat1 * Math.PI) / 180;
-    const phi2 = (lat2 * Math.PI) / 180;
-    const deltaLat = ((lat2 - lat1) * Math.PI) / 180;
-    const deltaLon = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a =
-      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-      Math.cos(phi1) *
-        Math.cos(phi2) *
-        Math.sin(deltaLon / 2) *
-        Math.sin(deltaLon / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-
-    return distance;
+  let earlier = coords1;
+  let later = coords2;
+  let earlierYear = year1;
+  let laterYear = year2;
+  if (year2 < year1) {
+    earlier = coords2;
+    later = coords1;
+    earlierYear = year2;
+    laterYear = year1;
   }
 
-  // Closest distance from a coords1 point to any point in coords2.
-  function findClosestDistance(point) {
-    let minDistance = Infinity;
+  const earlierLatLng = earlier.map(([lon, lat]) => [lat, lon]);
+  const laterLatLng = later.map(([lon, lat]) => [lat, lon]);
 
-    for (const targetPoint of coords2) {
-      const distance = haversineDistance(point, targetPoint);
-      if (distance < minDistance) {
-        minDistance = distance;
-      }
-    }
+  const changes = signedSeawardChanges(earlierLatLng, laterLatLng);
+  const netChange = median(changes.map((c) => c.changeMeters));
 
-    return minDistance;
-  }
-
-  const distances = coords1.map(findClosestDistance);
-
-  const averageDistance =
-    distances.reduce((sum, dist) => sum + dist, 0) / distances.length;
-
-  const yearsApart = Math.abs(year2 - year1);
-
-  // negative = retreat/erosion; sign flips based on year order
-  const sign = year2 > year1 ? -1 : 1;
-  const erosionRate = (sign * averageDistance) / yearsApart;
+  const yearsApart = laterYear - earlierYear;
+  const erosionRate = netChange / yearsApart;
 
   return {
-    erosionRate: erosionRate, // meters/year (negative = retreat/erosion)
-    distanceChange: averageDistance, // meters
-    yearsApart: yearsApart, // years
+    erosionRate: erosionRate,
+    netChange: netChange,
+    distanceChange: Math.abs(netChange),
+    yearsApart: yearsApart,
   };
 }
 
