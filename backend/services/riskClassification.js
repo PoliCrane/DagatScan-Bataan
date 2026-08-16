@@ -1,5 +1,6 @@
 // Erosion risk classification, single source of truth for the backend. 5 tiers by erosion_rate
-// (m/year; negative = erosion, positive = accretion), per MGB's coastal vulnerability criteria.
+// (m/year; negative = erosion, positive = accretion). Threshold provenance and citation
+// requirements are documented in Docs/RISK_TIER_SOURCES.md.
 // Frontend has its own copy (frontend/src/utils/segmentData.js) - after editing thresholds in
 // either file, run `node backend/verify-risk-tiers-sync.js` to confirm they still agree.
 
