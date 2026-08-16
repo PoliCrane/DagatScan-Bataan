@@ -249,23 +249,6 @@ function assessQuality(distances, erosionMetrics) {
   };
 }
 
-// Detects cloud cover / atmospheric interference. Not implemented - returns a placeholder.
-async function detectCloudCover(imagePath) {
-  try {
-    return {
-      cloudPercentage: 0,
-      canBeUsed: true,
-      message: 'No significant cloud cover detected',
-    };
-  } catch (error) {
-    return {
-      cloudPercentage: null,
-      canBeUsed: false,
-      message: error.message,
-    };
-  }
-}
-
 // Splits a coastline into zones, similar to GeoJSON feature-by-feature processing.
 function extractZoneMetrics(coastlineSegments, erosionMetrics) {
   const zoneLength = 5; // km
@@ -307,6 +290,5 @@ module.exports = {
   calculateErosionFromDistances,
   calculatePerpendularDistances,
   assessQuality,
-  detectCloudCover,
   extractZoneMetrics,
 };
