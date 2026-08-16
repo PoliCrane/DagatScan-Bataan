@@ -134,14 +134,13 @@ function resizeFloatNearest(data, srcW, srcH, dstW, dstH) {
   return out;
 }
 
-// Empirically verified (Bagac Bay Sentinel-2 composites): for this Earth
-// Engine band.subtract(band) pipeline, NEGATIVE NDWI = water, POSITIVE =
-// land — the opposite of the textbook McFeeters convention. Threshold stays
-// at 0.0; more negative values only add speckle noise on open water, not a
-// better boundary.
+// McFeeters NDWI (B3-B8)/(B3+B8) as exported by earthEngineService: POSITIVE = water,
+// NEGATIVE = land. The traced land/water boundary is the same either way, but mask=1
+// must mean water so that region stats, logs, and debug dumps read correctly.
+// Run scripts/verifyNdwiPolarity.js against any NDWI GeoTIFF to confirm empirically.
 function ndwiMaskFromArray(ndwi, threshold = 0.0) {
   const mask = new Uint8Array(ndwi.length);
-  for (let i = 0; i < ndwi.length; i++) mask[i] = ndwi[i] < threshold ? 1 : 0;
+  for (let i = 0; i < ndwi.length; i++) mask[i] = ndwi[i] > threshold ? 1 : 0;
   return mask;
 }
 
@@ -625,7 +624,7 @@ async function detectCoastlineWithCNN(imagePath) {
       const inputData3ch = singleChannelTo3ChannelTensorData(normalized);
 
       const pseudoWaterCount = pseudoLabels.reduce((s, v) => s + v, 0);
-      console.log(`[Detection] NDWI range: min=${ndwiMin.toFixed(4)} max=${ndwiMax.toFixed(4)} — threshold<0.0 pseudo-label water pixels: ${pseudoWaterCount}/${pseudoLabels.length} (${(pseudoWaterCount / pseudoLabels.length * 100).toFixed(1)}%)`);
+      console.log(`[Detection] NDWI range: min=${ndwiMin.toFixed(4)} max=${ndwiMax.toFixed(4)} — threshold>0.0 pseudo-label water pixels: ${pseudoWaterCount}/${pseudoLabels.length} (${(pseudoWaterCount / pseudoLabels.length * 100).toFixed(1)}%)`);
 
       mask = await classifyWithCNN(inputData3ch, pseudoLabels, TRACE_SIZE);
 
