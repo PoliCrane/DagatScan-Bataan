@@ -234,7 +234,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
         if (coords.length === 0) return null;
 
         const yearsAvailable = yearsByArea[row.specific_area || "Main Coastline"] || [];
-        const hasSufficientData = yearsAvailable.length >= 2;
+        const hasSufficientData = yearsAvailable.length >= 3;
 
         return {
           specificArea: row.specific_area,

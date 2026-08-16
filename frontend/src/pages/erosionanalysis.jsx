@@ -255,8 +255,8 @@ export default function ErosionAnalysis() {
       } else {
         const fallbackShoreline = yearlyShorelineData[yearlyShorelineData.length - 1]?.shoreline;
         if (fallbackShoreline && fallbackShoreline.length >= 2) {
-          // Fallback: whole polygon coastline as one area, using the LRR regression when 2+ years exist
-          const hasSufficientData = yearlyShorelineData.length >= 2;
+          // Fallback: whole polygon coastline as one area, using the LRR regression when 3+ years exist
+          const hasSufficientData = yearlyShorelineData.length >= 3;
           let lrrRate = null;
           let lrrConfidence = null;
           if (hasSufficientData) {

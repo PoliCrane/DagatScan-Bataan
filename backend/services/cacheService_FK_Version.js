@@ -376,7 +376,7 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
   for (const areaId of areaIds) {
     const history = historyByArea.get(areaId);
 
-    if (history.length >= 2) {
+    if (history.length >= 3) {
       const regression = calculateLRR(history);
       const projectedLrr = parseFloat(regression.slope.toFixed(4));
       const lrrConfidence = parseFloat(regression.confidence.toFixed(2));
@@ -389,7 +389,7 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
         [projectedLrr, lrrConfidence, riskLevel, areaId]
       );
     } else {
-      // Below the 2-year regression threshold — clear any previously-computed value.
+      // Below the 3-year regression threshold — clear any previously-computed value.
       await pool.query(
         `UPDATE coastal_areas
          SET projected_lrr = NULL, lrr_confidence = NULL, risk_level = NULL, lrr_calculated_at = NULL

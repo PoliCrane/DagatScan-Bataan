@@ -58,7 +58,7 @@ export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyS
     return { segments: [], satelliteAreas: [] };
   }
 
-  const hasSufficientData = yearlyShorelineData.length >= 2;
+  const hasSufficientData = yearlyShorelineData.length >= 3;
   let lrrRate = null;
   let lrrConfidence = null;
   if (hasSufficientData) {
