@@ -130,10 +130,18 @@ export const calculateEPRConfidence = (
   return timeConfidence * 0.7 + varianceConfidence * 0.3;
 };
 
+export const STABLE_BAND_M_PER_YEAR = 0.5;
+
+export const getShorelineStatus = (epr) => {
+  const rate = Number(epr);
+  if (!isFinite(rate)) return "No Data";
+  if (Math.abs(rate) < STABLE_BAND_M_PER_YEAR) return "Stable";
+  return rate < 0 ? "Erosion" : "Accretion";
+};
+
 export const formatEPR = (epr, decimals = 2) => {
   const value = Math.abs(Number(epr) || 0).toFixed(decimals);
-  const direction = epr < 0 ? "Erosion" : epr > 0 ? "Accretion" : "Stable";
-  return `${value} m/year (${direction})`;
+  return `${value} m/year (${getShorelineStatus(epr)})`;
 };
 
 export default {
@@ -141,5 +149,6 @@ export default {
   generateShoreline_ByEPR,
   generateShoreline_EPRWithTrend,
   calculateEPRConfidence,
+  getShorelineStatus,
   formatEPR,
 };
