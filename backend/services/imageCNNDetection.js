@@ -596,69 +596,73 @@ async function dumpDebugMask(mask, size, sourceImagePath, label) {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+async function buildWaterMasks(imagePath) {
+  const ndwiRaw = await tryReadSingleBandGeoTIFF(imagePath);
+
+  if (ndwiRaw) {
+    const resized256 = resizeFloatNearest(ndwiRaw.data, ndwiRaw.width, ndwiRaw.height, TRACE_SIZE, TRACE_SIZE);
+
+    // denoise before thresholding so wave texture/glint/turbidity speckle doesn't bake into the mask or the CNN's input
+    const denoised = medianFilter(resized256, TRACE_SIZE, 1);
+    const thresholdMask = ndwiMaskFromArray(denoised, 0.0);
+    await dumpDebugMask(thresholdMask, TRACE_SIZE, imagePath, 'raw-threshold');
+
+    // normalise -1..1 -> 0..1 and replicate into 3 channels for the CNN
+    let ndwiMin = Infinity, ndwiMax = -Infinity;
+    for (let i = 0; i < denoised.length; i++) {
+      if (denoised[i] < ndwiMin) ndwiMin = denoised[i];
+      if (denoised[i] > ndwiMax) ndwiMax = denoised[i];
+    }
+    const range = ndwiMax - ndwiMin || 1;
+    const normalized = new Float32Array(denoised.length);
+    for (let i = 0; i < denoised.length; i++) normalized[i] = (denoised[i] - ndwiMin) / range;
+    const inputData3ch = singleChannelTo3ChannelTensorData(normalized);
+
+    const pseudoWaterCount = thresholdMask.reduce((s, v) => s + v, 0);
+    console.log(`[Detection] NDWI range: min=${ndwiMin.toFixed(4)} max=${ndwiMax.toFixed(4)} — threshold>0.0 pseudo-label water pixels: ${pseudoWaterCount}/${thresholdMask.length} (${(pseudoWaterCount / thresholdMask.length * 100).toFixed(1)}%)`);
+
+    const cnnMask = await classifyWithCNN(inputData3ch, thresholdMask, TRACE_SIZE);
+    return { cnnMask, thresholdMask, usedNdwi: true };
+  }
+
+  const { data: raw256 } = await sharp(imagePath)
+    .resize(TRACE_SIZE, TRACE_SIZE)
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  // denoise before pseudo-label generation, same rationale as the NDWI path — enough speckle noise (>5% random pixels) can merge the whole mask into one region
+  const denoisedRGB = medianFilterRGB(raw256, TRACE_SIZE, 1);
+
+  const pseudoFloat = generatePseudoLabels(denoisedRGB, TRACE_SIZE, TRACE_SIZE);
+  const thresholdMask = new Uint8Array(TRACE_SIZE * TRACE_SIZE);
+  for (let i = 0; i < TRACE_SIZE * TRACE_SIZE; i++) thresholdMask[i] = pseudoFloat[i] >= 0.5 ? 1 : 0;
+
+  const inputData3ch = new Float32Array(TRACE_SIZE * TRACE_SIZE * 3);
+  for (let i = 0; i < denoisedRGB.length; i++) inputData3ch[i] = denoisedRGB[i] / 255;
+
+  const cnnMask = await classifyWithCNN(inputData3ch, thresholdMask, TRACE_SIZE);
+  return { cnnMask, thresholdMask, usedNdwi: false };
+}
+
 async function detectCoastlineWithCNN(imagePath) {
   try {
     console.log('[Detection] Processing:', path.basename(imagePath));
 
     // generates the water/land mask at 256px — NDWI/colour heuristic seeds pseudo-labels, the fine-tuned CNN predicts the mask actually used for tracing
-    const ndwiRaw = await tryReadSingleBandGeoTIFF(imagePath);
+    const { cnnMask, usedNdwi } = await buildWaterMasks(imagePath);
+    let mask = cnnMask;
+    const ndwiRaw = usedNdwi;
 
-    let mask;
-    if (ndwiRaw) {
-      const resized256 = resizeFloatNearest(ndwiRaw.data, ndwiRaw.width, ndwiRaw.height, TRACE_SIZE, TRACE_SIZE);
-
-      // denoise before thresholding so wave texture/glint/turbidity speckle doesn't bake into the mask or the CNN's input
-      const denoised = medianFilter(resized256, TRACE_SIZE, 1);
-      const pseudoLabels = ndwiMaskFromArray(denoised, 0.0);
-      await dumpDebugMask(pseudoLabels, TRACE_SIZE, imagePath, 'raw-threshold');
-
-      // normalise -1..1 -> 0..1 and replicate into 3 channels for the CNN
-      let ndwiMin = Infinity, ndwiMax = -Infinity;
-      for (let i = 0; i < denoised.length; i++) {
-        if (denoised[i] < ndwiMin) ndwiMin = denoised[i];
-        if (denoised[i] > ndwiMax) ndwiMax = denoised[i];
-      }
-      const range = ndwiMax - ndwiMin || 1;
-      const normalized = new Float32Array(denoised.length);
-      for (let i = 0; i < denoised.length; i++) normalized[i] = (denoised[i] - ndwiMin) / range;
-      const inputData3ch = singleChannelTo3ChannelTensorData(normalized);
-
-      const pseudoWaterCount = pseudoLabels.reduce((s, v) => s + v, 0);
-      console.log(`[Detection] NDWI range: min=${ndwiMin.toFixed(4)} max=${ndwiMax.toFixed(4)} — threshold>0.0 pseudo-label water pixels: ${pseudoWaterCount}/${pseudoLabels.length} (${(pseudoWaterCount / pseudoLabels.length * 100).toFixed(1)}%)`);
-
-      mask = await classifyWithCNN(inputData3ch, pseudoLabels, TRACE_SIZE);
-
-      const waterCount = mask.reduce((s, v) => s + v, 0);
-      console.log(`[Detection] NDWI+CNN — water pixels at ${TRACE_SIZE}px: ${waterCount}/${TRACE_SIZE * TRACE_SIZE} (${(waterCount / (TRACE_SIZE * TRACE_SIZE) * 100).toFixed(1)}%)`);
-      if (waterCount === 0 || waterCount === TRACE_SIZE * TRACE_SIZE) {
-        return { valid: false, error: 'Water/land mask is all-water or all-land — check bounds/year' };
-      }
-    } else {
-      const { data: raw256 } = await sharp(imagePath)
-        .resize(TRACE_SIZE, TRACE_SIZE)
-        .removeAlpha()
-        .raw()
-        .toBuffer({ resolveWithObject: true });
-
-      // denoise before pseudo-label generation, same rationale as the NDWI path — enough speckle noise (>5% random pixels) can merge the whole mask into one region
-      const denoisedRGB = medianFilterRGB(raw256, TRACE_SIZE, 1);
-
-      const pseudoFloat = generatePseudoLabels(denoisedRGB, TRACE_SIZE, TRACE_SIZE);
-      const pseudoLabels = new Uint8Array(TRACE_SIZE * TRACE_SIZE);
-      for (let i = 0; i < TRACE_SIZE * TRACE_SIZE; i++) pseudoLabels[i] = pseudoFloat[i] >= 0.5 ? 1 : 0;
-
-      const inputData3ch = new Float32Array(TRACE_SIZE * TRACE_SIZE * 3);
-      for (let i = 0; i < denoisedRGB.length; i++) inputData3ch[i] = denoisedRGB[i] / 255;
-
-      mask = await classifyWithCNN(inputData3ch, pseudoLabels, TRACE_SIZE);
-
-      const waterCount = mask.reduce((s, v) => s + v, 0);
-      const waterPct = (waterCount / (TRACE_SIZE * TRACE_SIZE) * 100).toFixed(1);
-      console.log(`[Detection] Colour+CNN — water pixels at ${TRACE_SIZE}px: ${waterCount}/${TRACE_SIZE * TRACE_SIZE} (${waterPct}%)`);
-
-      if (waterCount === 0 || waterCount === TRACE_SIZE * TRACE_SIZE) {
-        return { valid: false, error: 'Water/land mask is all-water or all-land — check image colours' };
-      }
+    const waterCount = mask.reduce((s, v) => s + v, 0);
+    console.log(`[Detection] ${usedNdwi ? 'NDWI' : 'Colour'}+CNN — water pixels at ${TRACE_SIZE}px: ${waterCount}/${TRACE_SIZE * TRACE_SIZE} (${(waterCount / (TRACE_SIZE * TRACE_SIZE) * 100).toFixed(1)}%)`);
+    if (waterCount === 0 || waterCount === TRACE_SIZE * TRACE_SIZE) {
+      return {
+        valid: false,
+        error: usedNdwi
+          ? 'Water/land mask is all-water or all-land — check bounds/year'
+          : 'Water/land mask is all-water or all-land — check image colours',
+      };
     }
 
     // morphological cleaning with conservative radii to preserve the thin land strip — close fills small gaps, open removes speckles
@@ -715,4 +719,4 @@ async function initCNNModel() {
   }
 }
 
-module.exports = { detectCoastlineWithCNN, initCNNModel, buildModel, COASTLINE_GRID_SIZE };
+module.exports = { detectCoastlineWithCNN, buildWaterMasks, initCNNModel, buildModel, COASTLINE_GRID_SIZE };
