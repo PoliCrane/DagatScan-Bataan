@@ -111,6 +111,22 @@ export default function UserManagement() {
     }
   };
 
+  const handleViewLetter = async (requestId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/admin/account-requests/${requestId}/letter`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Could not load the request letter");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      await showError(err.message);
+    }
+  };
+
   const handleApproveRequest = (request) => {
     setApprovingRequest(request);
     setShowApproveModal(true);
@@ -361,14 +377,13 @@ export default function UserManagement() {
                       <td>{request.contact_number}</td>
                       <td>{request.position}</td>
                       <td>
-                        <a
+                        <button
+                          type="button"
                           className="btn-view-letter-link"
-                          href={request.request_letter_url || `${API_BASE_URL}/uploads/request-letters/${request.request_letter_filename}`}
-                          target="_blank"
-                          rel="noreferrer"
+                          onClick={() => handleViewLetter(request.id)}
                         >
                           View Letter
-                        </a>
+                        </button>
                       </td>
                       <td>{new Date(request.requested_at).toLocaleDateString()}</td>
                       <td>

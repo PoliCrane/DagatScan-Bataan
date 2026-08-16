@@ -62,6 +62,42 @@ async function uploadBuffer(buffer, storagePath) {
   return data.publicUrl;
 }
 
+const PRIVATE_BUCKET_NAME = process.env.SUPABASE_PRIVATE_BUCKET || "request-letters-private";
+
+async function ensurePrivateBucketExists() {
+  const supabase = getClient();
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+  if (listError) throw new Error(`Could not list Supabase buckets: ${listError.message}`);
+  if (buckets.some((b) => b.name === PRIVATE_BUCKET_NAME)) return;
+
+  const { error: createError } = await supabase.storage.createBucket(PRIVATE_BUCKET_NAME, {
+    public: false,
+  });
+  if (createError) throw new Error(`Could not create private bucket "${PRIVATE_BUCKET_NAME}": ${createError.message}`);
+  console.log(`✓ Created private Supabase Storage bucket "${PRIVATE_BUCKET_NAME}"`);
+}
+
+async function uploadPrivateFile(localFilePath, storagePath) {
+  await ensurePrivateBucketExists();
+  const supabase = getClient();
+  const buffer = fs.readFileSync(localFilePath);
+
+  const { error } = await supabase.storage
+    .from(PRIVATE_BUCKET_NAME)
+    .upload(storagePath, buffer, { upsert: true });
+  if (error) throw new Error(`Private upload failed for ${storagePath}: ${error.message}`);
+  return storagePath;
+}
+
+async function getPrivateSignedUrl(storagePath, expiresInSeconds = 60) {
+  const supabase = getClient();
+  const { data, error } = await supabase.storage
+    .from(PRIVATE_BUCKET_NAME)
+    .createSignedUrl(storagePath, expiresInSeconds);
+  if (error) throw new Error(`Could not sign URL for ${storagePath}: ${error.message}`);
+  return data.signedUrl;
+}
+
 /** Downloads a Storage object to a local file path, creating parent dirs as needed. */
 async function downloadToLocalFile(storagePath, localFilePath) {
   const supabase = getClient();
@@ -83,9 +119,12 @@ async function deleteFromStorage(storagePath) {
 
 module.exports = {
   BUCKET_NAME,
+  PRIVATE_BUCKET_NAME,
   ensureBucketExists,
   uploadLocalFile,
   uploadBuffer,
+  uploadPrivateFile,
+  getPrivateSignedUrl,
   downloadToLocalFile,
   deleteFromStorage,
 };

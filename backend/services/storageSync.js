@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const pool = require("../db");
-const { uploadLocalFile } = require("./supabaseStorage");
+const { uploadLocalFile, uploadPrivateFile } = require("./supabaseStorage");
 const { thumbnailPathFor } = require("./thumbnailGenerator");
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
@@ -61,7 +61,8 @@ async function syncPendingFilesToStorage() {
     }
   }
 
-  // 3. account_requests - only a filename is stored, joined against the known directory
+  // 3. account_requests - letters contain PII, so they sync to the PRIVATE bucket and
+  // request_letter_url stores the storage path (served via a signed URL, never public).
   const pendingLetters = await pool.query(
     `SELECT id, request_letter_filename FROM account_requests
      WHERE request_letter_url IS NULL AND request_letter_filename IS NOT NULL`
@@ -70,8 +71,8 @@ async function syncPendingFilesToStorage() {
     const localPath = path.join(REQUEST_LETTERS_DIR, row.request_letter_filename);
     if (!fs.existsSync(localPath)) continue;
     try {
-      const url = await uploadOnce(localPath);
-      await pool.query(`UPDATE account_requests SET request_letter_url = $1 WHERE id = $2`, [url, row.id]);
+      const storagePath = await uploadPrivateFile(localPath, toStoragePath(localPath));
+      await pool.query(`UPDATE account_requests SET request_letter_url = $1 WHERE id = $2`, [storagePath, row.id]);
       synced++;
     } catch (err) {
       failed++;

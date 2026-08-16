@@ -42,6 +42,8 @@ app.use(
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(apiLimiter);
+// request letters contain PII — only superadmins may fetch them, via /admin/account-requests/:id/letter
+app.use("/uploads/request-letters", verifyToken, verifySuperadmin);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const authRouter = require("./routes/auth");

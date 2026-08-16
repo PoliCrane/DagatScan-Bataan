@@ -1,6 +1,9 @@
 const express = require("express");
+const path = require("path");
+const fs = require("fs");
 const bcrypt = require("bcrypt");
 const pool = require("../db");
+const { getPrivateSignedUrl } = require("../services/supabaseStorage");
 const {
   sendAccountApprovedEmail,
   sendAccountDeactivatedEmail,
@@ -334,6 +337,46 @@ router.get("/account-requests", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Failed to fetch account requests" });
+  }
+});
+
+// VIEW REQUEST LETTER — streams the local PDF, or redirects to a short-lived signed URL
+// when the file only exists in the private storage bucket.
+router.get("/account-requests/:id/letter", async (req, res) => {
+  try {
+    if (!/^\d+$/.test(req.params.id)) {
+      return res.status(400).json({ error: "Invalid request id" });
+    }
+
+    const result = await pool.query(
+      "SELECT request_letter_filename, request_letter_url FROM account_requests WHERE id = $1",
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    const { request_letter_filename: filename, request_letter_url: storagePath } = result.rows[0];
+    if (!filename && !storagePath) {
+      return res.status(404).json({ error: "No request letter on file" });
+    }
+
+    if (filename) {
+      const localPath = path.join(__dirname, "../uploads/request-letters", path.basename(filename));
+      if (fs.existsSync(localPath)) {
+        return res.sendFile(localPath);
+      }
+    }
+
+    if (storagePath && !storagePath.startsWith("http")) {
+      const signedUrl = await getPrivateSignedUrl(storagePath, 60);
+      return res.redirect(signedUrl);
+    }
+
+    res.status(404).json({ error: "Request letter file is not available" });
+  } catch (err) {
+    console.error("Failed to serve request letter:", err.message);
+    res.status(500).json({ error: "Failed to load request letter" });
   }
 });
 
