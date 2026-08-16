@@ -137,9 +137,16 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
   const netChange = calculateMedian(distances.map((d) => d.distanceMeters));
   const erosionRate = netChange / yearsDifference; // meters per year
 
-  // Confidence: based on consistency of measurements
+  // Confidence: signal-to-noise — measured change vs the 95% CI of the measurement spread.
+  // 1.0 means the net change clearly exceeds measurement noise; near 0 means it is noise.
   const stdDev = calculateStdDev(distances.map((d) => d.distanceMeters));
-  const confidence = Math.max(0, 1 - stdDev / Math.abs(erosionRate + 0.1));
+  const standardError = stdDev / Math.sqrt(distances.length);
+  const confidence =
+    standardError === 0
+      ? netChange === 0
+        ? 0
+        : 1
+      : Math.min(1, Math.abs(netChange) / (1.96 * standardError));
 
   // Plausibility gate: real coastal erosion rarely exceeds ~5 m/year (CVI "Very High" ceiling).
   // A rate many times that means a defective trace, not real erosion - refuse to store it
@@ -164,6 +171,7 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
     advancePercentage: (advanceDistances.length / distances.length) * 100,
     dataPointsUsed: distances.length,
     standardDeviation: parseFloat(stdDev.toFixed(2)),
+    standardError: parseFloat(standardError.toFixed(2)),
     confidenceLevel: parseFloat(confidence.toFixed(2)),
   };
 }

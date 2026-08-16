@@ -100,9 +100,9 @@ function calculateLRR(dataPoints) {
   }, 0);
 
   const r2 = totalSumSquares === 0 ? 1 : 1 - residualSumSquares / totalSumSquares;
-  const confidence = Math.min(0.95, Math.max(0.5, r2));
+  const confidence = Math.max(0, Math.min(1, r2));
 
-  return { slope, intercept, confidence, r2 };
+  return { slope, intercept, confidence, r2, sampleCount: n };
 }
 
 module.exports = { calculateEPR, calculateLRR };

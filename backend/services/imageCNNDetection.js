@@ -690,14 +690,11 @@ async function detectCoastlineWithCNN(imagePath) {
       return { valid: false, error: 'No coastline boundary found after land-depth filtering' };
     }
 
-    const confidence = Math.min(1.0, points.length / 100);
-
     return {
       valid: true,
       coastlinePoints: points,
       pointCount: points.length,
       method: 'CNN classified trace (256px)',
-      confidence: parseFloat(confidence.toFixed(2)),
       gridSize: TRACE_SIZE,
       architecture: 'Compact Encoder-Decoder CNN (3 conv+pool, 3 upsample+conv)',
       trainingStrategy: 'Self-supervised bootstrap, weights persisted across uploads — classical NDWI/colour threshold generates pseudo-labels, CNN fine-tunes on each upload and predict() output is what gets traced',
