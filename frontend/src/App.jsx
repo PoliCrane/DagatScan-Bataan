@@ -3,6 +3,7 @@ import {BrowserRouter,Routes,Route} from "react-router-dom";
 import MobileBlockOverlay from "./components/MobileBlockOverlay";
 import NdwiGenerationWidget from "./components/NdwiGenerationWidget";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { NdwiGenerationProvider } from "./contexts/NdwiGenerationContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/index";
@@ -29,6 +30,7 @@ return(
 
 <MobileBlockOverlay/>
 
+<ErrorBoundary>
 <AuthProvider>
 <NdwiGenerationProvider>
 <BrowserRouter>
@@ -69,6 +71,7 @@ return(
 </BrowserRouter>
 </NdwiGenerationProvider>
 </AuthProvider>
+</ErrorBoundary>
 
 </>
 
