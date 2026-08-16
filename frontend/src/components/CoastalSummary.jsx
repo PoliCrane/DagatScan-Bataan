@@ -51,8 +51,8 @@ export default function CoastalSummary({ yearlyData = [], selectedMunicipality =
   }
 
   const displayVeryHighRiskCount = activeSummary?.riskDistribution?.veryHighRisk ?? activeSummary?.veryHighRisk ?? 0;
-  const overallErosionRate = activeSummary?.avgErosionRate ?? 1.2;
-  const dataSource = activeSummary ? "Real Data" : "Simulated Data";
+  const overallErosionRate = activeSummary?.avgErosionRate ?? null;
+  const dataSource = activeSummary ? "Real Data" : "No Data";
 
   useEffect(() => {
     let sidebar = null;
@@ -147,7 +147,13 @@ export default function CoastalSummary({ yearlyData = [], selectedMunicipality =
             <img src="/rate.png" alt="Rate" className="card-icon" />
             <span className="card-label">Erosion Rate</span>
             <span className="card-value">
-              {overallErosionRate.toFixed(2)} <span className="card-unit">m/year</span>
+              {overallErosionRate != null ? (
+                <>
+                  {overallErosionRate.toFixed(2)} <span className="card-unit">m/year</span>
+                </>
+              ) : (
+                "No data"
+              )}
             </span>
           </div>
         </div>

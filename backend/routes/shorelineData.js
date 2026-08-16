@@ -341,6 +341,9 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
 
 /** POST /api/shoreline/seed — admin: seeds simulated erosion data for testing (skips if data already exists). */
 router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "Seeding simulated data is disabled in production" });
+  }
   // single client inside BEGIN/COMMIT so a mid-loop failure rolls back entirely
   const client = await pool.connect();
   try {

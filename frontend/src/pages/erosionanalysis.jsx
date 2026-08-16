@@ -202,8 +202,7 @@ export default function ErosionAnalysis() {
 
         const yearly = await getShorelineData(selectedMunicipality, smoothedCoastline, {
           startYear: 2015,
-          endYear: 2026,
-          useFallback: false,
+          endYear: new Date().getFullYear(),
         });
 
         setYearlyShorelineData(yearly);

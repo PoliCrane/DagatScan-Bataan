@@ -1,12 +1,12 @@
-// Fetches real shoreline data from the database, falling back to simulated data if empty.
+// Fetches real shoreline data from the database. Empty results stay empty —
+// callers must render an explicit no-data state, never simulated values.
 
-import { generateYearlyShorelineData } from "../utils/fakeDataset";
 import { offsetCoastlineSeaward } from "../utils/geometry";
 
 import { API_BASE_URL as BACKEND_URL } from "../config/api";
 const API_BASE_URL = `${BACKEND_URL}/api`;
 
-// Returns null (not []) on failure/empty so callers know to fall back to simulated data
+// Returns null (not []) on failure so callers can distinguish errors from empty data
 export const fetchMunicipalityData = async (
   municipality,
   options = {}
@@ -45,60 +45,31 @@ export const fetchMunicipalityData = async (
   }
 };
 
-export const getFallbackData = (
-  coastlinePoints,
-  municipality,
-  startYear = 2015,
-  endYear = new Date().getFullYear()
-) => {
-  console.log(
-    `⚠ Using simulated data for ${municipality} (${startYear}-${endYear})`
-  );
-  return generateYearlyShorelineData(coastlinePoints, startYear, endYear);
-};
-
 // cumulative change is signed seaward meters: negative = retreat, positive = advance
 const offsetCoastlineByErosion = (coastlinePoints, cumulativeChange) =>
   offsetCoastlineSeaward(coastlinePoints, cumulativeChange || 0);
 
-// Tries the database first, falls back to simulated data when empty/unavailable
+// Returns [] when the database has no records — the UI must show a no-data state
 export const getShorelineData = async (
   municipality,
   coastlinePoints,
   options = {}
 ) => {
-  const { startYear = 2015, endYear = new Date().getFullYear(), useFallback = true } = options;
+  const { startYear = 2015, endYear = new Date().getFullYear() } = options;
 
-  // Try to fetch real data from database
   const realData = await fetchMunicipalityData(municipality, {
     startYear,
     endYear,
   });
 
   if (realData && realData.length > 0 && coastlinePoints && coastlinePoints.length > 0) {
-    // Enrich real data with calculated shoreline coordinates
     return realData.map((yearData) => ({
       ...yearData,
       shoreline: offsetCoastlineByErosion(coastlinePoints, yearData.cumulativeErosion),
     }));
   }
 
-  // Fallback to simulated data if enabled
-  if (useFallback && coastlinePoints && coastlinePoints.length > 0) {
-    console.log(`⚠️ No real data found for ${municipality} - using simulated data (${startYear}-${endYear})`);
-    return getFallbackData(
-      coastlinePoints,
-      municipality,
-      startYear,
-      endYear
-    );
-  }
-
-  // No data and no fallback
-  if (!useFallback) {
-    console.error(`❌ No real data found for ${municipality} and fallback is disabled. Map will have no shoreline data.`);
-  }
-
+  console.warn(`No shoreline records found for ${municipality} (${startYear}-${endYear}).`);
   return [];
 };
 

@@ -129,12 +129,11 @@ export default function CoastalMonitoring() {
 
       const smoothedCoastline = smoothCoastline(rawCoastline, 1);
 
-      // Fetch real data from database (no fallback - testing real data only)
+      // Fetch real data from database — no simulated fallback exists
       (async () => {
         const yearly = await getShorelineData(selectedMunicipality, smoothedCoastline, {
           startYear: 2015,
-          endYear: 2026,
-          useFallback: false,
+          endYear: new Date().getFullYear(),
         });
         
         setYearlyShorelineData(yearly);

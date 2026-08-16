@@ -92,10 +92,10 @@ export default function ErosionAnalysisCards({
     dataSource: "Database"
   } : (selectedMunicipality && municipalityStats ? {
     municipalityName: selectedMunicipality,
-    coastlineLength: "2.5",
+    coastlineLength: "—",
     riskLevel: municipalityStats.riskLevel,
     erosionRate: municipalityStats.averageErosionRate?.toFixed(2) || "0",
-    dataSource: "Simulated"
+    dataSource: "Municipality summary"
   } : {
     municipalityName: "Select Municipality",
     coastlineLength: "0",
