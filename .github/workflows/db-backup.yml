@@ -14,7 +14,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "25.x"
+          node-version: "22.x"
 
       # Ubuntu's default apt package for postgresql-client trails Supabase's
       # actual Postgres version (was 16, Supabase runs 17) — pg_dump refuses
@@ -30,7 +30,7 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run backup script
         working-directory: backend
