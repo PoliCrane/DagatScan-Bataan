@@ -339,13 +339,13 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
         return res.status(400).json({ error: `Area "${area}" has insufficient data to estimate` });
       }
       const result = await pool.query(
-        `SELECT id, name, projected_lrr, risk_level FROM coastal_areas WHERE id = $1`,
+        `SELECT id, name, projected_lrr, lrr_confidence, risk_level FROM coastal_areas WHERE id = $1`,
         [areaId]
       );
       areaRows = result.rows;
     } else {
       const result = await pool.query(
-        `SELECT id, name, projected_lrr, risk_level FROM coastal_areas WHERE municipality_id = $1`,
+        `SELECT id, name, projected_lrr, lrr_confidence, risk_level FROM coastal_areas WHERE municipality_id = $1`,
         [municipalityId]
       );
       areaRows = result.rows;
@@ -367,11 +367,14 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
         erosionRate: projectedLrr,
         retreat: Math.abs(projectedLrr * (targetYear - baseYear)),
         riskLevel: row.risk_level,
+        modelFit: row.lrr_confidence !== null ? parseFloat(row.lrr_confidence) : null,
       };
     });
 
     const avgLrr = segments.reduce((sum, s) => sum + s.erosionRate, 0) / segments.length;
     const avgRetreat = segments.reduce((sum, s) => sum + s.retreat, 0) / segments.length;
+    const fits = segments.filter((s) => s.modelFit !== null).map((s) => s.modelFit);
+    const avgFit = fits.length ? fits.reduce((a, b) => a + b, 0) / fits.length : null;
 
     res.json({
       predictedYear: targetYear.toString(),
@@ -379,6 +382,7 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
       estimatedRetreatUnit: "m",
       projectedLRR: Math.abs(avgLrr).toFixed(2),
       projectedLRRUnit: "m/year",
+      modelFit: avgFit !== null ? parseFloat(avgFit.toFixed(2)) : null,
       segments,
     });
   } catch (err) {

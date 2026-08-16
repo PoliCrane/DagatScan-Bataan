@@ -57,7 +57,11 @@ export default function PredictionResultCard({
         <div className="card-item">
           <span className="card-label">Estimated Retreat</span>
           <span className="card-value">
-            {predictionData.estimatedRetreat} <span className="card-unit">{predictionData.estimatedRetreatUnit}</span>
+            {predictionData.estimatedRetreat}
+            {predictionData.validationMae != null && (
+              <span className="card-unit"> ± {predictionData.validationMae}</span>
+            )}{" "}
+            <span className="card-unit">{predictionData.estimatedRetreatUnit}</span>
           </span>
         </div>
 
@@ -67,6 +71,26 @@ export default function PredictionResultCard({
             {predictionData.projectedLRR} <span className="card-unit">{predictionData.projectedLRRUnit}</span>
           </span>
         </div>
+
+        {predictionData.modelFit != null && (
+          <div className="card-item">
+            <span className="card-label">Model Fit (r²)</span>
+            <span className="card-value">{predictionData.modelFit.toFixed(2)}</span>
+          </div>
+        )}
+
+        {predictionData.validationAccuracyPct != null && (
+          <div className="card-item">
+            <span className="card-label">Hindcast Accuracy</span>
+            <span className="card-value">
+              {predictionData.validationAccuracyPct}%
+              <span className="card-unit">
+                {" "}
+                ({predictionData.validationAreas} areas validated)
+              </span>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

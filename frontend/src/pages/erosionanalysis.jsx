@@ -477,6 +477,7 @@ export default function ErosionAnalysis() {
 
     const areaParam = selectedSegment ? `&area=${encodeURIComponent(selectedSegment.name)}` : "";
     let estimate;
+    let validation = null;
     try {
       const res = await fetch(
         `${API_BASE_URL}/api/shoreline/municipality/${encodeURIComponent(selectedMunicipality)}/shoreline-estimate?baseYear=${baseCoastlineYear}&targetYear=${predictionYear}${areaParam}`
@@ -487,6 +488,17 @@ export default function ErosionAnalysis() {
       console.error("Could not fetch shoreline estimate:", err.message);
       setIsSimulating(false);
       return;
+    }
+
+    try {
+      const valRes = await fetch(
+        `${API_BASE_URL}/api/shoreline/validation/latest?municipality=${encodeURIComponent(selectedMunicipality)}`
+      );
+      if (valRes.ok) {
+        validation = await valRes.json();
+      }
+    } catch (err) {
+      console.warn("No validation results available:", err.message);
     }
 
     const byArea = {};
@@ -516,6 +528,11 @@ export default function ErosionAnalysis() {
       estimatedRetreatUnit: estimate.estimatedRetreatUnit,
       projectedLRR: estimate.projectedLRR,
       projectedLRRUnit: estimate.projectedLRRUnit,
+      modelFit: estimate.modelFit,
+      validationMae: validation?.summary?.positionMaeMeters ?? null,
+      validationAccuracyPct: validation?.summary?.statusAccuracyPct ?? null,
+      validationAreas: validation?.summary?.areasEvaluated ?? null,
+      validationRunAt: validation?.runAt ?? null,
     });
 
     setPredictedYear(predictionYear);
