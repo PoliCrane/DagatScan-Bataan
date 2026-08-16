@@ -10,6 +10,7 @@ const {
   sendAccountReactivatedEmail,
 } = require("../email");
 const { logAction } = require("../services/auditLog");
+const { validate, schemas } = require("../middleware/validate");
 const {
   meetsPasswordRequirements,
   PASSWORD_REQUIREMENTS_MESSAGE,
@@ -40,7 +41,7 @@ router.get("/users", async (req, res) => {
 });
 
 // UPDATE USER ROLE
-router.put("/users/:userId/role", async (req, res) => {
+router.put("/users/:userId/role", validate(schemas.roleUpdate), async (req, res) => {
   try {
     const { userId } = req.params;
     const { roles, municipality_id } = req.body;
@@ -176,7 +177,7 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
 });
 
 // CREATE USER
-router.post("/create-user", async (req, res) => {
+router.post("/create-user", validate(schemas.createUser), async (req, res) => {
   try {
     const { username, email, password, roles } = req.body;
 
@@ -381,7 +382,7 @@ router.get("/account-requests/:id/letter", async (req, res) => {
 });
 
 // APPROVE ACCOUNT REQUEST — creates the real users row; admin sets the password here.
-router.post("/account-requests/:id/approve", async (req, res) => {
+router.post("/account-requests/:id/approve", validate(schemas.approveRequest), async (req, res) => {
   const { password } = req.body;
   if (!password) {
     return res.status(400).json({ error: "A password for the new account is required" });
@@ -461,7 +462,7 @@ router.post("/account-requests/:id/approve", async (req, res) => {
 });
 
 // REJECT ACCOUNT REQUEST
-router.post("/account-requests/:id/reject", async (req, res) => {
+router.post("/account-requests/:id/reject", validate(schemas.rejectRequest), async (req, res) => {
   try {
     const { reason } = req.body;
 

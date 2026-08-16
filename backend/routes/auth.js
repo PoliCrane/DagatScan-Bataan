@@ -9,6 +9,7 @@ const { verifyToken } = require("../middleware/auth");
 const { uploadRequestLetter } = require("../config/multer");
 const { loginLimiter, passwordResetLimiter, accountRequestLimiter } = require("../middleware/rateLimiters");
 const { logAction } = require("../services/auditLog");
+const { validate, schemas } = require("../middleware/validate");
 const { scheduleSync } = require("../services/storageSync");
 const {
   meetsPasswordRequirements,
@@ -127,7 +128,7 @@ router.post(
 );
 
 // LOGIN
-router.post("/login", loginLimiter, async (req, res) => {
+router.post("/login", loginLimiter, validate(schemas.login), async (req, res) => {
   try {
     const { email, password } = req.body;
     const userResult = await pool.query(
@@ -216,7 +217,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 });
 
 // FORGOT PASSWORD
-router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
+router.post("/forgot-password", passwordResetLimiter, validate(schemas.forgotPassword), async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -259,7 +260,7 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
 });
 
 // RESET PASSWORD
-router.post("/reset-password", passwordResetLimiter, async (req, res) => {
+router.post("/reset-password", passwordResetLimiter, validate(schemas.resetPassword), async (req, res) => {
   try {
     const { email, resetCode, newPassword } = req.body;
 
@@ -336,7 +337,7 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
 });
 
 // CHANGE PASSWORD
-router.post("/change-password", verifyToken, async (req, res) => {
+router.post("/change-password", verifyToken, validate(schemas.changePassword), async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.id;
