@@ -9,7 +9,7 @@ import Swal from "sweetalert2";
 export const confirmAction = async (message, options = {}) => {
   const result = await Swal.fire({
     title: "Are you sure?",
-    html: message,
+    text: message,
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#0077B6",
@@ -47,7 +47,7 @@ export const showLoading = async (message = "Loading...", duration = 3000) => {
 export const showSuccess = async (message, options = {}) => {
   await Swal.fire({
     title: "Success!",
-    html: message,
+    text: message,
     icon: "success",
     confirmButtonColor: "#0077B6",
     confirmButtonText: "OK",
@@ -62,7 +62,7 @@ export const showSuccess = async (message, options = {}) => {
 export const showError = async (message, options = {}) => {
   await Swal.fire({
     title: "Error!",
-    html: message,
+    text: message,
     icon: "error",
     confirmButtonColor: "#a70000",
     confirmButtonText: "OK",
@@ -75,7 +75,7 @@ export const showError = async (message, options = {}) => {
 export const showInfo = async (message, options = {}) => {
   await Swal.fire({
     title: "Information",
-    html: message,
+    text: message,
     icon: "info",
     confirmButtonColor: "#0077B6",
     confirmButtonText: "OK",
@@ -86,46 +86,3 @@ export const showInfo = async (message, options = {}) => {
   });
 };
 
-// custom dialog with multiple action buttons
-export const customDialog = async ({
-  title = "Dialog",
-  message = "",
-  icon = "info",
-  actions = [
-    { text: "OK", value: "ok", color: "#0077B6" },
-    { text: "Cancel", value: "cancel", color: "#999" },
-  ],
-} = {}) => {
-  const buttons = actions.map((action) =>
-    Swal.DismissReason.CANCEL !== action.value
-      ? `<button id="action-${action.value}" style="
-          padding: 8px 16px;
-          margin: 5px;
-          border: none;
-          border-radius: 4px;
-          background-color: ${action.color};
-          color: white;
-          font-weight: 600;
-          cursor: pointer;
-        ">${action.text}</button>`
-      : ""
-  );
-
-  await Swal.fire({
-    title,
-    html: `${message}<div class="custom-buttons">${buttons.join("")}</div>`,
-    icon,
-    showConfirmButton: false,
-    zIndex: 10000,
-    didOpen: async () => {
-      for (const action of actions) {
-        const button = document.getElementById(`action-${action.value}`);
-        if (button) {
-          button.addEventListener("click", () => {
-            Swal.close();
-          });
-        }
-      }
-    },
-  });
-};
