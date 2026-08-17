@@ -6,8 +6,10 @@ const {
 } = require("./riskClassification");
 
 const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
-const MIN_YEARS_FOR_HINDCAST = 5;
-const HOLDOUT_YEARS = 2;
+const {
+  MIN_YEARS_FOR_HINDCAST,
+  HINDCAST_HOLDOUT_YEARS: HOLDOUT_YEARS,
+} = require("../config/constants");
 
 function tierDistance(a, b) {
   const ia = RISK_TIER_ORDER.indexOf(a);

@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const { signedSeawardChanges, haversineMeters } = require('./geoUtils');
+const { PLAUSIBLE_MAX_RATE_M_PER_YEAR } = require('../config/constants');
 
 // Compares detected coastline against reference; computes erosion rate and accuracy metrics.
 async function compareWithReferenceCoastline(
@@ -151,7 +152,7 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
   // Plausibility gate: real coastal erosion rarely exceeds ~5 m/year (CVI "Very High" ceiling).
   // A rate many times that means a defective trace, not real erosion - refuse to store it
   // rather than report garbage; caller should flag the image for re-upload.
-  const PLAUSIBLE_MAX_RATE = 20; // m/year — generous ceiling, ~4x "Very High"
+  const PLAUSIBLE_MAX_RATE = PLAUSIBLE_MAX_RATE_M_PER_YEAR;
   if (Math.abs(erosionRate) > PLAUSIBLE_MAX_RATE) {
     return {
       valid: false,

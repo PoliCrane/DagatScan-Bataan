@@ -6,6 +6,7 @@
 const pool = require("../db");
 const { classifyErosionRisk } = require("./riskClassification");
 const { calculateLRR } = require("./eprCalculator");
+const { MIN_YEARS_FOR_LRR } = require("../config/constants");
 
 // Row predicate for active, satellite-detected zones only (excludes GeoJSON/CSV/manual/seed rows).
 // @param {string} alias - table alias with trailing dot (e.g. "sz."), or "" if unjoined.
@@ -376,7 +377,7 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
   for (const areaId of areaIds) {
     const history = historyByArea.get(areaId);
 
-    if (history.length >= 3) {
+    if (history.length >= MIN_YEARS_FOR_LRR) {
       const regression = calculateLRR(history);
       const projectedLrr = parseFloat(regression.slope.toFixed(4));
       const lrrConfidence = parseFloat(regression.confidence.toFixed(2));

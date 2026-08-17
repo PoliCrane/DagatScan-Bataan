@@ -37,7 +37,7 @@ function classifyErosionRisk(erosionRate) {
   return RISK_TIERS.find((tier) => tier.test(rate)).key;
 }
 
-const STABLE_BAND_M_PER_YEAR = 0.5;
+const { STABLE_BAND_M_PER_YEAR } = require("../config/constants");
 
 function classifyShorelineStatus(erosionRate) {
   if (erosionRate === null || erosionRate === undefined) return "NO_DATA";

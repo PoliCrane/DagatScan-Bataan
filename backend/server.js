@@ -1,4 +1,6 @@
 require("dotenv").config();
+const { validateEnv } = require("./config/env");
+validateEnv();
 
 // log unhandled rejections instead of dying silently
 process.on("unhandledRejection", (reason) => {
@@ -26,11 +28,6 @@ const app = express();
 app.set("trust proxy", 1);
 // PaaS platforms assign the port via this env var; falls back to 5000 locally
 const PORT = process.env.PORT || 5000;
-
-// no fallback secret — a guessable default would let anyone forge tokens
-if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET is not set. Add it to backend/.env before starting the server.");
-}
 
 app.use(
   helmet({

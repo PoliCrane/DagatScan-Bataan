@@ -19,6 +19,24 @@ const { runHindcast, storeRun, getLatestRun } = require("../services/hindcastVal
 
 const router = express.Router();
 
+router.get("/config/risk-tiers", (req, res) => {
+  const { RISK_COLORS, RISK_LABELS, STABLE_BAND_M_PER_YEAR } = require("../services/riskClassification");
+  res.json({
+    unit: "m/year",
+    convention: "negative = erosion, positive = accretion",
+    stableBand: STABLE_BAND_M_PER_YEAR,
+    tiers: [
+      { key: "VERY_HIGH", rule: "rate <= -5" },
+      { key: "HIGH", rule: "-5 < rate <= -1" },
+      { key: "MODERATE", rule: "-1 < rate < 1" },
+      { key: "LOW", rule: "1 <= rate < 5" },
+      { key: "VERY_LOW", rule: "rate >= 5" },
+    ],
+    colors: RISK_COLORS,
+    labels: RISK_LABELS,
+  });
+});
+
 router.post("/validation/run", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality } = req.body || {};
