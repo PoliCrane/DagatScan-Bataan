@@ -91,6 +91,12 @@ export default function PredictionResultCard({
             </span>
           </div>
         )}
+
+        {predictionData.validationAccuracyPct != null && (
+          <a href="/validation" className="card-unit" style={{ color: "#0077B6", textDecoration: "underline" }}>
+            View full validation report
+          </a>
+        )}
       </div>
     </div>
   );

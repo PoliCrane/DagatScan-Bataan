@@ -13,7 +13,8 @@ const { scheduleSync } = require("../services/storageSync");
 const { createJob, getJob, requestCancel, runNdwiBatch } = require("../services/ndwiBatchWorker");
 const { verifyToken, verifyAdmin } = require("../middleware/auth");
 
-const MIN_YEAR = 2015; // Sentinel-2 launch year
+const MIN_YEAR = 1990;
+const SENTINEL_MIN_YEAR = 2015;
 
 // Covers the single-year route directly; the batch POST responds before any year is processed,
 // so it doesn't cover the batch's real work - ndwiBatchWorker.js calls scheduleSync() itself per year.
@@ -47,7 +48,7 @@ function parseBounds(body) {
 // processes it through the same pipeline a manual upload uses - no download/re-upload step.
 router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { year, coastlineName, municipality, specificArea, isReupload } = req.body;
+    const { year, coastlineName, municipality, specificArea, isReupload, index, season } = req.body;
 
     const { bounds, error: boundsError } = parseBounds(req.body);
     if (boundsError) return res.status(400).json({ error: boundsError });
@@ -59,13 +60,15 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
     const yearNum = parseInt(year);
     if (isNaN(yearNum) || yearNum < MIN_YEAR || yearNum > new Date().getFullYear()) {
       return res.status(400).json({
-        error: `Year must be between ${MIN_YEAR} (Sentinel-2 launch) and ${new Date().getFullYear()}`,
+        error: `Year must be between ${MIN_YEAR} (Landsat 5 era) and ${new Date().getFullYear()}`,
       });
     }
+    const indexChoice = index === "mndwi" && yearNum >= SENTINEL_MIN_YEAR ? "mndwi" : "ndwi";
+    const seasonChoice = season === "dry" && yearNum >= SENTINEL_MIN_YEAR ? "dry" : "annual";
 
     const safeName = (coastlineName || specificArea || "coastline").replace(/[^a-zA-Z0-9_-]/g, "_");
 
-    const genResult = await generateNDWIGeoTIFF({ ...bounds, year: yearNum, coastlineName: safeName });
+    const genResult = await generateNDWIGeoTIFF({ ...bounds, year: yearNum, coastlineName: safeName, index: indexChoice, season: seasonChoice });
     const stats = fs.statSync(genResult.filePath);
     const syntheticFile = { path: genResult.filePath, filename: genResult.fileName, size: stats.size };
 

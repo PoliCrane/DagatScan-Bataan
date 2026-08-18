@@ -118,30 +118,85 @@ function downloadToFile(url, destPath) {
   });
 }
 
-// shared Sentinel-2 composite so NDWI and true-color read identical source pixels
-function buildSentinelComposite(geometry, year) {
-  const start = `${year}-01-01`;
-  const end = `${year}-12-31`;
-
-  const collection = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
-    .filterBounds(geometry)
-    .filterDate(start, end)
-    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20));
-
-  return collection.median();
+// masks cloud (8,9), cirrus (10), and cloud shadow (3) pixels via the Scene Classification band
+function maskSentinelClouds(image) {
+  const scl = image.select('SCL');
+  const clear = scl.neq(3).and(scl.neq(8)).and(scl.neq(9)).and(scl.neq(10));
+  return image.updateMask(clear);
 }
 
-// NDWI (McFeeters) = (Green - NIR) / (Green + NIR), Sentinel-2 bands B3/B8. Positive = water, negative = land.
-async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coastlineName }) {
+// shared Sentinel-2 composite so NDWI and true-color read identical source pixels.
+// season 'dry' restricts to Nov-Apr scenes (consistent beach/tide state year-over-year,
+// PH dry season); 'annual' keeps the original whole-year behavior.
+function buildSentinelComposite(geometry, year, season = 'annual') {
+  let collection = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+    .filterBounds(geometry)
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20));
+
+  if (season === 'dry') {
+    collection = collection.filter(
+      ee.Filter.or(
+        ee.Filter.date(`${year}-01-01`, `${year}-04-30`),
+        ee.Filter.date(`${year}-11-01`, `${year}-12-31`)
+      )
+    );
+  } else {
+    collection = collection.filterDate(`${year}-01-01`, `${year}-12-31`);
+  }
+
+  return collection.map(maskSentinelClouds).median();
+}
+
+// Landsat Collection 2 Level-2 composite for years before Sentinel-2 (1990-2014).
+// Applies the C02 optical scaling factors (NDWI is not invariant to the -0.2 offset)
+// and masks clouds/shadows via QA_PIXEL bits 3 and 4.
+function buildLandsatComposite(geometry, year) {
+  const spec =
+    year >= 2013
+      ? { id: 'LANDSAT/LC08/C02/T1_L2', green: 'SR_B3', nir: 'SR_B5' }
+      : year >= 1999
+      ? { id: 'LANDSAT/LE07/C02/T1_L2', green: 'SR_B2', nir: 'SR_B4' }
+      : { id: 'LANDSAT/LT05/C02/T1_L2', green: 'SR_B2', nir: 'SR_B4' };
+
+  const maskClouds = (image) => {
+    const qa = image.select('QA_PIXEL');
+    const clear = qa.bitwiseAnd(1 << 3).eq(0).and(qa.bitwiseAnd(1 << 4).eq(0));
+    return image.updateMask(clear);
+  };
+
+  const scaled = ee.ImageCollection(spec.id)
+    .filterBounds(geometry)
+    .filterDate(`${year}-01-01`, `${year}-12-31`)
+    .map(maskClouds)
+    .map((img) => img.select([spec.green, spec.nir]).multiply(0.0000275).add(-0.2))
+    .median();
+
+  return { composite: scaled, green: spec.green, nir: spec.nir, scaleMeters: 30 };
+}
+
+// NDWI (McFeeters) = (Green - NIR) / (Green + NIR). Positive = water, negative = land.
+// index 'mndwi' uses Green-SWIR (B3/B11, Sentinel-2 only) — better separation in turbid
+// coastal water. season 'dry' restricts the composite to Nov-Apr scenes. Years before
+// 2015 automatically use Landsat Collection 2 (30 m) instead of Sentinel-2.
+async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coastlineName, index = 'ndwi', season = 'annual' }) {
   await initEE();
 
   const geometry = ee.Geometry.Rectangle([lonMin, latMin, lonMax, latMax]);
-  const composite = buildSentinelComposite(geometry, year);
 
-  // NDVI-style NIR/RED wasn't used - water's NIR-RED value sits near zero and
-  // drifts across the threshold on glint/turbidity noise.
-  const green = composite.select('B3');
-  const nir = composite.select('B8');
+  let green;
+  let nir;
+  let exportScale = 10;
+  if (year < 2015) {
+    const landsat = buildLandsatComposite(geometry, year);
+    green = landsat.composite.select(landsat.green);
+    nir = landsat.composite.select(landsat.nir);
+    exportScale = landsat.scaleMeters;
+  } else {
+    const composite = buildSentinelComposite(geometry, year, season);
+    green = composite.select('B3');
+    nir = composite.select(index === 'mndwi' ? 'B11' : 'B8');
+  }
+
   const ndwi = green.subtract(nir).divide(green.add(nir)).rename('NDWI').clip(geometry);
 
   const downloadUrl = await withTimeout(new Promise((resolve, reject) => {
@@ -149,7 +204,7 @@ async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coast
       {
         name: `NDWI_${coastlineName}_${year}`,
         region: geometry,
-        scale: 10,
+        scale: exportScale,
         format: 'GEO_TIFF',
         // pin CRS - default export uses native UTM meters, downstream consumers expect WGS84 degrees
         crs: 'EPSG:4326',

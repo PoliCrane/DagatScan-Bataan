@@ -19,6 +19,7 @@ async function main() {
   console.log(`Risk tier accuracy (exact): ${s.riskTierAccuracyPct}%`);
   console.log(`Risk tier accuracy (within one tier): ${s.riskTierAdjacentPct}%`);
   console.log(`Mean model fit (r2): ${s.meanR2}`);
+  console.log(`Leave-one-out MAE: ${s.leaveOneOutMaeMeters} m`);
   console.log("");
 
   for (const area of result.details) {
