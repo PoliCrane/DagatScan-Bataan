@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * Segments Panel Component
  * Displays detailed information about coastal segments for a selected municipality
@@ -6,7 +7,7 @@
 import "../pages/styles/segmentsPanel.css";
 import { getRiskColor, SEGMENT_RISK_LEVELS } from '../utils/segmentData';
 
-export default function SegmentsPanel({
+function SegmentsPanel({
   showPanel,
   selectedMunicipality,
   segments,
@@ -132,3 +133,5 @@ export default function SegmentsPanel({
     </div>
   );
 }
+
+export default memo(SegmentsPanel);

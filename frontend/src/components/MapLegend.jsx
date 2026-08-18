@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import "../pages/styles/mapLegend.css";
 import { SEGMENT_COLORS, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 
 // derived from the shared risk classification so it can't drift from the map colors
 const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
 
-export default function MapLegend() {
+function MapLegend() {
   const legendRef = useRef(null);
   const [isVisible, setIsVisible] = useState(true);
   let lastScrollY = 0;
@@ -92,3 +92,5 @@ export default function MapLegend() {
     </div>
   );
 }
+
+export default memo(MapLegend);

@@ -1,9 +1,10 @@
+import { memo } from "react";
 import { SEGMENT_COLORS, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 
 // static (non-toggleable) risk-level reference for the Dashboard
 const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
 
-export default function RiskLevelLegendCard() {
+function RiskLevelLegendCard() {
   const riskLevels = RISK_TIER_ORDER.map((key) => ({
     color: SEGMENT_COLORS[`${key}_RISK`],
     label: SEGMENT_RISK_LEVELS[key],
@@ -26,3 +27,5 @@ export default function RiskLevelLegendCard() {
     </div>
   );
 }
+
+export default memo(RiskLevelLegendCard);

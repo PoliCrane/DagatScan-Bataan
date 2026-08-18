@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import "../pages/styles/coastalsummarycard.css";
 import { SEGMENT_COLORS } from "../utils/segmentData";
 
 import { API_BASE_URL } from "../config/api";
-export default function CoastalSummary({ yearlyData = [], selectedMunicipality = null, segments = [] }) {
+function CoastalSummary({ yearlyData = [], selectedMunicipality = null, segments = [] }) {
   const summaryRef = useRef(null);
   const [isVisible, setIsVisible] = useState(true);
   const [bataanSummary, setBataanSummary] = useState(null);
@@ -161,3 +161,5 @@ export default function CoastalSummary({ yearlyData = [], selectedMunicipality =
     </div>
   );
 }
+
+export default memo(CoastalSummary);

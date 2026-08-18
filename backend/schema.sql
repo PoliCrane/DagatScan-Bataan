@@ -130,3 +130,5 @@ CREATE TABLE IF NOT EXISTS municipality_analysis_cache (
 CREATE INDEX IF NOT EXISTS idx_shoreline_zones_area_year ON shoreline_zones (area_id, year);
 CREATE INDEX IF NOT EXISTS idx_upload_history_municipality ON upload_history (municipality_id, year);
 CREATE INDEX IF NOT EXISTS idx_coastal_areas_municipality ON coastal_areas (municipality_id);
+CREATE INDEX IF NOT EXISTS idx_zones_satellite_active ON shoreline_zones (area_id, year)
+  WHERE source_type LIKE 'Satellite Analysis%' AND active;

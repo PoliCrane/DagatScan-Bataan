@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import "../pages/styles/erosionAnalysisCards.css";
 import { getCoastlineLength } from "../utils/coastlineUtils";
 import { SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 
 import { API_BASE_URL } from "../config/api";
-export default function ErosionAnalysisCards({
+function ErosionAnalysisCards({
   selectedMunicipality,
   municipalityStats,
   yearlyShorelineData,
@@ -276,3 +276,5 @@ export default function ErosionAnalysisCards({
     </div>
   );
 }
+
+export default memo(ErosionAnalysisCards);

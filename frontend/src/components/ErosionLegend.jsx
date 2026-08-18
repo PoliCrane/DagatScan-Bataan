@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import "../pages/styles/erosionLegend.css";
 
-export default function ErosionLegend() {
+function ErosionLegend() {
   const legendRef = useRef(null);
   const [isVisible, setIsVisible] = useState(true);
   let lastScrollY = 0;
@@ -103,3 +103,5 @@ export default function ErosionLegend() {
     </div>
   );
 }
+
+export default memo(ErosionLegend);

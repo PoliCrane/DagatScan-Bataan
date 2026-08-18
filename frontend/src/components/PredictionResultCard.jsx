@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import "../pages/styles/predictionResultCard.css";
 
-export default function PredictionResultCard({
+function PredictionResultCard({
   isActive = false,
   predictionData = null,
   onClear = null
@@ -106,3 +106,5 @@ export default function PredictionResultCard({
     </div>
   );
 }
+
+export default memo(PredictionResultCard);
