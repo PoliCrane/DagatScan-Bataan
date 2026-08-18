@@ -27,6 +27,8 @@ export default function ValidationReport() {
         <p style={{ color: "#555", marginTop: 0 }}>
           Hindcast validation: the trend model is fitted on all but the last {run?.holdoutYears ?? 2} years of
           each area's satellite record, predicts those held-out years, and is scored against what was actually observed.
+          The system refits the trend as each new year of imagery arrives — projections are early-warning
+          estimates under a continuing-trend assumption, not fixed forecasts.
         </p>
 
         <AsyncSection loading={loading} error={error} empty={!loading && !error && !run}>
@@ -48,6 +50,37 @@ export default function ValidationReport() {
                   </div>
                 ))}
               </div>
+
+              {s.leadTimes && s.leadTimes.length > 0 && (
+                <>
+                  <h3 style={{ color: "#0077B6", marginBottom: 6 }}>Accuracy by Lead Time</h3>
+                  <p style={{ color: "#555", marginTop: 0, fontSize: 13 }}>
+                    How far ahead the model can still classify correctly — walk-forward evaluation
+                    over every training window in the record.
+                  </p>
+                  <div style={{ overflowX: "auto", marginBottom: 20 }}>
+                    <table style={{ borderCollapse: "collapse", fontSize: 14 }}>
+                      <thead>
+                        <tr style={{ background: "#0077B6", color: "white", textAlign: "left" }}>
+                          {["Years ahead", "Status accuracy", "MAE (m)", "Samples"].map((h) => (
+                            <th key={h} style={{ padding: "8px 12px" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {s.leadTimes.map((lt) => (
+                          <tr key={lt.leadYears} style={{ borderBottom: "1px solid #e0e0e0" }}>
+                            <td style={{ padding: "8px 12px" }}>{lt.leadYears}</td>
+                            <td style={{ padding: "8px 12px", fontWeight: 600 }}>{lt.statusAccuracyPct}%</td>
+                            <td style={{ padding: "8px 12px" }}>{lt.maeMeters}</td>
+                            <td style={{ padding: "8px 12px" }}>{lt.samples}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
 
               <p style={{ fontSize: 13, color: "#777" }}>
                 Run #{run.runId} · {new Date(run.runAt).toLocaleString()} · scope: {run.scope}

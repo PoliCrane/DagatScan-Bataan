@@ -58,8 +58,8 @@ export default function PredictionResultCard({
           <span className="card-label">Estimated Retreat</span>
           <span className="card-value">
             {predictionData.estimatedRetreat}
-            {predictionData.validationMae != null && (
-              <span className="card-unit"> ± {predictionData.validationMae}</span>
+            {(predictionData.retreatCi ?? predictionData.validationMae) != null && (
+              <span className="card-unit"> ± {predictionData.retreatCi ?? predictionData.validationMae}</span>
             )}{" "}
             <span className="card-unit">{predictionData.estimatedRetreatUnit}</span>
           </span>
@@ -97,6 +97,11 @@ export default function PredictionResultCard({
             View full validation report
           </a>
         )}
+
+        <p className="card-unit" style={{ marginTop: 8, color: "#777" }}>
+          Projection assumes the current trend continues, refit as each new year of imagery
+          arrives. Storm events, sea-level acceleration, and coastal construction are not modeled.
+        </p>
       </div>
     </div>
   );

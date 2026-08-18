@@ -418,13 +418,13 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
         return res.status(400).json({ error: `Area "${area}" has insufficient data to estimate` });
       }
       const result = await pool.query(
-        `SELECT id, name, projected_lrr, lrr_confidence, risk_level FROM coastal_areas WHERE id = $1`,
+        `SELECT id, name, projected_lrr, lrr_confidence, lrr_ci95, risk_level FROM coastal_areas WHERE id = $1`,
         [areaId]
       );
       areaRows = result.rows;
     } else {
       const result = await pool.query(
-        `SELECT id, name, projected_lrr, lrr_confidence, risk_level FROM coastal_areas WHERE municipality_id = $1`,
+        `SELECT id, name, projected_lrr, lrr_confidence, lrr_ci95, risk_level FROM coastal_areas WHERE municipality_id = $1`,
         [municipalityId]
       );
       areaRows = result.rows;
@@ -447,6 +447,7 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
         retreat: Math.abs(projectedLrr * (targetYear - baseYear)),
         riskLevel: row.risk_level,
         modelFit: row.lrr_confidence !== null ? parseFloat(row.lrr_confidence) : null,
+        ci95: row.lrr_ci95 !== null ? parseFloat(row.lrr_ci95) : null,
       };
     });
 
@@ -454,6 +455,9 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
     const avgRetreat = segments.reduce((sum, s) => sum + s.retreat, 0) / segments.length;
     const fits = segments.filter((s) => s.modelFit !== null).map((s) => s.modelFit);
     const avgFit = fits.length ? fits.reduce((a, b) => a + b, 0) / fits.length : null;
+    const cis = segments.filter((s) => s.ci95 !== null).map((s) => s.ci95);
+    const avgCi = cis.length ? cis.reduce((a, b) => a + b, 0) / cis.length : null;
+    const retreatCi = avgCi !== null ? Math.abs(avgCi * (targetYear - baseYear)) : null;
 
     res.json({
       predictedYear: targetYear.toString(),
@@ -462,6 +466,8 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
       projectedLRR: Math.abs(avgLrr).toFixed(2),
       projectedLRRUnit: "m/year",
       modelFit: avgFit !== null ? parseFloat(avgFit.toFixed(2)) : null,
+      projectedLRRCi: avgCi !== null ? parseFloat(avgCi.toFixed(2)) : null,
+      retreatCi: retreatCi !== null ? parseFloat(retreatCi.toFixed(1)) : null,
       segments,
     });
   } catch (err) {

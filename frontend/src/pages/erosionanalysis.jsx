@@ -100,6 +100,14 @@ export default function ErosionAnalysis() {
   const [shorelineSegments, setShorelineSegments] = useState([]);
   const [selectedSegmentId, setSelectedSegmentId] = useState(null);
 
+  // Longest observed year span across segments; caps how far ahead prediction is offered
+  const dataYearSpan =
+    shorelineSegments.reduce((max, seg) => {
+      const ys = seg.yearsAvailable || [];
+      if (ys.length < 2) return max;
+      return Math.max(max, Math.max(...ys) - Math.min(...ys));
+    }, 0) || null;
+
   useEffect(() => {
     const loadGeoJson = async () => {
       try {
@@ -513,10 +521,14 @@ export default function ErosionAnalysis() {
       const retreat = segEstimate
         ? segEstimate.retreat
         : Math.abs(seg.erosionRate * (predictionYear - baseCoastlineYear));
+      const dt = predictionYear - baseCoastlineYear;
+      const ci = segEstimate?.ci95 ?? null;
       return {
         id: seg.id,
         name: seg.name,
-        shoreline: offsetCoastlineForPrediction(seg.shoreline, erosionRate * (predictionYear - baseCoastlineYear)),
+        shoreline: offsetCoastlineForPrediction(seg.shoreline, erosionRate * dt),
+        shorelineLandwardBound: ci != null ? offsetCoastlineForPrediction(seg.shoreline, (erosionRate - ci) * dt) : null,
+        shorelineSeawardBound: ci != null ? offsetCoastlineForPrediction(seg.shoreline, (erosionRate + ci) * dt) : null,
         erosionRate,
         retreat,
       };
@@ -529,6 +541,7 @@ export default function ErosionAnalysis() {
       projectedLRR: estimate.projectedLRR,
       projectedLRRUnit: estimate.projectedLRRUnit,
       modelFit: estimate.modelFit,
+      retreatCi: estimate.retreatCi ?? null,
       validationMae: validation?.summary?.positionMaeMeters ?? null,
       validationAccuracyPct: validation?.summary?.statusAccuracyPct ?? null,
       validationAreas: validation?.summary?.areasEvaluated ?? null,
@@ -584,6 +597,7 @@ export default function ErosionAnalysis() {
         selectedSegmentId={selectedSegmentId}
       />
       <AnalysisToolsCards
+        dataYearSpan={dataYearSpan}
         selectedMunicipality={selectedMunicipality}
         onSimulate={handlePredictSimulate}
         onEndSimulation={handleEndSimulation}
@@ -904,6 +918,23 @@ export default function ErosionAnalysis() {
                   />
                 );
               })}
+
+              {/* 95% CI cone bounds: dashed lines either side of the predicted shoreline */}
+              {predictedShoreline && predictedYear && predictedShoreline.map((seg) => (
+                [seg.shorelineLandwardBound, seg.shorelineSeawardBound]
+                  .filter((line) => line && line.length >= 2)
+                  .map((line, i) => (
+                    <Polyline
+                      key={`predicted-ci-${seg.id}-${i}`}
+                      positions={line}
+                      color="#7CFC00"
+                      weight={1.5}
+                      opacity={0.6}
+                      dashArray="6 6"
+                      interactive={false}
+                    />
+                  ))
+              ))}
 
               {/* Predicted shoreline(s), green, one per target segment, on top */}
               {predictedShoreline && predictedYear && predictedShoreline.map((seg) => (

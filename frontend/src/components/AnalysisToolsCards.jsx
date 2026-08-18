@@ -3,7 +3,7 @@ import "../pages/styles/analysisToolsCards.css";
 import PredictionResultCard from "./PredictionResultCard";
 import { showInfo } from "../utils/sweetAlertUtils";
 
-export default function AnalysisToolsCards({
+export default function AnalysisToolsCards({ dataYearSpan = null,
   selectedMunicipality,
   onSimulate,
   onEndSimulation,
@@ -28,15 +28,19 @@ export default function AnalysisToolsCards({
     return { value: year.toString(), label: year === BASE_YEAR ? `${year} (Current)` : year.toString() };
   });
 
-  // fixed set of common horizons past the current year, to keep the dropdown short
-  const futureYears = [1, 2, 4, 9, 14, 19, 24].map((offset) => {
-    const year = BASE_YEAR + offset;
-    return { value: year.toString(), label: year.toString() };
-  });
+  // horizons are capped at ~half the observed data span — extrapolating further than the
+  // record supports is not defensible; defaults to 5 years when the span is unknown
+  const maxHorizon = dataYearSpan ? Math.max(1, Math.floor(dataYearSpan / 2)) : 5;
+  const futureYears = [1, 2, 3, 5, 10, 15]
+    .filter((offset) => offset <= maxHorizon)
+    .map((offset) => {
+      const year = BASE_YEAR + offset;
+      return { value: year.toString(), label: year.toString() };
+    });
 
   const [comparePastYear, setComparePastYear] = useState((BASE_YEAR - 11).toString());
   const [compareSelectedYear, setCompareSelectedYear] = useState(BASE_YEAR.toString());
-  const [predictYear, setPredictYear] = useState((BASE_YEAR + 4).toString());
+  const [predictYear, setPredictYear] = useState((BASE_YEAR + Math.min(3, dataYearSpan ? Math.max(1, Math.floor(dataYearSpan / 2)) : 3)).toString());
 
   // Validate Selected Year when Past Year changes
   const handleComparePastYearChange = (e) => {

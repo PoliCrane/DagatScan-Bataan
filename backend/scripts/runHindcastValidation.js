@@ -20,6 +20,9 @@ async function main() {
   console.log(`Risk tier accuracy (within one tier): ${s.riskTierAdjacentPct}%`);
   console.log(`Mean model fit (r2): ${s.meanR2}`);
   console.log(`Leave-one-out MAE: ${s.leaveOneOutMaeMeters} m`);
+  for (const lt of s.leadTimes || []) {
+    console.log(`Lead ${lt.leadYears} yr: status accuracy ${lt.statusAccuracyPct}% (MAE ${lt.maeMeters} m, n=${lt.samples})`);
+  }
   console.log("");
 
   for (const area of result.details) {

@@ -71,6 +71,53 @@ function leaveOneOutErrors(series) {
   return errors;
 }
 
+// Walk-forward lead-time evaluation: every prefix with >=3 years becomes a training set,
+// and every later year is a prediction target at lead = target year - train end year.
+// Aggregated by lead, this answers "how far ahead can the model still classify correctly".
+function leadTimeSamples(series) {
+  const samples = [];
+  for (let i = 2; i < series.length - 1; i++) {
+    const train = series.slice(0, i + 1);
+    const fit = calculateLRR(train);
+    const trainEnd = series[i];
+    for (let j = i + 1; j < series.length; j++) {
+      const target = series[j];
+      const lead = target.year - trainEnd.year;
+      if (lead <= 0) continue;
+      const predicted = fit.slope * target.year + fit.intercept;
+      const predictedStatus = classifyShorelineStatus(fit.slope);
+      const observedRate = (target.value - trainEnd.value) / lead;
+      samples.push({
+        lead,
+        absError: Math.abs(predicted - target.value),
+        statusMatch: predictedStatus === classifyShorelineStatus(observedRate),
+      });
+    }
+  }
+  return samples;
+}
+
+function aggregateLeadTimes(allSamples) {
+  const buckets = new Map();
+  for (const s of allSamples) {
+    const key = s.lead >= 5 ? "5+" : String(s.lead);
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(s);
+  }
+  const order = ["1", "2", "3", "4", "5+"];
+  return order
+    .filter((k) => buckets.has(k))
+    .map((k) => {
+      const rows = buckets.get(k);
+      return {
+        leadYears: k,
+        samples: rows.length,
+        statusAccuracyPct: parseFloat(((rows.filter((r) => r.statusMatch).length / rows.length) * 100).toFixed(1)),
+        maeMeters: parseFloat((rows.reduce((s, r) => s + r.absError, 0) / rows.length).toFixed(2)),
+      };
+    });
+}
+
 function evaluateArea(area) {
   const series = area.series;
   const train = series.slice(0, series.length - HOLDOUT_YEARS);
@@ -102,6 +149,7 @@ function evaluateArea(area) {
   const observedTier = classifyErosionRisk(observedRate);
   const distance = tierDistance(predictedTier, observedTier);
 
+  const leadSamples = leadTimeSamples(series);
   const looErrors = leaveOneOutErrors(series);
   const looMae = looErrors.length
     ? parseFloat((looErrors.reduce((s, e) => s + Math.abs(e), 0) / looErrors.length).toFixed(2))
@@ -112,6 +160,7 @@ function evaluateArea(area) {
     areaName: area.areaName,
     municipality: area.municipality,
     looMae,
+    leadSamples,
     yearsUsed: train.map((p) => p.year),
     holdoutYears: holdout.map((p) => p.year),
     r2: parseFloat(regression.r2.toFixed(3)),
@@ -157,6 +206,7 @@ function aggregate(evaluated, skipped) {
     meanR2: evaluated.length
       ? parseFloat(mean(evaluated.map((a) => a.r2)).toFixed(3))
       : null,
+    leadTimes: aggregateLeadTimes(evaluated.flatMap((a) => a.leadSamples || [])),
     leaveOneOutMaeMeters: evaluated.some((a) => a.looMae !== null)
       ? parseFloat(mean(evaluated.filter((a) => a.looMae !== null).map((a) => a.looMae)).toFixed(2))
       : null,
