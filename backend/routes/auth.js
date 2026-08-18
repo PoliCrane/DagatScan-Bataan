@@ -1,3 +1,4 @@
+const logger = require("../utils/logger");
 const express = require("express");
 const fs = require("fs");
 const crypto = require("crypto");
@@ -121,7 +122,7 @@ router.post(
       });
     } catch (err) {
       cleanupFile();
-      console.error("Account request error:", err.message);
+      logger.error("Account request error:", err.message);
       res.status(500).json({ error: "Request failed" });
     }
   }
@@ -211,7 +212,7 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
       targetId: user.id,
     });
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Login failed" });
   }
 });
@@ -254,7 +255,7 @@ router.post("/forgot-password", passwordResetLimiter, validate(schemas.forgotPas
     // same response either way, prevents email enumeration
     res.json({ message: "If that email is registered, a password reset code has been sent." });
   } catch (err) {
-    console.error("Forgot password error:", err);
+    logger.error("Forgot password error:", err);
     res.status(500).json({ error: "Failed to process forgot password request" });
   }
 });
@@ -331,7 +332,7 @@ router.post("/reset-password", passwordResetLimiter, validate(schemas.resetPassw
       targetId: user.id,
     });
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to reset password" });
   }
 });
@@ -378,7 +379,7 @@ router.post("/change-password", verifyToken, validate(schemas.changePassword), a
       targetId: userId,
     });
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to change password" });
   }
 });

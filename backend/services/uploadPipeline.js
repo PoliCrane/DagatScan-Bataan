@@ -1,3 +1,4 @@
+const logger = require("../utils/logger");
 const path = require("path");
 const fs = require("fs");
 const { autoCalculateErosionRates } = require("./eprAutoCalculator");
@@ -48,7 +49,7 @@ async function insertZoneRecords(client, records, municipalityId, adminId) {
 
       insertedCount++;
     } catch (err) {
-      console.error(`Error inserting zone record for ${record.specific_area}:`, err.message);
+      logger.error(`Error inserting zone record for ${record.specific_area}:`, err.message);
       errors.push(`${record.specific_area}: ${err.message}`);
       try {
         await client.query(`ROLLBACK TO sp_${insertedCount}`);
@@ -104,7 +105,7 @@ async function processGeoJSONFile(
 
       // Delete the file since it's invalid
       fs.unlink(file.path, (err) => {
-        if (err) console.error("Error deleting invalid file:", err);
+        if (err) logger.error("Error deleting invalid file:", err);
       });
 
       return {
@@ -203,7 +204,7 @@ async function processGeoJSONFile(
     };
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Error processing GeoJSON:", error);
+    logger.error("Error processing GeoJSON:", error);
 
     // Create failed upload record
     const failedUpload = await client.query(
@@ -324,7 +325,7 @@ async function recomputeAreaTimeSeries(client, areaId) {
     const currCoastline = coastlines[i];
 
     if (!baselineCoastline || !currCoastline || rows[i].year === baselineYear) {
-      console.warn(`[recompute] Skipping area_id=${areaId} year ${rows[i].year}: missing coastline data or duplicate year`);
+      logger.warn(`[recompute] Skipping area_id=${areaId} year ${rows[i].year}: missing coastline data or duplicate year`);
       await client.query(
         `UPDATE shoreline_zones
          SET erosion_rate = NULL, cumulative_erosion = NULL, data_quality = 'Needs Review (Missing Data)'
@@ -338,7 +339,7 @@ async function recomputeAreaTimeSeries(client, areaId) {
     const metrics = calculateErosionFromDistances(distances, baselineYear, rows[i].year);
 
     if (!metrics.valid) {
-      console.warn(`[recompute] area_id=${areaId} year ${rows[i].year}: ${metrics.message}`);
+      logger.warn(`[recompute] area_id=${areaId} year ${rows[i].year}: ${metrics.message}`);
       // Clear stale erosion figures so a rejected comparison doesn't keep showing old numbers.
       await client.query(
         `UPDATE shoreline_zones
@@ -416,7 +417,7 @@ async function processSatelliteImageFile(
       );
 
       fs.unlink(file.path, (err) => {
-        if (err) console.error("Error deleting invalid file:", err);
+        if (err) logger.error("Error deleting invalid file:", err);
       });
 
       return {
@@ -479,7 +480,7 @@ async function processSatelliteImageFile(
     try {
       await generateThumbnail(file.path);
     } catch (thumbErr) {
-      console.warn("[Upload] Thumbnail generation failed (non-fatal):", thumbErr.message);
+      logger.warn("[Upload] Thumbnail generation failed (non-fatal):", thumbErr.message);
     }
 
     // Persist the image's own embedded georeferencing onto satellite_imagery.bounds
@@ -494,7 +495,7 @@ async function processSatelliteImageFile(
         );
       }
     } catch (geoErr) {
-      console.warn("[Upload] Bounds auto-detection failed (non-fatal):", geoErr.message);
+      logger.warn("[Upload] Bounds auto-detection failed (non-fatal):", geoErr.message);
     }
 
     // Best-effort coastline-detection/erosion pipeline; requires georeferencing.
@@ -629,7 +630,7 @@ async function processSatelliteImageFile(
         }
       }
     } catch (analysisError) {
-      console.error("Satellite image analysis pipeline error:", analysisError);
+      logger.error("Satellite image analysis pipeline error:", analysisError);
       analysisOutcome = { ran: false, reason: analysisError.message };
     }
 
@@ -660,7 +661,7 @@ async function processSatelliteImageFile(
       for (const p of [priorImagePath, thumbnailPathFor(priorImagePath)]) {
         if (fs.existsSync(p)) {
           fs.unlink(p, (err) => {
-            if (err) console.error("Error deleting superseded file:", err);
+            if (err) logger.error("Error deleting superseded file:", err);
           });
         }
       }
@@ -684,7 +685,7 @@ async function processSatelliteImageFile(
           }`,
     };
   } catch (error) {
-    console.error("Error processing satellite image:", error);
+    logger.error("Error processing satellite image:", error);
 
     const failedUpload = await client.query(
       `INSERT INTO upload_history
@@ -775,7 +776,7 @@ async function processCSVFile(
 
       // Delete the file since it's invalid
       fs.unlink(file.path, (err) => {
-        if (err) console.error("Error deleting invalid file:", err);
+        if (err) logger.error("Error deleting invalid file:", err);
       });
 
       return {
@@ -840,7 +841,7 @@ async function processCSVFile(
 
         insertedCount++;
       } catch (err) {
-        console.error(`Error inserting CSV record for ${record.specific_area}:`, err.message);
+        logger.error(`Error inserting CSV record for ${record.specific_area}:`, err.message);
         errors.push(`${record.specific_area}: ${err.message}`);
         try {
           await client.query(`ROLLBACK TO sp_${insertedCount}`);
@@ -899,7 +900,7 @@ async function processCSVFile(
       message: `Successfully processed ${insertedCount} CSV record(s). Cache invalidated automatically.`,
     };
   } catch (error) {
-    console.error("Error processing CSV:", error);
+    logger.error("Error processing CSV:", error);
 
     const failedUpload = await client.query(
       `INSERT INTO upload_history

@@ -1,5 +1,6 @@
 /** Generates a PDF assessment report on the fly for a given shoreline zone record. */
 
+const logger = require("../utils/logger");
 const express = require("express");
 const PDFDocument = require("pdfkit");
 const pool = require("../db");
@@ -212,7 +213,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
         });
       } catch (mapErr) {
         // likely offline/tile server unreachable - fall back to plain vector rendering instead of failing
-        console.warn("Static basemap render failed, falling back to plain background:", mapErr.message);
+        logger.warn("Static basemap render failed, falling back to plain background:", mapErr.message);
       }
     }
 
@@ -311,7 +312,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
 
     doc.end();
   } catch (err) {
-    console.error("Error generating report PDF:", err.message);
+    logger.error("Error generating report PDF:", err.message);
     res.status(500).json({ error: "Failed to generate report PDF", details: err.message });
   }
 });

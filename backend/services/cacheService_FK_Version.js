@@ -3,6 +3,7 @@
 // plain SELECTs, recomputing only if a row is unexpectedly missing.
 // getBataanSummary is the exception - it aggregates live, no cache table of its own.
 
+const logger = require("../utils/logger");
 const pool = require("../db");
 const { classifyErosionRisk } = require("./riskClassification");
 const { calculateLRR } = require("./eprCalculator");
@@ -23,7 +24,7 @@ async function getMunicipalityId(municipalityName) {
     );
     return result.rows.length > 0 ? result.rows[0].id : null;
   } catch (err) {
-    console.error(`Error finding municipality ID for ${municipalityName}:`, err.message);
+    logger.error(`Error finding municipality ID for ${municipalityName}:`, err.message);
     return null;
   }
 }
@@ -172,7 +173,7 @@ async function computeAndStoreMunicipalityAnalysis(municipalityId) {
           }
         }
       } catch (e) {
-        console.warn(`Error calculating coastline for municipality ${municipalityId}:`, e.message);
+        logger.warn(`Error calculating coastline for municipality ${municipalityId}:`, e.message);
       }
     }
 
@@ -225,7 +226,7 @@ async function computeAndStoreMunicipalityAnalysis(municipalityId) {
       dataSource: "Database",
     };
   } catch (err) {
-    console.error("Error in computeAndStoreMunicipalityAnalysis:", err.message);
+    logger.error("Error in computeAndStoreMunicipalityAnalysis:", err.message);
     throw err;
   }
 }
@@ -256,7 +257,7 @@ async function getMunicipalityAnalysis(municipalityId) {
       dataSource: "Database (Cached)",
     };
   } catch (err) {
-    console.error("Error in getMunicipalityAnalysis:", err.message);
+    logger.error("Error in getMunicipalityAnalysis:", err.message);
     throw err;
   }
 }
@@ -308,7 +309,7 @@ async function getBataanSummary() {
       municipalities: [...municipalityNames].sort(),
     };
   } catch (err) {
-    console.error("Error in getBataanSummary:", err.message);
+    logger.error("Error in getBataanSummary:", err.message);
     throw err;
   }
 }
@@ -341,7 +342,7 @@ async function getMunicipalitySummary(municipalityId) {
       zoneCount: row.zone_count,
     };
   } catch (err) {
-    console.error("Error in getMunicipalitySummary:", err.message);
+    logger.error("Error in getMunicipalitySummary:", err.message);
     throw err;
   }
 }
@@ -412,13 +413,13 @@ async function invalidateMunicipalityCache(municipality) {
   try {
     const municipalityId = await getMunicipalityId(municipality);
     if (!municipalityId) {
-      console.warn(`Municipality not found for cache refresh: ${municipality}`);
+      logger.warn(`Municipality not found for cache refresh: ${municipality}`);
       return;
     }
 
     await refreshMunicipalityDerived(municipalityId);
   } catch (err) {
-    console.error("Error refreshing cache:", err.message);
+    logger.error("Error refreshing cache:", err.message);
     throw err;
   }
 }

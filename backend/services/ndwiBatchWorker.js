@@ -4,6 +4,7 @@
 // though completed years are already saved; jobs are only visible to the process that created them.
 // Loops years 2015 (Sentinel-2 launch) through the current year, generating an NDWI GeoTIFF per
 // year via the same pipeline a manual upload uses. A failed year is skipped, not fatal to the batch.
+const logger = require("../utils/logger");
 const fs = require("fs");
 const pool = require("../db");
 const { generateNDWIGeoTIFF } = require("./earthEngineService");
@@ -52,7 +53,7 @@ function requestCancel(id) {
 async function runNdwiBatch(jobId) {
   const job = jobs.get(jobId);
   if (!job) {
-    console.error(`In-memory batch job ${jobId} not found — aborting worker`);
+    logger.error(`In-memory batch job ${jobId} not found — aborting worker`);
     return;
   }
 
@@ -101,7 +102,7 @@ async function runNdwiBatch(jobId) {
         failed.push({ year, reason: result.message || "Processing failed" });
       }
     } catch (err) {
-      console.error(`NDWI batch job ${jobId}, year ${year} failed:`, err.message);
+      logger.error(`NDWI batch job ${jobId}, year ${year} failed:`, err.message);
       failed.push({ year, reason: err.message });
     } finally {
       if (client) client.release();
@@ -117,7 +118,7 @@ async function runNdwiBatch(jobId) {
     try {
       await invalidateMunicipalityCache(job.municipality);
     } catch (err) {
-      console.error(`NDWI batch job ${jobId}: cache invalidation failed:`, err.message);
+      logger.error(`NDWI batch job ${jobId}: cache invalidation failed:`, err.message);
     }
   }
 

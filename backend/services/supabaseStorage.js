@@ -1,6 +1,7 @@
 // Supabase Storage client: off-disk persistence for uploads that must survive a redeploy on
 // ephemeral hosts. Low-level read/write/delete only - storageSync.js and imageCNNDetection.js populate it.
 require("dotenv").config();
+const logger = require("../utils/logger");
 const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
 
@@ -114,7 +115,7 @@ async function downloadToLocalFile(storagePath, localFilePath) {
 async function deleteFromStorage(storagePath) {
   const supabase = getClient();
   const { error } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
-  if (error) console.error(`Supabase delete failed for ${storagePath}:`, error.message);
+  if (error) logger.error(`Supabase delete failed for ${storagePath}:`, error.message);
 }
 
 module.exports = {

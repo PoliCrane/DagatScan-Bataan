@@ -3,6 +3,7 @@
  * behind verifyToken + verifySuperadmin in server.js.
  */
 
+const logger = require("../utils/logger");
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
@@ -58,7 +59,7 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Error fetching audit logs:", err.message);
+    logger.error("Error fetching audit logs:", err.message);
     res.status(500).json({ error: "Failed to fetch audit logs" });
   }
 });
@@ -81,7 +82,7 @@ router.get("/stats", async (req, res) => {
       user: parseInt(row.user),
     });
   } catch (err) {
-    console.error("Error fetching audit log stats:", err.message);
+    logger.error("Error fetching audit log stats:", err.message);
     res.status(500).json({ error: "Failed to fetch audit log stats" });
   }
 });

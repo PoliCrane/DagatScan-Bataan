@@ -1,5 +1,6 @@
 /** Shoreline data API routes, backed by the eager analysis cache. */
 
+const logger = require("../utils/logger");
 const express = require("express");
 const pool = require("../db");
 const {
@@ -63,7 +64,7 @@ router.post("/validation/run", verifyToken, verifyAdmin, async (req, res) => {
 
     res.json({ runId: stored.id, runAt: stored.run_at, scope, ...result });
   } catch (err) {
-    console.error("Hindcast validation failed:", err);
+    logger.error("Hindcast validation failed:", err);
     res.status(500).json({ error: "Hindcast validation failed" });
   }
 });
@@ -88,7 +89,7 @@ router.get("/validation/latest", async (req, res) => {
       details: run.details,
     });
   } catch (err) {
-    console.error("Failed to load validation run:", err);
+    logger.error("Failed to load validation run:", err);
     res.status(500).json({ error: "Failed to load validation results" });
   }
 });
@@ -105,7 +106,7 @@ router.get("/municipalities", async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    console.error("Error fetching municipalities:", err);
+    logger.error("Error fetching municipalities:", err);
     res.status(500).json({ error: "Failed to fetch municipalities" });
   }
 });
@@ -186,7 +187,7 @@ router.get("/municipality/:municipality", async (req, res) => {
       data,
     });
   } catch (err) {
-    console.error("Error fetching municipality shoreline data:", err);
+    logger.error("Error fetching municipality shoreline data:", err);
     res.status(500).json({ error: "Failed to fetch shoreline data" });
   }
 });
@@ -235,7 +236,7 @@ router.get("/municipality/:municipality/year/:year", async (req, res) => {
       recordId: row.id,
     });
   } catch (err) {
-    console.error("Error fetching year data:", err);
+    logger.error("Error fetching year data:", err);
     res.status(500).json({ error: "Failed to fetch year data" });
   }
 });
@@ -336,7 +337,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
       areas,
     });
   } catch (err) {
-    console.error("Error fetching satellite coastline:", err);
+    logger.error("Error fetching satellite coastline:", err);
     res.status(500).json({ error: "Failed to fetch satellite coastline" });
   }
 });
@@ -412,7 +413,7 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
       segments,
     });
   } catch (err) {
-    console.error("Error computing shoreline estimate:", err);
+    logger.error("Error computing shoreline estimate:", err);
     res.status(500).json({ error: "Failed to compute shoreline estimate" });
   }
 });
@@ -526,7 +527,7 @@ router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
     });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error("Error seeding data:", err);
+    logger.error("Error seeding data:", err);
     res.status(500).json({ error: "Failed to seed data", details: err.message });
   } finally {
     client.release();
@@ -635,7 +636,7 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
       return;
     }
   } catch (err) {
-    console.error("Error inserting yearly data:", err);
+    logger.error("Error inserting yearly data:", err);
     res.status(500).json({ 
       error: "Failed to insert yearly data", 
       details: err.message 
@@ -679,7 +680,7 @@ router.get("/municipality/:municipality/latest", async (req, res) => {
       data: result.rows[0]
     });
   } catch (err) {
-    console.error("Error fetching latest data:", err);
+    logger.error("Error fetching latest data:", err);
     res.status(500).json({ error: "Failed to fetch latest data" });
   }
 });
@@ -697,7 +698,7 @@ router.get("/bataan/summary", async (req, res) => {
 
     res.json(summary);
   } catch (err) {
-    console.error("Error fetching Bataan summary:", err);
+    logger.error("Error fetching Bataan summary:", err);
     res.status(500).json({ error: "Failed to fetch Bataan summary" });
   }
 });
@@ -719,7 +720,7 @@ router.get("/municipality/:municipality/summary", async (req, res) => {
 
     res.json(summary);
   } catch (err) {
-    console.error("Error fetching municipality summary:", err);
+    logger.error("Error fetching municipality summary:", err);
     res.status(500).json({ error: "Failed to fetch municipality summary" });
   }
 });
@@ -770,7 +771,7 @@ router.get("/bataan/all-zones", async (req, res) => {
       totalCount: zones.length,
     });
   } catch (err) {
-    console.error("Error fetching all zones:", err.message);
+    logger.error("Error fetching all zones:", err.message);
     res.status(500).json({ error: "Failed to fetch zones", details: err.message });
   }
 });
@@ -839,7 +840,7 @@ router.get("/municipality/:municipality/zones", async (req, res) => {
       dataSource: zones.length > 0 ? "zones" : "empty",
     });
   } catch (err) {
-    console.error("Error fetching zones:", err);
+    logger.error("Error fetching zones:", err);
     res.status(500).json({ 
       error: "Failed to fetch zones",
       municipality: req.params.municipality,
@@ -866,7 +867,7 @@ router.get("/municipality/:municipality/areas", async (req, res) => {
 
     res.json({ areas: result.rows });
   } catch (err) {
-    console.error("Error fetching coastal areas:", err.message);
+    logger.error("Error fetching coastal areas:", err.message);
     res.status(500).json({ error: "Failed to fetch coastal areas", areas: [] });
   }
 });
@@ -936,7 +937,7 @@ router.get("/municipality/:municipality/analysis", async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("❌ Error fetching analysis for " + municipality + ":", err.message);
+    logger.error("❌ Error fetching analysis for " + municipality + ":", err.message);
     res.status(500).json({ error: "Failed to fetch analysis data", details: err.message });
   }
 });
@@ -973,7 +974,7 @@ router.delete("/municipality/:municipality", verifyToken, verifyAdmin, async (re
       details: { municipality, deleted: result.rowCount },
     });
   } catch (err) {
-    console.error("Error deleting data:", err);
+    logger.error("Error deleting data:", err);
     res.status(500).json({ error: "Failed to delete data" });
   }
 });
@@ -995,7 +996,7 @@ router.post("/cache/invalidate", verifyToken, verifyAdmin, async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    console.error("Error invalidating cache:", err);
+    logger.error("Error invalidating cache:", err);
     res.status(500).json({ error: "Failed to invalidate cache" });
   }
 });
@@ -1011,7 +1012,7 @@ router.post("/cache/invalidate-all", verifyToken, verifyAdmin, async (req, res) 
       timestamp: new Date().toISOString()
     });
   } catch (err) {
-    console.error("Error refreshing all caches:", err);
+    logger.error("Error refreshing all caches:", err);
     res.status(500).json({ error: "Failed to refresh caches" });
   }
 });
@@ -1034,7 +1035,7 @@ router.get("/cache/status", verifyToken, verifyAdmin, async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("Error fetching cache status:", err);
+    logger.error("Error fetching cache status:", err);
     res.status(500).json({ error: "Failed to fetch cache status" });
   }
 });

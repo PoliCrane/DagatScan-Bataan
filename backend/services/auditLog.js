@@ -1,3 +1,4 @@
+const logger = require("../utils/logger");
 const pool = require("../db");
 
 // Records one audit_log row. Pass a pg client to log inside an existing transaction.
@@ -20,7 +21,7 @@ async function logAction(client, { actor, action, category, severity = "normal",
       ]
     );
   } catch (err) {
-    console.error(`Failed to write audit log entry (${action}):`, err.message);
+    logger.error(`Failed to write audit log entry (${action}):`, err.message);
   }
 }
 

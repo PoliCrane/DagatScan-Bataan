@@ -2,6 +2,7 @@
  * Data upload management routes: GeoJSON, CSV, and satellite image ingestion.
  */
 
+const logger = require("../utils/logger");
 const express = require("express");
 const router = express.Router();
 const path = require("path");
@@ -139,7 +140,7 @@ router.post("/validate", async (req, res) => {
       nextStep: "Submit file via /api/admin/uploads/upload",
     });
   } catch (err) {
-    console.error("Error validating file:", err);
+    logger.error("Error validating file:", err);
     res.status(500).json({ error: "Validation failed" });
   }
 });
@@ -262,7 +263,7 @@ router.post(
         details: { municipality, year, specific_area: specific_area || description || null },
       });
     } catch (error) {
-      console.error("Error processing upload:", error);
+      logger.error("Error processing upload:", error);
       res.status(500).json({
         error: "Upload processing failed",
         message: error.message,
@@ -363,7 +364,7 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Error fetching uploads:", err);
+    logger.error("Error fetching uploads:", err);
     res.status(500).json({ error: "Failed to fetch uploads" });
   }
 });
@@ -413,7 +414,7 @@ router.get("/:uploadId/satellite-imagery", async (req, res) => {
 
     res.json({ url: `/uploads/satellite-images/rgb-cache/${upload.area_id}_${upload.year}.png` });
   } catch (err) {
-    console.error("Error fetching satellite imagery:", err);
+    logger.error("Error fetching satellite imagery:", err);
     res.status(500).json({ error: err.message || "Failed to fetch satellite imagery" });
   }
 });
@@ -440,7 +441,7 @@ router.get("/:uploadId", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("Error fetching upload:", err);
+    logger.error("Error fetching upload:", err);
     res.status(500).json({ error: "Failed to fetch upload" });
   }
 });
@@ -492,7 +493,7 @@ router.get("/:uploadId/status", async (req, res) => {
           : "Waiting for processing. Contact admin.",
     });
   } catch (err) {
-    console.error("Error checking upload status:", err);
+    logger.error("Error checking upload status:", err);
     res.status(500).json({ error: "Failed to check status" });
   }
 });
@@ -603,10 +604,10 @@ router.patch("/:uploadId/active", verifySuperadmin, async (req, res) => {
       try {
         await client.query("ROLLBACK");
       } catch (rollbackErr) {
-        console.error("Rollback failed:", rollbackErr.message);
+        logger.error("Rollback failed:", rollbackErr.message);
       }
     }
-    console.error("Error toggling dataset active state:", err);
+    logger.error("Error toggling dataset active state:", err);
     res.status(500).json({ error: "Failed to update dataset status" });
   } finally {
     if (client) client.release();
@@ -652,7 +653,7 @@ router.delete("/:uploadId", verifySuperadmin, async (req, res) => {
     for (const p of [upload.file_path, upload.file_path && thumbnailPathFor(upload.file_path)]) {
       if (p && fs.existsSync(p)) {
         fs.unlink(p, (err) => {
-          if (err) console.error("Error deleting file:", err);
+          if (err) logger.error("Error deleting file:", err);
         });
       }
     }
@@ -661,7 +662,7 @@ router.delete("/:uploadId", verifySuperadmin, async (req, res) => {
     if (upload.storage_url && process.env.SUPABASE_URL) {
       const { deleteFromStorage } = require("../services/supabaseStorage");
       const storagePath = path.relative(path.join(__dirname, "../uploads"), upload.file_path).split(path.sep).join("/");
-      deleteFromStorage(storagePath).catch((err) => console.error("Error deleting from Supabase Storage:", err.message));
+      deleteFromStorage(storagePath).catch((err) => logger.error("Error deleting from Supabase Storage:", err.message));
     }
 
     await invalidateMunicipalityCache(upload.municipality);
@@ -691,10 +692,10 @@ router.delete("/:uploadId", verifySuperadmin, async (req, res) => {
       try {
         await client.query("ROLLBACK");
       } catch (rollbackErr) {
-        console.error("Rollback failed:", rollbackErr.message);
+        logger.error("Rollback failed:", rollbackErr.message);
       }
     }
-    console.error("Error deleting upload:", err);
+    logger.error("Error deleting upload:", err);
     res.status(500).json({ error: "Failed to delete upload" });
   } finally {
     if (client) client.release();

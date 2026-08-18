@@ -1,6 +1,7 @@
 // Background sync: uploads local files not yet mirrored to Supabase Storage, records the
 // public URL on the owning row. Runs independently on a timer (server.js), decoupled from
 // the upload routes. Safe to call repeatedly - only NULL storage_url rows with a local file do anything.
+const logger = require("../utils/logger");
 const fs = require("fs");
 const path = require("path");
 const pool = require("../db");
@@ -41,7 +42,7 @@ async function syncPendingFilesToStorage() {
       synced++;
     } catch (err) {
       failed++;
-      console.error(`[storageSync] upload_history id=${row.id}:`, err.message);
+      logger.error(`[storageSync] upload_history id=${row.id}:`, err.message);
     }
   }
 
@@ -57,7 +58,7 @@ async function syncPendingFilesToStorage() {
       synced++;
     } catch (err) {
       failed++;
-      console.error(`[storageSync] satellite_imagery id=${row.id}:`, err.message);
+      logger.error(`[storageSync] satellite_imagery id=${row.id}:`, err.message);
     }
   }
 
@@ -76,7 +77,7 @@ async function syncPendingFilesToStorage() {
       synced++;
     } catch (err) {
       failed++;
-      console.error(`[storageSync] account_requests id=${row.id}:`, err.message);
+      logger.error(`[storageSync] account_requests id=${row.id}:`, err.message);
     }
   }
 
@@ -95,7 +96,7 @@ async function syncPendingFilesToStorage() {
       synced++;
     } catch (err) {
       failed++;
-      console.error(`[storageSync] upload_history thumbnail id=${row.id}:`, err.message);
+      logger.error(`[storageSync] upload_history thumbnail id=${row.id}:`, err.message);
     }
   }
 
@@ -115,7 +116,7 @@ function scheduleSync() {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     debounceTimer = null;
-    syncPendingFilesToStorage().catch((err) => console.error("[storageSync] Scheduled sync failed:", err.message));
+    syncPendingFilesToStorage().catch((err) => logger.error("[storageSync] Scheduled sync failed:", err.message));
   }, DEBOUNCE_MS);
 }
 

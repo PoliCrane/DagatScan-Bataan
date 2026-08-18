@@ -23,6 +23,7 @@
 // util.isNullOrUndefined was removed in recent Node; tfjs-node's compiled JS
 // still calls it. Node's "util" module is a cached singleton, so patching it
 // once here before tfjs-node loads fixes every internal call site.
+const logger = require("../utils/logger");
 const nodeUtil = require('util');
 if (typeof nodeUtil.isNullOrUndefined !== 'function') {
   nodeUtil.isNullOrUndefined = (x) => x === null || x === undefined;
@@ -35,7 +36,7 @@ try {
   tf = require('@tensorflow/tfjs-node');
   console.log('[Detection] Using native tfjs-node backend (accelerated)');
 } catch (e) {
-  console.warn('[Detection] tfjs-node native module failed to load, falling back to pure-JS CPU backend (slow):', e.message);
+  logger.warn('[Detection] tfjs-node native module failed to load, falling back to pure-JS CPU backend (slow):', e.message);
   require('@tensorflow/tfjs-backend-cpu');
   tf = require('@tensorflow/tfjs');
 }
@@ -117,7 +118,7 @@ async function tryReadSingleBandGeoTIFF(imagePath) {
       height: image.getHeight(),
     };
   } catch (e) {
-    console.warn('[Detection] GeoTIFF single-band read failed, falling back to RGB path:', e.message);
+    logger.warn('[Detection] GeoTIFF single-band read failed, falling back to RGB path:', e.message);
     return null;
   }
 }
@@ -273,7 +274,7 @@ async function loadOrCreateModel() {
       console.log('[Detection] Loaded saved CNN weights from', weightsPath);
       return cachedModel;
     } catch (e) {
-      console.warn('[Detection] Could not load saved CNN weights, rebuilding:', e.message);
+      logger.warn('[Detection] Could not load saved CNN weights, rebuilding:', e.message);
       cachedModel = null;
     }
   }
@@ -304,11 +305,11 @@ async function saveModel(model) {
         await uploadBuffer(Buffer.from(weightsJson), 'cnn-model/weights.json');
         console.log('[Detection] CNN weights mirrored to Supabase Storage');
       } catch (e2) {
-        console.warn('[Detection] CNN weights Supabase upload failed (local save still succeeded):', e2.message);
+        logger.warn('[Detection] CNN weights Supabase upload failed (local save still succeeded):', e2.message);
       }
     }
   } catch (e) {
-    console.warn('[Detection] CNN save failed:', e.message);
+    logger.warn('[Detection] CNN save failed:', e.message);
   }
 }
 
@@ -590,7 +591,7 @@ async function dumpDebugMask(mask, size, sourceImagePath, label) {
     await sharp(buf, { raw: { width: size, height: size, channels: 1 } }).png().toFile(outPath);
     console.log(`[Detection] Debug mask written: ${outPath}`);
   } catch (e) {
-    console.warn('[Detection] Debug mask dump failed:', e.message);
+    logger.warn('[Detection] Debug mask dump failed:', e.message);
   }
 }
 
@@ -703,7 +704,7 @@ async function detectCoastlineWithCNN(imagePath) {
       trainingStrategy: 'Self-supervised bootstrap, weights persisted across uploads — classical NDWI/colour threshold generates pseudo-labels, CNN fine-tunes on each upload and predict() output is what gets traced',
     };
   } catch (error) {
-    console.error('[Detection] Detection error:', error.message);
+    logger.error('[Detection] Detection error:', error.message);
     // clear the cached model if corrupted so the next upload rebuilds from scratch
     cachedModel = null;
     return { valid: false, error: error.message, method: 'CNN classified trace' };
@@ -715,7 +716,7 @@ async function initCNNModel() {
     await loadOrCreateModel();
     console.log('[Detection] CNN model ready');
   } catch (e) {
-    console.warn('[Detection] CNN init warning:', e.message);
+    logger.warn('[Detection] CNN init warning:', e.message);
   }
 }
 

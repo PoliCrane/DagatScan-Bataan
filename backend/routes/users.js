@@ -1,3 +1,4 @@
+const logger = require("../utils/logger");
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -35,7 +36,7 @@ router.get("/users", async (req, res) => {
     `);
     res.json(users.rows);
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
@@ -87,7 +88,7 @@ router.put("/users/:userId/role", validate(schemas.roleUpdate), async (req, res)
       details: { username: targetUser.rows[0].username, from_role: targetUser.rows[0].roles, to_role: roles },
     });
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to update user role" });
   }
 });
@@ -118,7 +119,7 @@ router.patch("/users/:userId/deactivate", async (req, res) => {
     res.json({ message: "User deactivated successfully", user: result.rows[0] });
 
     sendAccountDeactivatedEmail(result.rows[0].email, result.rows[0].username).catch((err) => {
-      console.error(`Failed to send account-deactivated email to ${result.rows[0].email}:`, err.message);
+      logger.error(`Failed to send account-deactivated email to ${result.rows[0].email}:`, err.message);
     });
 
     logAction(null, {
@@ -131,7 +132,7 @@ router.patch("/users/:userId/deactivate", async (req, res) => {
       details: { username: result.rows[0].username },
     });
   } catch (err) {
-    console.error("Deactivate user error:", err.message);
+    logger.error("Deactivate user error:", err.message);
     res.status(500).json({ error: "Failed to deactivate user" });
   }
 });
@@ -158,7 +159,7 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
     res.json({ message: "User reactivated successfully", user: result.rows[0] });
 
     sendAccountReactivatedEmail(result.rows[0].email, result.rows[0].username).catch((err) => {
-      console.error(`Failed to send account-reactivated email to ${result.rows[0].email}:`, err.message);
+      logger.error(`Failed to send account-reactivated email to ${result.rows[0].email}:`, err.message);
     });
 
     logAction(null, {
@@ -171,7 +172,7 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
       details: { username: result.rows[0].username },
     });
   } catch (err) {
-    console.error("Reactivate user error:", err.message);
+    logger.error("Reactivate user error:", err.message);
     res.status(500).json({ error: "Failed to reactivate user" });
   }
 });
@@ -246,7 +247,7 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
       details: { username, email, role: userRole },
     });
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to create user account" });
   }
 });
@@ -313,7 +314,7 @@ router.put("/users/:userId/edit", async (req, res) => {
       details: { old_username: targetUser.rows[0].username, new_username: username },
     });
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to update user information" });
   }
 });
@@ -336,7 +337,7 @@ router.get("/account-requests", async (req, res) => {
     const result = await pool.query(query, [status === "all" ? null : status]);
     res.json(result.rows);
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to fetch account requests" });
   }
 });
@@ -376,7 +377,7 @@ router.get("/account-requests/:id/letter", async (req, res) => {
 
     res.status(404).json({ error: "Request letter file is not available" });
   } catch (err) {
-    console.error("Failed to serve request letter:", err.message);
+    logger.error("Failed to serve request letter:", err.message);
     res.status(500).json({ error: "Failed to load request letter" });
   }
 });
@@ -440,7 +441,7 @@ router.post("/account-requests/:id/approve", validate(schemas.approveRequest), a
 
     // fire-and-forget — a slow/failed email shouldn't block the response
     sendAccountApprovedEmail(request.email, request.username, request.municipality_name).catch((err) => {
-      console.error(`Failed to send account-approved email to ${request.email}:`, err.message);
+      logger.error(`Failed to send account-approved email to ${request.email}:`, err.message);
     });
 
     logAction(null, {
@@ -454,7 +455,7 @@ router.post("/account-requests/:id/approve", validate(schemas.approveRequest), a
     });
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to approve request" });
   } finally {
     client.release();
@@ -490,7 +491,7 @@ router.post("/account-requests/:id/reject", validate(schemas.rejectRequest), asy
       details: { username: updated.rows[0].username, email: updated.rows[0].email, reason: reason || null },
     });
   } catch (err) {
-    console.error(err.message);
+    logger.error(err.message);
     res.status(500).json({ error: "Failed to reject request" });
   }
 });

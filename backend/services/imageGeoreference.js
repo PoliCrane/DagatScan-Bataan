@@ -1,5 +1,6 @@
 // Converts pixel coordinates to geographic coordinates.
 
+const logger = require("../utils/logger");
 const fs = require('fs');
 
 // Derives a {north, south, east, west} bounding box from upper-left/pixel-size fields.
@@ -123,7 +124,7 @@ async function readWorldFile(imagePath) {
 
     return null;
   } catch (error) {
-    console.error('Error reading world file:', error);
+    logger.error('Error reading world file:', error);
     return null;
   }
 }
@@ -144,7 +145,7 @@ async function extractGeoTIFFMetadata(imagePath) {
     const looksLikeDegrees =
       west >= -180 && east <= 180 && south >= -90 && north <= 90 && east > west && north > south;
     if (!looksLikeDegrees) {
-      console.warn(
+      logger.warn(
         `[Georeference] GeoTIFF bounding box (${bbox.join(', ')}) doesn't look like WGS84 degrees — likely a projected CRS. Falling back to manual bounds.`
       );
       return null;
@@ -161,7 +162,7 @@ async function extractGeoTIFFMetadata(imagePath) {
       crs: 'EPSG:4326',
     };
   } catch (error) {
-    console.warn('[Georeference] Could not read embedded GeoTIFF georeferencing:', error.message);
+    logger.warn('[Georeference] Could not read embedded GeoTIFF georeferencing:', error.message);
     return null;
   }
 }

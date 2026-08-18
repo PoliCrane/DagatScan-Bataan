@@ -1,5 +1,6 @@
 // Computes EPR for features missing erosionRate by comparing against the previous year's data.
 
+const logger = require("../utils/logger");
 const { calculateEPR } = require("./eprCalculator");
 const { findAreaId } = require("./coastalAreas");
 
@@ -151,12 +152,12 @@ async function autoCalculateErosionRates(client, features, municipality, year) {
           `  ✅ ${specificArea}: EPR = ${eprResult.erosionRate.toFixed(2)} m/year | Cumulative = ${cumulativeErosion.toFixed(1)}m`
         );
       } catch (eprError) {
-        console.warn(
+        logger.warn(
           `  ❌ ${specificArea}: Calculation failed - ${eprError.message}`
         );
       }
     } catch (dbError) {
-      console.error(
+      logger.error(
         `  ⚠️  ${specificArea}: Database error - ${dbError.message}`
       );
     }

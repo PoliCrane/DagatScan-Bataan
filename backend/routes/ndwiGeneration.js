@@ -1,11 +1,12 @@
 /** Generates NDWI GeoTIFF(s) from Sentinel-2 imagery and processes them directly — no manual re-upload step. */
 
+const logger = require("../utils/logger");
 const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const pool = require("../db");
 const { generateNDWIGeoTIFF } = require("../services/earthEngineService");
-const { processSatelliteImageFile } = require("./uploadManagement");
+const { processSatelliteImageFile } = require("../services/uploadPipeline");
 const { invalidateMunicipalityCache } = require("../services/cacheService_FK_Version");
 const { logAction } = require("../services/auditLog");
 const { scheduleSync } = require("../services/storageSync");
@@ -90,7 +91,7 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
       try {
         await invalidateMunicipalityCache(municipality);
       } catch (err) {
-        console.error("Cache invalidation failed after NDWI generation:", err.message);
+        logger.error("Cache invalidation failed after NDWI generation:", err.message);
       }
 
       // isReupload distinguishes a Reupload from a fresh "Generate This Year" so
@@ -114,7 +115,7 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
         : result.message || "NDWI generated, but processing failed.",
     });
   } catch (err) {
-    console.error("NDWI generation error:", err);
+    logger.error("NDWI generation error:", err);
     res.status(500).json({ error: err.message || "NDWI generation failed" });
   }
 });
@@ -139,10 +140,10 @@ router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) =
 
     // Not awaited — the batch runs in the background after this response.
     runNdwiBatch(jobId).catch((err) => {
-      console.error(`NDWI batch job ${jobId} crashed:`, err.message);
+      logger.error(`NDWI batch job ${jobId} crashed:`, err.message);
     });
   } catch (err) {
-    console.error("NDWI batch start error:", err);
+    logger.error("NDWI batch start error:", err);
     res.status(500).json({ error: err.message || "Failed to start NDWI batch" });
   }
 });
