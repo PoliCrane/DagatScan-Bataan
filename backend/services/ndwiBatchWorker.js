@@ -7,7 +7,7 @@
 const fs = require("fs");
 const pool = require("../db");
 const { generateNDWIGeoTIFF } = require("./earthEngineService");
-const { processSatelliteImageFile } = require("../routes/uploadManagement");
+const { processSatelliteImageFile } = require("../services/uploadPipeline");
 const { invalidateMunicipalityCache } = require("./cacheService_FK_Version");
 const { logAction } = require("./auditLog");
 const { scheduleSync } = require("./storageSync");

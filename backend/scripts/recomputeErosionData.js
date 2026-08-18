@@ -1,6 +1,6 @@
 require("dotenv").config();
 const pool = require("../db");
-const { recomputeAreaTimeSeries } = require("../routes/uploadManagement");
+const { recomputeAreaTimeSeries } = require("../services/uploadPipeline");
 const { calculateEPR } = require("../services/eprCalculator");
 const { extractCoordinatesFromGeoJSON } = require("../services/eprAutoCalculator");
 const {
