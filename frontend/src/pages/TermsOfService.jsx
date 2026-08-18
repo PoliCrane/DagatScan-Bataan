@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import AuthModals from "../components/AuthModals";
 import IndexNavBar from "./indexNavBar";
 import Layout from "../components/Layout";
-import "./styles/footer-pages.css";
+import { StaticPageShell, StaticPageSection } from "../components/StaticPageShell";
 import "./styles/footer.css";
 
 export default function TermsOfService() {
@@ -18,59 +18,36 @@ export default function TermsOfService() {
 
   const content = (
     <>
-      <div className="footer-page-wrapper">
-        <div className="footer-page-container">
-          <div className="footer-page-header" style={{ backgroundImage: "url('/tempoaboutBG.jpg')" }}>
-            <h1>Terms of Service</h1>
-          </div>
-
-          <div className="footer-page-content">
-            <div className="introduction">
-              <h2>Introduction</h2>
-              <p>
-                DagatScan Bataan is a web-based coastal erosion visualization and awareness system developed
-                for academic and research purposes.
-              </p>
-            </div>
-
-            <section className="footer-page-section">
-              <div className="section-header">
-                <img src="/analytics.png" alt="Usage Icon" className="section-icon" />
-                <h3>Use of the System</h3>
-              </div>
-              <p>
-                The system provides coastal erosion data visualization for informational, educational, and
-                research purposes only. All outputs are intended to support understanding of coastal
-                conditions and should not be used as the sole basis for official decision-making.
-              </p>
-            </section>
-
-            <section className="footer-page-section">
-              <div className="section-header">
-                <img src="/bar-chart.png" alt="Data Icon" className="section-icon" />
-                <h3>Data and Outputs</h3>
-              </div>
-              <p>
-                All system outputs, including maps, statistics, simulations, and reports, are generated based
-                on available datasets. Results may vary depending on the quality and availability of historical
-                maps and satellite imagery used in the system.
-              </p>
-            </section>
-
-            <section className="footer-page-section">
-              <div className="section-header">
-                <img src="/userresponsibility.png" alt="Responsibility Icon" className="section-icon" />
-                <h3>User Responsibility</h3>
-              </div>
-              <p>
-                Users are responsible for the interpretation and use of the information provided. The system
-                does not replace official assessments or field-based evaluations conducted by authorized
-                agencies.
-              </p>
-            </section>
-          </div>
+      <StaticPageShell title="Terms of Service">
+        <div className="mb-6 rounded-card bg-primary/5 p-5 md:p-6">
+          <h2 className="m-0 mb-2 font-sans text-xl font-bold text-navy">Introduction</h2>
+          <p className="m-0 text-[15px] leading-relaxed text-muted">
+            DagatScan Bataan is a web-based coastal erosion visualization and awareness system developed
+            for academic and research purposes.
+          </p>
         </div>
-      </div>
+        <StaticPageSection icon="/analytics.png" title="Use of the System">
+          <p>
+            The system provides coastal erosion data visualization for informational, educational, and
+            research purposes only. All outputs are intended to support understanding of coastal
+            conditions and should not be used as the sole basis for official decision-making.
+          </p>
+        </StaticPageSection>
+        <StaticPageSection icon="/bar-chart.png" title="Data and Outputs">
+          <p>
+            All system outputs, including maps, statistics, simulations, and reports, are generated based
+            on available datasets. Results may vary depending on the quality and availability of historical
+            maps and satellite imagery used in the system.
+          </p>
+        </StaticPageSection>
+        <StaticPageSection icon="/userresponsibility.png" title="User Responsibility">
+          <p>
+            Users are responsible for the interpretation and use of the information provided. The system
+            does not replace official assessments or field-based evaluations conducted by authorized
+            agencies.
+          </p>
+        </StaticPageSection>
+      </StaticPageShell>
 
       {!useSystemChrome && (
         <footer className="footer">

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import AuthModals from "../components/AuthModals";
 import IndexNavBar from "./indexNavBar";
 import Layout from "../components/Layout";
-import "./styles/footer-pages.css";
+import { StaticPageShell, StaticPageSection } from "../components/StaticPageShell";
 import "./styles/footer.css";
 
 export default function PolicyPage() {
@@ -18,62 +18,35 @@ export default function PolicyPage() {
 
   const content = (
     <>
-      <div className="footer-page-wrapper">
-        <div className="footer-page-container privacy-policy-container">
-          <div className="footer-page-header" style={{ backgroundImage: "url('/tempoaboutBG.jpg')" }}>
-            <h1>Privacy Policy</h1>
-          </div>
-
-          <div className="footer-page-content">
-            <section className="footer-page-section">
-              <div className="section-header">
-                <img src="/database.png" alt="Data Collection Icon" className="section-icon" />
-                <h3>Data Collection</h3>
-              </div>
-              <p>
-                The system may collect basic user information such as account credentials for
-                authentication and access to system features.
-              </p>
-            </section>
-
-            <section className="footer-page-section">
-              <div className="section-header">
-                <img src="/database-usage.png" alt="Data Usage Icon" className="section-icon" />
-                <h3>Data Usage</h3>
-              </div>
-              <p>
-                Collected information is used solely for system functionality, including user account
-                management, authentication, and access control.
-              </p>
-            </section>
-
-            <section className="footer-page-section">
-              <div className="section-header">
-                <img src="/data-sharing.png" alt="Data Sharing Icon" className="section-icon" />
-                <h3>Data Sharing</h3>
-              </div>
-              <p>
-                The system does not collect sensitive personal data and does not share user
-                information with external parties.
-              </p>
-            </section>
-
-            <section className="footer-page-section">
-              <div className="section-header">
-                <img src="/data-collection.png" alt="Data Sources Icon" className="section-icon" />
-                <h3>System Data Sources</h3>
-              </div>
-              <p>
-                Coastal data used in the system, including maps and satellite images, are sourced
-                from authorized or publicly available datasets such as:
-              </p>
-              <ul className="data-sources-list">
-                <li>DENR - Bataan</li>
-              </ul>
-            </section>
-          </div>
-        </div>
-      </div>
+      <StaticPageShell title="Privacy Policy">
+        <StaticPageSection icon="/database.png" title="Data Collection">
+          <p>
+            The system may collect basic user information such as account credentials for
+            authentication and access to system features.
+          </p>
+        </StaticPageSection>
+        <StaticPageSection icon="/database-usage.png" title="Data Usage">
+          <p>
+            Collected information is used solely for system functionality, including user account
+            management, authentication, and access control.
+          </p>
+        </StaticPageSection>
+        <StaticPageSection icon="/data-sharing.png" title="Data Sharing">
+          <p>
+            The system does not collect sensitive personal data and does not share user
+            information with external parties.
+          </p>
+        </StaticPageSection>
+        <StaticPageSection icon="/data-collection.png" title="System Data Sources">
+          <p>
+            Coastal data used in the system, including maps and satellite images, are sourced
+            from authorized or publicly available datasets such as:
+          </p>
+          <ul className="list-disc pl-6">
+            <li>DENR - Bataan</li>
+          </ul>
+        </StaticPageSection>
+      </StaticPageShell>
 
       {!useSystemChrome && (
         <footer className="footer">
