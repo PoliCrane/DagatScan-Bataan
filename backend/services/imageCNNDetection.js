@@ -44,6 +44,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const { otsuThreshold } = require('./imageThresholds');
+const { extractSubpixelShoreline } = require('./subpixelContour');
 const GeoTIFFLib = require('geotiff');
 
 const TRACE_SIZE = 256;   // Water/land mask + boundary tracing resolution — CNN trains AND predicts at this resolution
@@ -626,7 +627,13 @@ async function buildWaterMasks(imagePath) {
     console.log(`[Detection] NDWI range: min=${ndwiMin.toFixed(4)} max=${ndwiMax.toFixed(4)} — pseudo-label water pixels: ${pseudoWaterCount}/${thresholdMask.length} (${(pseudoWaterCount / thresholdMask.length * 100).toFixed(1)}%)`);
 
     const cnnMask = await classifyWithCNN(inputData3ch, thresholdMask, TRACE_SIZE);
-    return { cnnMask, thresholdMask, usedNdwi: true };
+    return {
+      cnnMask,
+      thresholdMask,
+      usedNdwi: true,
+      native: { data: ndwiRaw.data, width: ndwiRaw.width, height: ndwiRaw.height },
+      ndwiThreshold,
+    };
   }
 
   const { data: raw256 } = await sharp(imagePath)
@@ -646,7 +653,7 @@ async function buildWaterMasks(imagePath) {
   for (let i = 0; i < denoisedRGB.length; i++) inputData3ch[i] = denoisedRGB[i] / 255;
 
   const cnnMask = await classifyWithCNN(inputData3ch, thresholdMask, TRACE_SIZE);
-  return { cnnMask, thresholdMask, usedNdwi: false };
+  return { cnnMask, thresholdMask, usedNdwi: false, native: null, ndwiThreshold: null };
 }
 
 async function detectCoastlineWithCNN(imagePath) {
@@ -654,7 +661,7 @@ async function detectCoastlineWithCNN(imagePath) {
     console.log('[Detection] Processing:', path.basename(imagePath));
 
     // generates the water/land mask at 256px — NDWI/colour heuristic seeds pseudo-labels, the fine-tuned CNN predicts the mask actually used for tracing
-    const { cnnMask, usedNdwi } = await buildWaterMasks(imagePath);
+    const { cnnMask, usedNdwi, native, ndwiThreshold } = await buildWaterMasks(imagePath);
     let mask = cnnMask;
     const ndwiRaw = usedNdwi;
 
@@ -689,7 +696,7 @@ async function detectCoastlineWithCNN(imagePath) {
       return { valid: false, error: 'No water region survived morphological cleaning' };
     }
 
-    const points = extractCoastlineFromMask(mask, TRACE_SIZE);
+    let points = extractCoastlineFromMask(mask, TRACE_SIZE);
 
     console.log(`[Detection] ${points.length} coastline points (grid: ${TRACE_SIZE}px)`);
 
@@ -697,11 +704,39 @@ async function detectCoastlineWithCNN(imagePath) {
       return { valid: false, error: 'No coastline boundary found after land-depth filtering' };
     }
 
+    // Sub-pixel refinement: re-extract the shoreline from the NATIVE-resolution NDWI via
+    // marching squares at the same threshold, then express it in 256-grid coordinates as
+    // floats. The coarse 256px trace stays as the fallback and quality reference.
+    let method = 'CNN classified trace (256px)';
+    if (usedNdwi && native && Math.max(native.width, native.height) > TRACE_SIZE) {
+      const pixelLen = (pts) => {
+        let sum = 0;
+        for (let i = 0; i < pts.length - 1; i++) sum += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+        return sum;
+      };
+      const subpixel = extractSubpixelShoreline(native.data, native.width, native.height, ndwiThreshold ?? 0);
+      if (subpixel.length >= 3) {
+        const scaled = subpixel.map((p) => ({
+          x: (p.x * TRACE_SIZE) / native.width,
+          y: (p.y * TRACE_SIZE) / native.height,
+        }));
+        const coarseLen = pixelLen(points);
+        const fineLen = pixelLen(scaled);
+        if (coarseLen === 0 || fineLen >= coarseLen * 0.5) {
+          console.log(`[Detection] Sub-pixel contour adopted: ${scaled.length} points from ${native.width}x${native.height} native raster`);
+          points = scaled;
+          method = `Sub-pixel NDWI contour (native ${native.width}x${native.height})`;
+        } else {
+          console.log(`[Detection] Sub-pixel contour rejected (too short: ${fineLen.toFixed(1)} vs ${coarseLen.toFixed(1)} px) — keeping 256px trace`);
+        }
+      }
+    }
+
     return {
       valid: true,
       coastlinePoints: points,
       pointCount: points.length,
-      method: 'CNN classified trace (256px)',
+      method,
       gridSize: TRACE_SIZE,
       architecture: 'Compact Encoder-Decoder CNN (3 conv+pool, 3 upsample+conv)',
       trainingStrategy: 'Self-supervised bootstrap, weights persisted across uploads — classical NDWI/colour threshold generates pseudo-labels, CNN fine-tunes on each upload and predict() output is what gets traced',
