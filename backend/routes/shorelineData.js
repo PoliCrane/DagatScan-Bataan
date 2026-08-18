@@ -47,6 +47,94 @@ router.get("/config/risk-tiers", (req, res) => {
   });
 });
 
+let eventContextCache = null;
+router.get("/context/:year", (req, res) => {
+  try {
+    if (!/^\d{4}$/.test(req.params.year)) {
+      return res.status(400).json({ error: "year must be a 4-digit year" });
+    }
+    if (!eventContextCache) {
+      const contextPath = require("path").join(__dirname, "../data/eventContext.json");
+      if (!require("fs").existsSync(contextPath)) {
+        return res.status(404).json({
+          error: "Event context data not built yet. Run: node scripts/fetchEventContext.js",
+        });
+      }
+      eventContextCache = JSON.parse(require("fs").readFileSync(contextPath, "utf8"));
+    }
+    const year = eventContextCache.years?.[req.params.year];
+    if (!year) {
+      return res.status(404).json({ error: `No event context for ${req.params.year}` });
+    }
+    res.json({ year: parseInt(req.params.year), sources: eventContextCache.sources, ...year });
+  } catch (err) {
+    logger.error("Event context read failed:", err.message);
+    res.status(500).json({ error: "Failed to load event context" });
+  }
+});
+
+router.get("/bataan/hotspots", async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+    const result = await pool.query(
+      `SELECT ca.name AS area, m.name AS municipality,
+              CAST(ca.projected_lrr AS FLOAT) AS rate,
+              CAST(ca.lrr_ci95 AS FLOAT) AS ci95,
+              CAST(ca.lrr_confidence AS FLOAT) AS r2,
+              ca.risk_level
+       FROM coastal_areas ca
+       JOIN municipalities m ON m.id = ca.municipality_id
+       WHERE ca.projected_lrr IS NOT NULL
+       ORDER BY ca.projected_lrr ASC
+       LIMIT $1`,
+      [limit]
+    );
+    res.json({
+      unit: "m/year",
+      convention: "most negative = fastest erosion",
+      hotspots: result.rows,
+    });
+  } catch (err) {
+    logger.error("Hotspot ranking failed:", err.message);
+    res.status(500).json({ error: "Failed to load hotspot ranking" });
+  }
+});
+
+router.get("/export/:municipality.csv", async (req, res) => {
+  try {
+    const { municipality } = req.params;
+    const result = await pool.query(
+      `SELECT m.name AS municipality, ca.name AS area, sz.year,
+              sz.erosion_rate, sz.cumulative_erosion, sz.data_quality, sz.source_type
+       FROM shoreline_zones sz
+       JOIN coastal_areas ca ON ca.id = sz.area_id
+       JOIN municipalities m ON m.id = ca.municipality_id
+       WHERE LOWER(m.name) = LOWER($1) AND sz.active
+       ORDER BY ca.name, sz.year`,
+      [municipality]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: `No data for municipality: ${municipality}` });
+    }
+
+    const esc = (v) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = "municipality,area,year,erosion_rate_m_per_year,cumulative_change_m,data_quality,source_type";
+    const body = result.rows
+      .map((r) => [r.municipality, r.area, r.year, r.erosion_rate, r.cumulative_erosion, r.data_quality, r.source_type].map(esc).join(","))
+      .join("\n");
+
+    res.set("Content-Type", "text/csv");
+    res.set("Content-Disposition", `attachment; filename="${municipality.toLowerCase()}-shoreline-data.csv"`);
+    res.send(`${header}\n${body}\n`);
+  } catch (err) {
+    logger.error("CSV export failed:", err.message);
+    res.status(500).json({ error: "Failed to export data" });
+  }
+});
+
 router.get("/municipality/:municipality/transects", async (req, res) => {
   try {
     const { municipality } = req.params;

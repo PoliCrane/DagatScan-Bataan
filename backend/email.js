@@ -166,7 +166,45 @@ const sendBackupFailureEmail = async (errorMessage) => {
   }
 };
 
+const RISK_ORDER = ["VERY_LOW", "LOW", "MODERATE", "HIGH", "VERY_HIGH"];
+
+const sendRiskEscalationEmail = async (email, municipalityName, changes) => {
+  const rows = changes
+    .map(
+      (ch) =>
+        `<tr><td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;">${escapeHtml(ch.areaName)}</td>` +
+        `<td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;">${escapeHtml(ch.from || "—")}</td>` +
+        `<td style="padding:6px 10px;border-bottom:1px solid #e0e0e0;font-weight:bold;color:#a70000;">${escapeHtml(ch.to)}</td></tr>`
+    )
+    .join("");
+  try {
+    await sendViaBrevo({
+      to: email,
+      subject: `Coastal risk level increased in ${municipalityName} — DagatScan Bataan`,
+      html: emailTemplate(
+        "Risk Level Escalation",
+        `
+        <p>New shoreline data for <strong>${escapeHtml(municipalityName)}</strong> moved the following coastal areas to a higher risk tier:</p>
+        <table style="border-collapse:collapse;margin:16px 0;">
+          <tr style="background:#f5f5f5;"><th style="padding:6px 10px;text-align:left;">Area</th><th style="padding:6px 10px;text-align:left;">Previous</th><th style="padding:6px 10px;text-align:left;">New</th></tr>
+          ${rows}
+        </table>
+        <p>Open the DagatScan Bataan dashboard for the updated analysis and validation figures.</p>
+        <p style="color:#999;font-size:12px;">You receive this because your account is assigned to ${escapeHtml(municipalityName)}.</p>
+        `
+      ),
+    });
+    console.log(`Risk escalation email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to send risk escalation email:", error);
+    throw error;
+  }
+};
+
 module.exports = {
+  RISK_ORDER,
+  sendRiskEscalationEmail,
   sendPasswordResetEmail,
   sendAccountApprovedEmail,
   sendAccountDeactivatedEmail,

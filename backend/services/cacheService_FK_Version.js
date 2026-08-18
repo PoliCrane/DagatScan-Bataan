@@ -8,6 +8,7 @@ const pool = require("../db");
 const { classifyErosionRisk } = require("./riskClassification");
 const { calculateLRR, calculateRobustLRR } = require("./eprCalculator");
 const { MIN_YEARS_FOR_LRR } = require("../config/constants");
+const { sendRiskEscalationEmail, RISK_ORDER } = require("../email");
 
 // Row predicate for active, satellite-detected zones only (excludes GeoJSON/CSV/manual/seed rows).
 // @param {string} alias - table alias with trailing dot (e.g. "sz."), or "" if unjoined.
@@ -351,11 +352,13 @@ async function getMunicipalitySummary(municipalityId) {
 // coastal_area under a municipality. History is fetched in one batched query; updates stay per-area.
 async function recomputeMunicipalityAreaLRR(municipalityId) {
   const areasResult = await pool.query(
-    `SELECT id FROM coastal_areas WHERE municipality_id = $1`,
+    `SELECT id, name, risk_level FROM coastal_areas WHERE municipality_id = $1`,
     [municipalityId]
   );
   const areaIds = areasResult.rows.map((row) => row.id);
   if (areaIds.length === 0) return;
+  const previousTiers = new Map(areasResult.rows.map((row) => [row.id, { name: row.name, tier: row.risk_level }]));
+  const escalations = [];
 
   const historyResult = await pool.query(
     `SELECT area_id, CAST(year AS INTEGER) as year, AVG(CAST(cumulative_erosion AS FLOAT)) as cumulative_erosion
@@ -384,6 +387,16 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
       const lrrConfidence = parseFloat(regression.confidence.toFixed(2));
       const riskLevel = classifyErosionRisk(projectedLrr);
 
+      const previous = previousTiers.get(areaId);
+      if (
+        previous &&
+        riskLevel !== "NO_DATA" &&
+        RISK_ORDER.indexOf(riskLevel) > Math.max(RISK_ORDER.indexOf(previous.tier), -1) &&
+        previous.tier !== null
+      ) {
+        escalations.push({ areaName: previous.name, from: previous.tier, to: riskLevel });
+      }
+
       await pool.query(
         `UPDATE coastal_areas
          SET projected_lrr = $1, lrr_confidence = $2, risk_level = $3, lrr_calculated_at = NOW(),
@@ -408,6 +421,24 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
         [areaId]
       );
     }
+  }
+
+  if (escalations.length > 0) {
+    pool
+      .query(
+        `SELECT email FROM users WHERE municipality_id = $1 AND roles = 'municipal' AND active = true`,
+        [municipalityId]
+      )
+      .then(async (recipients) => {
+        const muni = await pool.query(`SELECT name FROM municipalities WHERE id = $1`, [municipalityId]);
+        const municipalityName = muni.rows[0]?.name || "your municipality";
+        for (const row of recipients.rows) {
+          sendRiskEscalationEmail(row.email, municipalityName, escalations).catch((err) =>
+            logger.error(`Risk escalation email to ${row.email} failed:`, err.message)
+          );
+        }
+      })
+      .catch((err) => logger.error("Risk escalation recipient lookup failed:", err.message));
   }
 }
 
