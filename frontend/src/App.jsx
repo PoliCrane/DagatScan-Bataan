@@ -23,6 +23,7 @@ const ContactUs = lazy(() => import("./pages/ContactUs"));
 const RequestAccount = lazy(() => import("./pages/requestAccount"));
 const Register = lazy(() => import("./pages/register"));
 const ValidationReport = lazy(() => import("./pages/ValidationReport"));
+const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 
 const pageFallback = (
   <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#0077B6", fontFamily: "sans-serif" }}>
@@ -53,6 +54,7 @@ return(
 <Route path="/erosion-analysis" element={<ErosionAnalysis/>}/>
 <Route path="/reports" element={<Reports/>}/>
 <Route path="/validation" element={<ValidationReport/>}/>
+{import.meta.env.DEV && <Route path="/style-guide" element={<StyleGuide/>}/>}
 <Route path="/coastal-awareness" element={<CoastalAwareness/>}/>
 <Route path="/admin/data-upload" element={
   <ProtectedRoute allowedRoles={["admin","superadmin"]}><DataUpload/></ProtectedRoute>

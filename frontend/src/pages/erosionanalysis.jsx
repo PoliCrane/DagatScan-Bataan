@@ -342,7 +342,43 @@ export default function ErosionAnalysis() {
     setPredictionResult(null);
   };
 
+  const timelineRef = useRef(null);
+  const [isPlayingTimeline, setIsPlayingTimeline] = useState(false);
+
+  const stopTimeline = () => {
+    if (timelineRef.current) {
+      clearInterval(timelineRef.current);
+      timelineRef.current = null;
+    }
+    setIsPlayingTimeline(false);
+  };
+
+  const handlePlayTimeline = () => {
+    if (isPlayingTimeline) {
+      stopTimeline();
+      return;
+    }
+    const years = [...new Set(shorelineSegments.flatMap((s) => s.yearsAvailable || []))].sort();
+    if (years.length < 2) return;
+    const latest = years[years.length - 1];
+    const steps = years.slice(0, -1);
+    let idx = 0;
+    setIsPlayingTimeline(true);
+    handleCompare(steps[idx], latest);
+    timelineRef.current = setInterval(() => {
+      idx += 1;
+      if (idx >= steps.length) {
+        stopTimeline();
+        return;
+      }
+      handleCompare(steps[idx], latest);
+    }, 1500);
+  };
+
+  useEffect(() => () => stopTimeline(), []);
+
   const handleEndComparison = () => {
+    stopTimeline();
     setComparedYear(null);
     setComparedShoreline(null);
     setComparedIsEstimated([]);
@@ -597,6 +633,8 @@ export default function ErosionAnalysis() {
         selectedSegmentId={selectedSegmentId}
       />
       <AnalysisToolsCards
+        onPlayTimeline={handlePlayTimeline}
+        isPlayingTimeline={isPlayingTimeline}
         contextYear={comparedYear}
         dataYearSpan={dataYearSpan}
         selectedMunicipality={selectedMunicipality}

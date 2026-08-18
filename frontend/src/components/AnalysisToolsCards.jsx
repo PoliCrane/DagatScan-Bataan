@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import "../pages/styles/analysisToolsCards.css";
 import PredictionResultCard from "./PredictionResultCard";
+import EventContextCard from "./EventContextCard";
 import { showInfo } from "../utils/sweetAlertUtils";
 
-export default function AnalysisToolsCards({ contextYear = null, dataYearSpan = null,
+export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline = null, isPlayingTimeline = false, dataYearSpan = null,
   selectedMunicipality,
   onSimulate,
   onEndSimulation,
@@ -171,6 +172,16 @@ export default function AnalysisToolsCards({ contextYear = null, dataYearSpan = 
     <>
       <div className={`analysis-tools-container ${isVisible ? "visible" : "hidden"}`} ref={cardsRef}>
         <EventContextCard year={contextYear} />
+        {onPlayTimeline && (
+          <button
+            type="button"
+            onClick={onPlayTimeline}
+            disabled={!canAnalyze}
+            className="mb-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-card transition enabled:hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isPlayingTimeline ? "Stop Timeline" : "Play Shoreline Timeline"}
+          </button>
+        )}
         {/* Compare Shoreline Card */}
         <div className="tools-card compare-card">
           <div className="card-header">
