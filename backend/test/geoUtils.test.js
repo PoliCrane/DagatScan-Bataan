@@ -65,3 +65,21 @@ test("simplifyCoastline keeps fine detail under a small tolerance", () => {
   const simplified = g.simplifyCoastline(wiggly, 5);
   assert.ok(simplified.length > 10, `20m wiggles must survive 5m tolerance, got ${simplified.length}`);
 });
+
+test("otsu threshold splits a bimodal NDWI distribution", () => {
+  const { otsuThreshold } = require("../services/imageThresholds");
+  const values = [];
+  for (let i = 0; i < 500; i++) values.push(0.25 + (i % 10) * 0.005);
+  for (let i = 0; i < 500; i++) values.push(-0.3 - (i % 10) * 0.005);
+  const t = otsuThreshold(values, 0.0);
+  assert.ok(t > -0.31 && t < 0.25, `threshold must separate the modes, got ${t}`);
+  assert.notStrictEqual(t, 0.0);
+});
+
+test("otsu falls back on flat or implausible data", () => {
+  const { otsuThreshold } = require("../services/imageThresholds");
+  assert.strictEqual(otsuThreshold(new Array(100).fill(0.5), 0.0), 0.0);
+  const shifted = [];
+  for (let i = 0; i < 200; i++) shifted.push(0.6 + (i % 20) * 0.01);
+  assert.strictEqual(otsuThreshold(shifted, 0.0), 0.0);
+});

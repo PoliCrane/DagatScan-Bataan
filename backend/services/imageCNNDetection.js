@@ -43,6 +43,7 @@ try {
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const { otsuThreshold } = require('./imageThresholds');
 const GeoTIFFLib = require('geotiff');
 
 const TRACE_SIZE = 256;   // Water/land mask + boundary tracing resolution — CNN trains AND predicts at this resolution
@@ -605,7 +606,9 @@ async function buildWaterMasks(imagePath) {
 
     // denoise before thresholding so wave texture/glint/turbidity speckle doesn't bake into the mask or the CNN's input
     const denoised = medianFilter(resized256, TRACE_SIZE, 1);
-    const thresholdMask = ndwiMaskFromArray(denoised, 0.0);
+    const ndwiThreshold = otsuThreshold(denoised, 0.0);
+    console.log(`[Detection] Otsu NDWI threshold: ${ndwiThreshold.toFixed(4)}${ndwiThreshold === 0 ? ' (fallback)' : ''}`);
+    const thresholdMask = ndwiMaskFromArray(denoised, ndwiThreshold);
     await dumpDebugMask(thresholdMask, TRACE_SIZE, imagePath, 'raw-threshold');
 
     // normalise -1..1 -> 0..1 and replicate into 3 channels for the CNN
@@ -620,7 +623,7 @@ async function buildWaterMasks(imagePath) {
     const inputData3ch = singleChannelTo3ChannelTensorData(normalized);
 
     const pseudoWaterCount = thresholdMask.reduce((s, v) => s + v, 0);
-    console.log(`[Detection] NDWI range: min=${ndwiMin.toFixed(4)} max=${ndwiMax.toFixed(4)} — threshold>0.0 pseudo-label water pixels: ${pseudoWaterCount}/${thresholdMask.length} (${(pseudoWaterCount / thresholdMask.length * 100).toFixed(1)}%)`);
+    console.log(`[Detection] NDWI range: min=${ndwiMin.toFixed(4)} max=${ndwiMax.toFixed(4)} — pseudo-label water pixels: ${pseudoWaterCount}/${thresholdMask.length} (${(pseudoWaterCount / thresholdMask.length * 100).toFixed(1)}%)`);
 
     const cnnMask = await classifyWithCNN(inputData3ch, thresholdMask, TRACE_SIZE);
     return { cnnMask, thresholdMask, usedNdwi: true };

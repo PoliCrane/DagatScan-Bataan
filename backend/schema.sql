@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS coastal_areas (
   lrr_confidence NUMERIC,
   risk_level TEXT,
   lrr_calculated_at TIMESTAMPTZ,
+  lrr_ci95 NUMERIC,
+  lrr_p_value NUMERIC,
+  lrr_outliers_removed INTEGER,
   UNIQUE (municipality_id, name)
 );
 

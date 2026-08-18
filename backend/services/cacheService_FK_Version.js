@@ -6,7 +6,7 @@
 const logger = require("../utils/logger");
 const pool = require("../db");
 const { classifyErosionRisk } = require("./riskClassification");
-const { calculateLRR } = require("./eprCalculator");
+const { calculateLRR, calculateRobustLRR } = require("./eprCalculator");
 const { MIN_YEARS_FOR_LRR } = require("../config/constants");
 
 // Row predicate for active, satellite-detected zones only (excludes GeoJSON/CSV/manual/seed rows).
@@ -379,22 +379,31 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
     const history = historyByArea.get(areaId);
 
     if (history.length >= MIN_YEARS_FOR_LRR) {
-      const regression = calculateLRR(history);
+      const regression = calculateRobustLRR(history);
       const projectedLrr = parseFloat(regression.slope.toFixed(4));
       const lrrConfidence = parseFloat(regression.confidence.toFixed(2));
       const riskLevel = classifyErosionRisk(projectedLrr);
 
       await pool.query(
         `UPDATE coastal_areas
-         SET projected_lrr = $1, lrr_confidence = $2, risk_level = $3, lrr_calculated_at = NOW()
+         SET projected_lrr = $1, lrr_confidence = $2, risk_level = $3, lrr_calculated_at = NOW(),
+             lrr_ci95 = $5, lrr_p_value = $6, lrr_outliers_removed = $7
          WHERE id = $4`,
-        [projectedLrr, lrrConfidence, riskLevel, areaId]
+        [
+          projectedLrr,
+          lrrConfidence,
+          riskLevel,
+          areaId,
+          regression.ci95 !== null ? parseFloat(regression.ci95.toFixed(4)) : null,
+          regression.pValue !== null ? parseFloat(regression.pValue.toFixed(6)) : null,
+          regression.outliersRemoved,
+        ]
       );
     } else {
       // Below the 3-year regression threshold — clear any previously-computed value.
       await pool.query(
         `UPDATE coastal_areas
-         SET projected_lrr = NULL, lrr_confidence = NULL, risk_level = NULL, lrr_calculated_at = NULL
+         SET projected_lrr = NULL, lrr_confidence = NULL, risk_level = NULL, lrr_calculated_at = NULL, lrr_ci95 = NULL, lrr_p_value = NULL, lrr_outliers_removed = NULL
          WHERE id = $1`,
         [areaId]
       );

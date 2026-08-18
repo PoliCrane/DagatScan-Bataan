@@ -59,6 +59,18 @@ async function loadAreaSeries(municipalityId) {
   return [...byArea.values()];
 }
 
+function leaveOneOutErrors(series) {
+  if (series.length < 4) return [];
+  const errors = [];
+  for (let i = 0; i < series.length; i++) {
+    const rest = series.filter((_, idx) => idx !== i);
+    const fit = calculateLRR(rest);
+    const predicted = fit.slope * series[i].year + fit.intercept;
+    errors.push(predicted - series[i].value);
+  }
+  return errors;
+}
+
 function evaluateArea(area) {
   const series = area.series;
   const train = series.slice(0, series.length - HOLDOUT_YEARS);
@@ -90,10 +102,16 @@ function evaluateArea(area) {
   const observedTier = classifyErosionRisk(observedRate);
   const distance = tierDistance(predictedTier, observedTier);
 
+  const looErrors = leaveOneOutErrors(series);
+  const looMae = looErrors.length
+    ? parseFloat((looErrors.reduce((s, e) => s + Math.abs(e), 0) / looErrors.length).toFixed(2))
+    : null;
+
   return {
     areaId: area.areaId,
     areaName: area.areaName,
     municipality: area.municipality,
+    looMae,
     yearsUsed: train.map((p) => p.year),
     holdoutYears: holdout.map((p) => p.year),
     r2: parseFloat(regression.r2.toFixed(3)),
@@ -138,6 +156,9 @@ function aggregate(evaluated, skipped) {
     riskTierAdjacentPct: pct(tierAdjacent, evaluated.length),
     meanR2: evaluated.length
       ? parseFloat(mean(evaluated.map((a) => a.r2)).toFixed(3))
+      : null,
+    leaveOneOutMaeMeters: evaluated.some((a) => a.looMae !== null)
+      ? parseFloat(mean(evaluated.filter((a) => a.looMae !== null).map((a) => a.looMae)).toFixed(2))
       : null,
     baseline: {
       model: "no-change",
