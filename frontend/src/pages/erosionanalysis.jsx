@@ -597,6 +597,7 @@ export default function ErosionAnalysis() {
         selectedSegmentId={selectedSegmentId}
       />
       <AnalysisToolsCards
+        contextYear={comparedYear}
         dataYearSpan={dataYearSpan}
         selectedMunicipality={selectedMunicipality}
         onSimulate={handlePredictSimulate}

@@ -63,3 +63,17 @@
     padding: 16px;
   }
 }
+
+@media (min-width: 769px) {
+  .coastal-summary-container,
+  .analysis-cards-container {
+    transition: left 0.3s ease;
+  }
+
+  .layout-content:has(.map-sidebar:hover) .coastal-summary-container,
+  .layout-content:has(.admin-sidebar:hover) .coastal-summary-container,
+  .layout-content:has(.map-sidebar:hover) .analysis-cards-container,
+  .layout-content:has(.admin-sidebar:hover) .analysis-cards-container {
+    left: calc(224px + 15px);
+  }
+}

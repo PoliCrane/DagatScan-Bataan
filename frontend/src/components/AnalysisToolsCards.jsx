@@ -3,7 +3,7 @@ import "../pages/styles/analysisToolsCards.css";
 import PredictionResultCard from "./PredictionResultCard";
 import { showInfo } from "../utils/sweetAlertUtils";
 
-export default function AnalysisToolsCards({ dataYearSpan = null,
+export default function AnalysisToolsCards({ contextYear = null, dataYearSpan = null,
   selectedMunicipality,
   onSimulate,
   onEndSimulation,
@@ -170,6 +170,7 @@ export default function AnalysisToolsCards({ dataYearSpan = null,
   return (
     <>
       <div className={`analysis-tools-container ${isVisible ? "visible" : "hidden"}`} ref={cardsRef}>
+        <EventContextCard year={contextYear} />
         {/* Compare Shoreline Card */}
         <div className="tools-card compare-card">
           <div className="card-header">

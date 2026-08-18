@@ -54,38 +54,6 @@ function CoastalSummary({ yearlyData = [], selectedMunicipality = null, segments
   const overallErosionRate = activeSummary?.avgErosionRate ?? null;
   const dataSource = activeSummary ? "Real Data" : "No Data";
 
-  useEffect(() => {
-    let sidebar = null;
-    const handleMouseEnter = () => {
-      if (summaryRef.current) summaryRef.current.style.left = "calc(224px + 15px)";
-    };
-    const handleMouseLeave = () => {
-      if (summaryRef.current) summaryRef.current.style.left = "calc(65px + 15px)";
-    };
-
-    const findAndObserveSidebar = () => {
-      const mapSidebar = document.querySelector(".map-sidebar");
-      const adminSidebar = document.querySelector(".admin-sidebar");
-      sidebar = mapSidebar || adminSidebar;
-
-      if (sidebar) {
-        sidebar.addEventListener("mouseenter", handleMouseEnter);
-        sidebar.addEventListener("mouseleave", handleMouseLeave);
-      }
-    };
-
-    // wait for the DOM to render before querying
-    const timeoutId = setTimeout(findAndObserveSidebar, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (sidebar) {
-        sidebar.removeEventListener("mouseenter", handleMouseEnter);
-        sidebar.removeEventListener("mouseleave", handleMouseLeave);
-      }
-    };
-  }, []);
-
   // position below the map legend dynamically since its height varies
   useEffect(() => {
     const positionCoastalSummary = () => {

@@ -86,6 +86,9 @@ function ErosionAnalysisCards({
   const baseErosionData = analysisData ? {
     municipalityName: analysisData.erosionData?.municipalityName || selectedMunicipality,
     coastlineLength: analysisData.erosionData?.coastlineLength || "0",
+    affectedAreaHa: analysisData.erosionData?.affectedArea != null
+      ? (Number(analysisData.erosionData.affectedArea) / 10).toFixed(2)
+      : null,
     riskLevel: analysisData.erosionData?.riskLevel || "NO_DATA",
     erosionRate: Number(analysisData.metadata?.erosionRate ?? 0).toFixed(2),
     dataYear: analysisData.metadata?.analysisYear,
@@ -143,38 +146,6 @@ function ErosionAnalysisCards({
 
   const currentYear = new Date().getFullYear();
   const latestYear = analysisData?.metadata?.analysisYear || currentYear;
-
-  useEffect(() => {
-    let sidebar = null;
-    const handleMouseEnter = () => {
-      if (cardsRef.current) cardsRef.current.style.left = "calc(224px + 15px)";
-    };
-    const handleMouseLeave = () => {
-      if (cardsRef.current) cardsRef.current.style.left = "calc(65px + 15px)";
-    };
-
-    const findAndObserveSidebar = () => {
-      const mapSidebar = document.querySelector(".map-sidebar");
-      const adminSidebar = document.querySelector(".admin-sidebar");
-      sidebar = mapSidebar || adminSidebar;
-
-      if (sidebar) {
-        sidebar.addEventListener("mouseenter", handleMouseEnter);
-        sidebar.addEventListener("mouseleave", handleMouseLeave);
-      }
-    };
-
-    // wait for the DOM to render before querying
-    const timeoutId = setTimeout(findAndObserveSidebar, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (sidebar) {
-        sidebar.removeEventListener("mouseenter", handleMouseEnter);
-        sidebar.removeEventListener("mouseleave", handleMouseLeave);
-      }
-    };
-  }, []);
 
   // position below the erosion legend dynamically since its height varies
   useEffect(() => {
@@ -242,6 +213,16 @@ function ErosionAnalysisCards({
                   <span className="card-label">Coastline Length</span>
                   <span className="card-value">
                     {erosionData.coastlineLength} <span className="card-unit">km</span>
+                  </span>
+                </div>
+              )}
+
+              {erosionData.affectedAreaHa != null && (
+                <div className="card-item">
+                  <img src="/affected.png" alt="Affected Area" className="card-icon" />
+                  <span className="card-label">Est. Affected Area</span>
+                  <span className="card-value">
+                    {erosionData.affectedAreaHa} <span className="card-unit">ha</span>
                   </span>
                 </div>
               )}
