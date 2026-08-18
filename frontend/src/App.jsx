@@ -1,7 +1,6 @@
 import {BrowserRouter,Routes,Route} from "react-router-dom";
 import { lazy, Suspense } from "react";
 
-import MobileBlockOverlay from "./components/MobileBlockOverlay";
 import NdwiGenerationWidget from "./components/NdwiGenerationWidget";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -36,8 +35,6 @@ export default function App(){
 return(
 
 <>
-
-<MobileBlockOverlay/>
 
 <ErrorBoundary>
 <AuthProvider>

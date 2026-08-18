@@ -34,7 +34,7 @@ export default function ValidationReport() {
         <AsyncSection loading={loading} error={error} empty={!loading && !error && !run}>
           {s && (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, margin: "20px 0" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 12, margin: "20px 0" }}>
                 {[
                   ["Status Accuracy", pct(s.statusAccuracyPct), `vs ${pct(s.baseline?.statusAccuracyPct)} no-change baseline`],
                   ["Risk Tier Accuracy", pct(s.riskTierAccuracyPct), `${pct(s.riskTierAdjacentPct)} within one tier`],
