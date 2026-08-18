@@ -47,3 +47,21 @@ test("haversine distance matches a known value", () => {
   const d = g.haversineMeters([14.7, 120.25], [14.7, 120.26]);
   assert.ok(Math.abs(d - 1076) < 10, `expected ~1076 m, got ${d}`);
 });
+
+test("simplifyCoastline drops collinear points but keeps shape", () => {
+  const dense = [];
+  for (let i = 0; i <= 100; i++) dense.push([14.7 - i * 0.0005, 120.25]);
+  dense[50] = [14.675, 120.253];
+  const simplified = g.simplifyCoastline(dense, 5);
+  assert.ok(simplified.length < 10, `expected <10 points, got ${simplified.length}`);
+  assert.deepStrictEqual(simplified[0], dense[0]);
+  assert.deepStrictEqual(simplified[simplified.length - 1], dense[dense.length - 1]);
+  assert.ok(simplified.some((p) => p[1] > 120.252), "the deviation point must survive");
+});
+
+test("simplifyCoastline keeps fine detail under a small tolerance", () => {
+  const wiggly = [];
+  for (let i = 0; i <= 20; i++) wiggly.push([14.7 - i * 0.001, 120.25 + (i % 2) * 0.0002]);
+  const simplified = g.simplifyCoastline(wiggly, 5);
+  assert.ok(simplified.length > 10, `20m wiggles must survive 5m tolerance, got ${simplified.length}`);
+});

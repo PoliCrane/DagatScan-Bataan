@@ -16,6 +16,7 @@ const { classifyErosionRisk } = require("../services/riskClassification");
 const { getOrCreateMunicipalityId } = require("../services/municipalities");
 const { logAction } = require("../services/auditLog");
 const { runHindcast, storeRun, getLatestRun } = require("../services/hindcastValidation");
+const { simplifyCoastline } = require("../services/geoUtils");
 
 const router = express.Router();
 
@@ -315,7 +316,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
           year: row.year,
           sourceType: row.source_type,
           isBaseline: row.source_type === 'Satellite Analysis - Baseline',
-          coastlinePoints: coords,
+          coastlinePoints: simplifyCoastline(coords, 5),
           yearsAvailable,
           hasSufficientData,
           lrrRate: row.projected_lrr !== null ? parseFloat(row.projected_lrr) : null,

@@ -123,6 +123,37 @@ function signedSeawardChanges(referencePoints, comparedPoints, interior = BATAAN
   });
 }
 
+function perpendicularDistanceMeters(point, lineStart, lineEnd) {
+  const mLon = metersPerDegreeLon(point[0]);
+  const px = (point[1] - lineStart[1]) * mLon;
+  const py = (point[0] - lineStart[0]) * METERS_PER_DEGREE_LAT;
+  const ex = (lineEnd[1] - lineStart[1]) * mLon;
+  const ey = (lineEnd[0] - lineStart[0]) * METERS_PER_DEGREE_LAT;
+  const lenSq = ex * ex + ey * ey;
+  if (lenSq === 0) return Math.hypot(px, py);
+  const t = Math.max(0, Math.min(1, (px * ex + py * ey) / lenSq));
+  return Math.hypot(px - t * ex, py - t * ey);
+}
+
+function simplifyCoastline(points, toleranceMeters = 5) {
+  if (!points || points.length < 3) return points;
+  let maxDist = 0;
+  let maxIdx = 0;
+  const first = points[0];
+  const last = points[points.length - 1];
+  for (let i = 1; i < points.length - 1; i++) {
+    const d = perpendicularDistanceMeters(points[i], first, last);
+    if (d > maxDist) {
+      maxDist = d;
+      maxIdx = i;
+    }
+  }
+  if (maxDist <= toleranceMeters) return [first, last];
+  const left = simplifyCoastline(points.slice(0, maxIdx + 1), toleranceMeters);
+  const right = simplifyCoastline(points.slice(maxIdx), toleranceMeters);
+  return [...left.slice(0, -1), ...right];
+}
+
 function median(values) {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -143,5 +174,6 @@ module.exports = {
   cumulativeArcMeters,
   pointAtArcFraction,
   signedSeawardChanges,
+  simplifyCoastline,
   median,
 };
