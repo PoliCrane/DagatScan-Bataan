@@ -18,6 +18,7 @@ const { getOrCreateMunicipalityId } = require("../services/municipalities");
 const { logAction } = require("../services/auditLog");
 const { runHindcast, storeRun, getLatestRun } = require("../services/hindcastValidation");
 const { simplifyCoastline } = require("../services/geoUtils");
+const { computeTransectStatistics } = require("../services/transectAnalysis");
 
 const router = express.Router();
 
@@ -44,6 +45,57 @@ router.get("/config/risk-tiers", (req, res) => {
     colors: RISK_COLORS,
     labels: RISK_LABELS,
   });
+});
+
+router.get("/municipality/:municipality/transects", async (req, res) => {
+  try {
+    const { municipality } = req.params;
+    const { area } = req.query;
+    const spacing = Math.min(Math.max(parseInt(req.query.spacing, 10) || 100, 25), 500);
+
+    if (!area) {
+      return res.status(400).json({ error: "area query parameter is required" });
+    }
+
+    const municipalityId = await getMunicipalityId(municipality);
+    if (!municipalityId) {
+      return res.status(404).json({ error: `Unknown municipality: ${municipality}` });
+    }
+    const areaId = await findAreaId(pool, municipalityId, area);
+    if (!areaId) {
+      return res.status(404).json({ error: `Unknown area: ${area}` });
+    }
+
+    const rows = await pool.query(
+      `SELECT DISTINCT ON (year) year, geojson_data
+       FROM shoreline_zones
+       WHERE area_id = $1 AND active AND geojson_data IS NOT NULL
+         AND source_type LIKE 'Satellite Analysis%'
+       ORDER BY year ASC, id DESC`,
+      [areaId]
+    );
+
+    const { extractCoordinatesFromGeoJSON } = require("../services/eprAutoCalculator");
+    const yearly = rows.rows
+      .map((row) => {
+        const lonLat = extractCoordinatesFromGeoJSON(row.geojson_data);
+        if (!lonLat || lonLat.length < 2) return null;
+        return { year: parseInt(row.year), points: lonLat.map(([lon, lat]) => [lat, lon]) };
+      })
+      .filter(Boolean);
+
+    if (yearly.length < 2) {
+      return res.status(400).json({
+        error: `Area "${area}" needs at least 2 years of satellite shorelines for transect statistics`,
+      });
+    }
+
+    const result = computeTransectStatistics(yearly, spacing);
+    res.json({ municipality, area, ...result });
+  } catch (err) {
+    logger.error("Transect statistics failed:", err.message);
+    res.status(500).json({ error: "Failed to compute transect statistics" });
+  }
 });
 
 router.post("/validation/run", verifyToken, verifyAdmin, async (req, res) => {
