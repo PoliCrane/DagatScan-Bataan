@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@turf/turf": "^6.5.0",
+    "@turf/bbox": "^7.4.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -1,4 +1,5 @@
 import {BrowserRouter,Routes,Route} from "react-router-dom";
+import { lazy, Suspense } from "react";
 
 import MobileBlockOverlay from "./components/MobileBlockOverlay";
 import NdwiGenerationWidget from "./components/NdwiGenerationWidget";
@@ -7,20 +8,27 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { NdwiGenerationProvider } from "./contexts/NdwiGenerationContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/index";
-import Home from "./pages/Home";
-import MapPage from "./pages/coastalmonitoring";
-import ErosionAnalysis from "./pages/erosionanalysis";
-import Reports from "./pages/Reports";
-import CoastalAwareness from "./pages/CoastalAwareness";
-import DataUpload from "./pages/admin/DataUpload";
-import DataManagement from "./pages/admin/DataManagement";
-import UserManagement from "./pages/admin/UserManagement";
-import AuditTrail from "./pages/admin/AuditTrail";
-import PolicyPage from "./pages/PolicyPage";
-import TermsOfService from "./pages/TermsOfService";
-import ContactUs from "./pages/ContactUs";
-import RequestAccount from "./pages/requestAccount";
-import Register from "./pages/register";
+
+const Home = lazy(() => import("./pages/Home"));
+const MapPage = lazy(() => import("./pages/coastalmonitoring"));
+const ErosionAnalysis = lazy(() => import("./pages/erosionanalysis"));
+const Reports = lazy(() => import("./pages/Reports"));
+const CoastalAwareness = lazy(() => import("./pages/CoastalAwareness"));
+const DataUpload = lazy(() => import("./pages/admin/DataUpload"));
+const DataManagement = lazy(() => import("./pages/admin/DataManagement"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const AuditTrail = lazy(() => import("./pages/admin/AuditTrail"));
+const PolicyPage = lazy(() => import("./pages/PolicyPage"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const ContactUs = lazy(() => import("./pages/ContactUs"));
+const RequestAccount = lazy(() => import("./pages/requestAccount"));
+const Register = lazy(() => import("./pages/register"));
+
+const pageFallback = (
+  <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#0077B6", fontFamily: "sans-serif" }}>
+    Loading...
+  </div>
+);
 
 export default function App(){
 
@@ -35,6 +43,7 @@ return(
 <NdwiGenerationProvider>
 <BrowserRouter>
 
+<Suspense fallback={pageFallback}>
 <Routes>
 
 <Route path="/" element={<Index/>}/>
@@ -65,6 +74,7 @@ return(
 <Route path="/request-account/apply" element={<Register/>}/>
 
 </Routes>
+</Suspense>
 
 <NdwiGenerationWidget/>
 

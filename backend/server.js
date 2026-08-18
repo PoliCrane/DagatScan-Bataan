@@ -18,6 +18,7 @@ process.on("exit", (code) => console.log(`[shutdown] process exiting with code $
 const express = require("express");
 const path = require("path");
 const helmet = require("helmet");
+const compression = require("compression");
 const cors = require("cors");
 const { verifyToken, verifyAdmin, verifySuperadmin } = require("./middleware/auth");
 const { apiLimiter } = require("./middleware/rateLimiters");
@@ -37,6 +38,7 @@ app.use(
 );
 // falls back to local Vite port; set FRONTEND_URL in production, no trailing slash
 app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
+app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(apiLimiter);
 // request letters contain PII — only superadmins may fetch them, via /admin/account-requests/:id/letter

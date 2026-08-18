@@ -19,6 +19,13 @@ const { runHindcast, storeRun, getLatestRun } = require("../services/hindcastVal
 
 const router = express.Router();
 
+// browser-side caching for the public reads: data only changes on new uploads,
+// so a short max-age cuts repeat map loads without risking stale demos
+router.use((req, res, next) => {
+  if (req.method === "GET") res.set("Cache-Control", "public, max-age=300");
+  next();
+});
+
 router.get("/config/risk-tiers", (req, res) => {
   const { RISK_COLORS, RISK_LABELS, STABLE_BAND_M_PER_YEAR } = require("../services/riskClassification");
   res.json({

@@ -9,7 +9,12 @@ const pool = require("../db");
 
 router.get("/", async (req, res) => {
   try {
-    const { category, severity, search, limit = 25, offset = 0 } = req.query;
+    const rawLimit = parseInt(req.query.limit, 10);
+    const rawOffset = parseInt(req.query.offset, 10);
+    const limit = Math.min(Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 25, 100);
+    const offset = Math.max(Number.isFinite(rawOffset) ? rawOffset : 0, 0);
+    const { category, severity } = req.query;
+    const search = typeof req.query.search === "string" ? req.query.search.slice(0, 100) : undefined;
 
     let query = `SELECT id, actor_id, actor_username, actor_role, action, category, severity, target_type, target_id, details, created_at
                  FROM audit_log WHERE 1=1`;
@@ -36,7 +41,7 @@ router.get("/", async (req, res) => {
       paramIndex++;
     }
 
-    const listParams = [...params, parseInt(limit), parseInt(offset)];
+    const listParams = [...params, limit, offset];
     query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
 
     const [result, countResult] = await Promise.all([
@@ -48,8 +53,8 @@ router.get("/", async (req, res) => {
       logs: result.rows,
       pagination: {
         total: parseInt(countResult.rows[0].total),
-        limit: parseInt(limit),
-        offset: parseInt(offset),
+        limit: limit,
+        offset: offset,
       },
     });
   } catch (err) {

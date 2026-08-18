@@ -2,7 +2,7 @@
  * Coastline utilities for extracting a municipality's outer boundary from GeoJSON via turf.js
  */
 
-import * as turf from "@turf/turf";
+import turfBbox from "@turf/bbox";
 
 /**
  * Extracts a municipality's coastline via edge hashing: edges shared with a neighbor are internal, unshared edges are coastline.
@@ -42,8 +42,8 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
     let mainFeature = selectedFeatures[0];
     if (selectedFeatures.length > 1) {
       const areas = selectedFeatures.map((f) => {
-        const bbox = turf.bbox(f);
-        return (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]);
+        const box = turfBbox(f);
+        return (box[2] - box[0]) * (box[3] - box[1]);
       });
       const maxIdx = areas.indexOf(Math.max(...areas));
       mainFeature = selectedFeatures[maxIdx];
