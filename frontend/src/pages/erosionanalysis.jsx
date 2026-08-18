@@ -14,6 +14,7 @@ import { getShorelineData } from "../api/shorelineData";
 import { offsetCoastlineSeaward } from "../utils/geometry";
 import { buildAreaSegments } from "../utils/areaSegments";
 import { classifyErosionRisk, getRiskColor, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
+import { showInfo } from "../utils/sweetAlertUtils";
 import useGuidedTour from "../hooks/useGuidedTour";
 import useMunicipalityDataStatus from "../hooks/useMunicipalityDataStatus";
 import TourInfoButton from "../components/tour/TourInfoButton";
@@ -714,8 +715,18 @@ export default function ErosionAnalysis() {
                 layer.on("click", (e) => {
                   // Stops the click from reaching the map's outside-click deselect handler
                   L.DomEvent.stopPropagation(e);
-                  if (isLocked) return;
+                  if (isLocked) {
+                    showInfo(
+                      `${feature.properties?.MUNICIPALI} has no analyzed shoreline data yet. Upload satellite or GeoJSON data for it in the admin Data Upload page.`
+                    );
+                    return;
+                  }
+                  const name = feature.properties?.MUNICIPALI;
                   if (!selectedMunicipality) {
+                    handleMunicipalityClick(feature);
+                  } else if (name && name !== selectedMunicipality) {
+                    handleEndComparison();
+                    handleEndSimulation();
                     handleMunicipalityClick(feature);
                   }
                 });
