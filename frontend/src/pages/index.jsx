@@ -3,19 +3,38 @@ import { useNavigate } from "react-router-dom";
 import AuthModals from "../components/AuthModals";
 import SiteFooter from "../components/SiteFooter";
 import IndexNavBar from "./indexNavBar";
+import { useAuth } from "../contexts/useAuth";
 import "./index-organized.css";
+
+const FEATURES = [
+  {
+    icon: "/corefeature1.png",
+    title: "View Coastline",
+    text: "Compare past and present coastlines from satellite-derived shoreline data.",
+  },
+  {
+    icon: "/corefeature2.png",
+    title: "Predict Erosion",
+    text: "Project future shoreline positions with confidence bounds and validated accuracy.",
+  },
+  {
+    icon: "/corefeature3.png",
+    title: "Generate Reports",
+    text: "Download per-municipality erosion assessment reports and open data.",
+  },
+];
 
 export default function Index() {
   const authModalsRef = useRef(null);
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) navigate("/home");
-  }, [navigate]);
+    if (isLoggedIn) navigate("/home");
+  }, [isLoggedIn, navigate]);
 
   return (
-    <div>
+    <div className="bg-white font-sans">
       <IndexNavBar
         onLoginClick={() => authModalsRef.current?.openLogin()}
         onRegisterClick={() => navigate("/request-account")}
@@ -23,61 +42,77 @@ export default function Index() {
         showMiddleNav={true}
       />
 
-      <div id="home" className="IndexBG" style={{ backgroundImage: "url('/tempoBG.jpg')" }}>
-
-        <h1>DagatScan <span>Bataan</span></h1>
-        <p>
-          A Coastal Erosion Visualization & Awareness System
-        </p>
-        <button onClick={() => navigate("/coastalmonitoring")}>
-          Explore Map
-        </button>
-      </div>
-
-      <div id="features" className="core-features">
-        <h2>Core Features</h2>
-        <div className="features-container">
-          <div className="feature-card">
-            <div className="feature-card-logo">
-              <img src="/corefeature1.png" alt="Core Feature 1  " className="navbar-logo" />
-            </div>
-            <div className="feature-card-content">
-              <h3>View Coastline</h3>
-              <p>Compare Past and Present Coastlines</p>
-            </div>
-          </div>
-          <div className="feature-card">
-            <div className="feature-card-logo">
-              <img src="/corefeature2.png" alt="Core Feature 2" className="navbar-logo" />
-            </div>
-            <div className="feature-card-content">
-              <h3>Predict Erosion</h3>
-              <p>Forecast future Coastal Erosion</p>
-            </div>
-          </div>
-          <div className="feature-card">
-            <div className="feature-card-logo">
-              <img src="/corefeature3.png" alt="Core Feature 3" className="navbar-logo" />
-            </div>
-            <div className="feature-card-content">
-              <h3>Generate Reports</h3>
-              <p>Download Erosion Reports</p>
-            </div>
+      <section
+        id="home"
+        className="relative flex min-h-[88vh] items-center justify-center overflow-hidden px-6"
+        style={{ backgroundImage: "url('/tempoBG.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="absolute inset-0 bg-linear-to-b from-navy/70 via-navy/50 to-navy/80" />
+        <div className="relative mx-auto max-w-3xl py-24 text-center text-white">
+          <span className="mb-5 inline-block rounded-full border border-white/40 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest backdrop-blur">
+            Coastal Monitoring for Bataan
+          </span>
+          <h1 className="m-0 text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
+            DagatScan <span className="text-accent">Bataan</span>
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-base text-white/85 sm:text-lg">
+            A coastal erosion visualization and awareness system — satellite-derived
+            shorelines, validated predictions, and risk assessments for all 12 coastal
+            municipalities.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={() => navigate("/coastalmonitoring")}
+              className="rounded-lg bg-primary px-7 py-3 text-base font-semibold text-white shadow-raised transition hover:bg-primary-dark"
+            >
+              Explore Map
+            </button>
+            <button
+              onClick={() => navigate("/validation")}
+              className="rounded-lg border border-white/50 bg-white/10 px-7 py-3 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20"
+            >
+              View Accuracy Report
+            </button>
           </div>
         </div>
-      </div>
+      </section>
 
-        <br />
-          <br />
-
-      <div id="about" className="about-dagatscan" style={{ backgroundImage: "url('/tempoaboutBG.jpg')" }}>
-        <h1>About DagatScan Bataan</h1>
-        <p>
-          Our goal is to promote coastal awareness and support coastal monitoring in Bataan 
-          by providing a clear and accessible system for visualizing coastal erosion and 
-          changes over time.
+      <section id="features" className="mx-auto max-w-5xl px-6 py-16 md:py-20">
+        <h2 className="m-0 text-center text-3xl font-bold text-navy">Core Features</h2>
+        <p className="mx-auto mt-2 max-w-xl text-center text-muted">
+          From raw satellite imagery to defensible shoreline-change insight.
         </p>
-      </div>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className="rounded-card border border-line bg-white p-6 text-center shadow-card transition hover:-translate-y-1 hover:shadow-raised"
+            >
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-card">
+                <img src={f.icon} alt="" className="h-9 w-9" />
+              </div>
+              <h3 className="m-0 text-lg font-bold text-primary">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{f.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section
+        id="about"
+        className="relative overflow-hidden px-6 py-20"
+        style={{ backgroundImage: "url('/tempoaboutBG.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="absolute inset-0 bg-white/85" />
+        <div className="relative mx-auto max-w-3xl text-center">
+          <h2 className="m-0 text-3xl font-bold text-navy">About DagatScan Bataan</h2>
+          <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-muted">
+            Our goal is to promote coastal awareness and support coastal monitoring in
+            Bataan by providing a clear and accessible system for visualizing coastal
+            erosion and changes over time.
+          </p>
+        </div>
+      </section>
 
       <SiteFooter />
 
