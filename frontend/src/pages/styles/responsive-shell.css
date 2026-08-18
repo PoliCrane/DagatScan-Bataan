@@ -33,3 +33,33 @@
     font-size: 15px;
   }
 }
+
+@media (max-width: 768px) {
+  .user-table-container,
+  .dm-table-container,
+  .at-table-container {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .user-table-container table,
+  .dm-table-container table,
+  .at-table-container table {
+    min-width: 640px;
+  }
+
+  .modal-content,
+  .account-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px;
+  }
+}
