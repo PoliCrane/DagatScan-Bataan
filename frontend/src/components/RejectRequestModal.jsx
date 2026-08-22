@@ -1,6 +1,11 @@
 import { useState } from "react";
 import "../pages/styles/accountModals.css";
 import { showSuccess, showError } from "../utils/sweetAlertUtils";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { InputTextarea } from "primereact/inputtextarea";
+import { Message } from "primereact/message";
+import { openRequestLetter } from "../utils/requestLetter";
 
 import { API_BASE_URL } from "../config/api";
 // rejection modal with an optional reason field; backend already accepted this field, frontend just never sent it before
@@ -49,58 +54,62 @@ export default function RejectRequestModal({ isOpen, request, onClose, onSuccess
 
   if (!request) return null;
 
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <Button label="Cancel" outlined severity="secondary" onClick={handleClose} disabled={loading} />
+      <Button
+        label={loading ? "Rejecting..." : "Reject Request"}
+        icon="pi pi-times"
+        severity="danger"
+        onClick={handleReject}
+        loading={loading}
+      />
+    </div>
+  );
+
   return (
-    <>
-      {isOpen && <div className="modal-overlay" onClick={handleClose}></div>}
-      <div className={`account-modal ${isOpen ? "open" : ""}`}>
-        <div className="modal-header">
-          <h2>Reject Account Request</h2>
-          <button className="close-btn" onClick={handleClose}>✕</button>
-        </div>
+    <Dialog
+      header="Reject Account Request"
+      visible={isOpen}
+      onHide={handleClose}
+      footer={footer}
+      style={{ width: "min(32rem, 92vw)" }}
+      modal
+      draggable={false}
+      dismissableMask
+    >
+      {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
-        <div className="modal-content">
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="approve-request-summary">
-            <p><strong>{request.username}</strong> ({request.email}) — {request.municipality}</p>
-            <p>Contact: {request.contact_number} · Position: {request.position}</p>
-            <p>
-              <a
-                className="btn-view-letter-link"
-                href={request.request_letter_url || `${API_BASE_URL}/uploads/request-letters/${request.request_letter_filename}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                View Letter
-              </a>
-            </p>
-            {request.additional_remarks && (
-              <p>Remarks: {request.additional_remarks}</p>
-            )}
-          </div>
-
-          <p>Are you sure you want to reject this request? The applicant will not be able to log in.</p>
-
-          <div className="form-group">
-            <label htmlFor="reject-reason">Rejection Reason</label>
-            <textarea
-              id="reject-reason"
-              className="form-textarea"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Rejection reason (optional)"
-              disabled={loading}
-            />
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-cancel" onClick={handleClose}>Cancel</button>
-          <button className="btn btn-save" onClick={handleReject} disabled={loading}>
-            {loading ? "Rejecting..." : "Reject Request"}
-          </button>
-        </div>
+      <div className="approve-request-summary">
+        <p><strong>{request.username}</strong> ({request.email}) — {request.municipality}</p>
+        <p>Contact: {request.contact_number} · Position: {request.position}</p>
+        <p>
+          <Button
+            label="View Letter"
+            icon="pi pi-file-pdf"
+            link
+            className="btn-view-letter-link p-0"
+            onClick={() => openRequestLetter(request.id)}
+          />
+        </p>
+        {request.additional_remarks && <p>Remarks: {request.additional_remarks}</p>}
       </div>
-    </>
+
+      <p>Are you sure you want to reject this request? The applicant will not be able to log in.</p>
+
+      <div className="form-group">
+        <label htmlFor="reject-reason">Rejection Reason</label>
+        <InputTextarea
+          id="reject-reason"
+          className="form-textarea w-full"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Rejection reason (optional)"
+          disabled={loading}
+          rows={3}
+          autoResize
+        />
+      </div>
+    </Dialog>
   );
 }

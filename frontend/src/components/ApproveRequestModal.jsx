@@ -1,6 +1,11 @@
 import { useState } from "react";
 import "../pages/styles/accountModals.css";
 import { showSuccess, showError } from "../utils/sweetAlertUtils";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { Password } from "primereact/password";
+import { Message } from "primereact/message";
+import { openRequestLetter } from "../utils/requestLetter";
 
 import { API_BASE_URL } from "../config/api";
 // the admin sets the account's initial password here, at approval time — the request form no longer collects one from the applicant
@@ -74,105 +79,100 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
 
   if (!request) return null;
 
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <Button label="Cancel" outlined severity="secondary" onClick={handleClose} disabled={loading} />
+      <Button
+        label={loading ? "Approving..." : "Approve & Create Account"}
+        icon="pi pi-check"
+        onClick={handleApprove}
+        loading={loading}
+      />
+    </div>
+  );
+
+  const requirementRow = (met, text) => (
+    <div className={`requirement ${met ? "met" : ""}`}>
+      <span className="requirement-icon">{met ? "✓" : "○"}</span>
+      {text}
+    </div>
+  );
+
   return (
-    <>
-      {isOpen && <div className="modal-overlay" onClick={handleClose}></div>}
-      <div className={`account-modal ${isOpen ? "open" : ""}`}>
-        <div className="modal-header">
-          <h2>Approve Account Request</h2>
-          <button className="close-btn" onClick={handleClose}>✕</button>
-        </div>
+    <Dialog
+      header="Approve Account Request"
+      visible={isOpen}
+      onHide={handleClose}
+      footer={footer}
+      style={{ width: "min(34rem, 92vw)" }}
+      modal
+      draggable={false}
+      dismissableMask
+    >
+      {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
-        <div className="modal-content">
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="approve-request-summary">
-            <p><strong>{request.username}</strong> ({request.email}) — {request.municipality}</p>
-            <p>Contact: {request.contact_number} · Position: {request.position}</p>
-            <p>
-              <a
-                className="btn-view-letter-link"
-                href={request.request_letter_url || `${API_BASE_URL}/uploads/request-letters/${request.request_letter_filename}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                View Letter
-              </a>
-            </p>
-            {request.additional_remarks && (
-              <p>Remarks: {request.additional_remarks}</p>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="approve-password">Set Initial Password *</label>
-            <div className="password-input-wrapper">
-              <input
-                id="approve-password"
-                type="password"
-                className="form-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setExpandPassword(true)}
-                onBlur={() => setExpandPassword(false)}
-                placeholder="Set initial password"
-                disabled={loading}
-              />
-            </div>
-            {expandPassword && (
-              <div className="password-requirements">
-                <div className={`requirement ${passwordRequirements.minLength ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.minLength ? "✓" : "○"}</span>
-                  At least 8 characters
-                </div>
-                <div className={`requirement ${passwordRequirements.hasUppercase ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasUppercase ? "✓" : "○"}</span>
-                  One uppercase letter (A-Z)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasLowercase ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasLowercase ? "✓" : "○"}</span>
-                  One lowercase letter (a-z)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasNumber ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasNumber ? "✓" : "○"}</span>
-                  One number (0-9)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasSpecial ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasSpecial ? "✓" : "○"}</span>
-                  Special Characters (! @ # $ % ^ & * ( ) _ +)
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="approve-confirm-password">Confirm Password *</label>
-            <div className="password-input-wrapper">
-              <input
-                id="approve-confirm-password"
-                type="password"
-                className="form-input"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter password"
-                disabled={loading}
-              />
-            </div>
-            {confirmPassword && (
-              <div className={`password-match-hint ${password === confirmPassword ? "match" : "mismatch"}`}>
-                {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-cancel" onClick={handleClose}>Cancel</button>
-          <button className="btn btn-save" onClick={handleApprove} disabled={loading}>
-            {loading ? "Approving..." : "Approve & Create Account"}
-          </button>
-        </div>
+      <div className="approve-request-summary">
+        <p><strong>{request.username}</strong> ({request.email}) — {request.municipality}</p>
+        <p>Contact: {request.contact_number} · Position: {request.position}</p>
+        <p>
+          <Button
+            label="View Letter"
+            icon="pi pi-file-pdf"
+            link
+            className="btn-view-letter-link p-0"
+            onClick={() => openRequestLetter(request.id)}
+          />
+        </p>
+        {request.additional_remarks && <p>Remarks: {request.additional_remarks}</p>}
       </div>
-    </>
+
+      <div className="form-group">
+        <label htmlFor="approve-password">Set Initial Password *</label>
+        <Password
+          id="approve-password"
+          className="w-full"
+          inputClassName="form-input w-full"
+          inputStyle={{ width: "100%" }}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onFocus={() => setExpandPassword(true)}
+          onBlur={() => setExpandPassword(false)}
+          placeholder="Set initial password"
+          disabled={loading}
+          toggleMask
+          feedback={false}
+        />
+        {expandPassword && (
+          <div className="password-requirements">
+            {requirementRow(passwordRequirements.minLength, "At least 8 characters")}
+            {requirementRow(passwordRequirements.hasUppercase, "One uppercase letter (A-Z)")}
+            {requirementRow(passwordRequirements.hasLowercase, "One lowercase letter (a-z)")}
+            {requirementRow(passwordRequirements.hasNumber, "One number (0-9)")}
+            {requirementRow(passwordRequirements.hasSpecial, "Special Characters (! @ # $ % ^ & * ( ) _ +)")}
+          </div>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="approve-confirm-password">Confirm Password *</label>
+        <Password
+          id="approve-confirm-password"
+          className="w-full"
+          inputClassName="form-input w-full"
+          inputStyle={{ width: "100%" }}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Re-enter password"
+          disabled={loading}
+          toggleMask
+          feedback={false}
+        />
+        {confirmPassword && (
+          <div className={`password-match-hint ${password === confirmPassword ? "match" : "mismatch"}`}>
+            {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
+          </div>
+        )}
+      </div>
+    </Dialog>
   );
 }

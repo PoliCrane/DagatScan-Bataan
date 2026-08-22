@@ -1,0 +1,22 @@
+/* App-level adjustments to PrimeReact defaults.
+   Unlayered on purpose so these win over the themed component styles. */
+
+/* Password renders span.p-password > span.p-icon-field > input, so both wrappers
+   need to stretch or the input keeps its intrinsic size. */
+.p-password {
+  display: inline-flex;
+  width: 100%;
+}
+
+.p-password > .p-icon-field {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.p-password .p-password-input {
+  width: 100%;
+}
+
+.p-dialog .form-group {
+  margin-bottom: 1rem;
+}

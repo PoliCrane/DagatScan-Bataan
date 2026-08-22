@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { InputText } from "primereact/inputtext";
+import { Password } from "primereact/password";
+import { Button } from "primereact/button";
+import { Message } from "primereact/message";
 import { loginUser } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import { showLoading, showSuccess, showError } from "../utils/sweetAlertUtils";
@@ -10,7 +14,6 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const auth = useAuth();
 
@@ -56,46 +59,28 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
         <h2 className="form-header-title">DagatScan <span>Bataan</span></h2>
       </div>
 
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+      {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          className="form-input"
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <InputText
+          className="form-input w-full"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={loading}
         />
-        <div className="password-field">
-          <div className="password-input-wrapper">
-            <input
-              className="form-input"
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-              disabled={loading}
-              title={showPassword ? "Hide password" : "Show password"}
-            >
-              <img 
-                src={showPassword ? "/view.png" : "/hide.png"}
-                alt={showPassword ? "Hide password" : "Show password"}
-                className="toggle-icon"
-              />
-            </button>
-          </div>
-        </div>
-            
+        <Password
+          className="w-full"
+          inputClassName="form-input w-full"
+          inputStyle={{ width: "100%" }}
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={loading}
+          toggleMask
+          feedback={false}
+        />
+
         <p className="form-footer">
           <button 
             onClick={() => onSwitchToForgotPassword && onSwitchToForgotPassword()}
@@ -112,9 +97,13 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
             Forgot Password?
           </button>
         </p>
-        <button className="form-btn" type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Log in"}
-        </button>
+        <Button
+          type="submit"
+          className="form-btn w-full"
+          label={loading ? "Logging in..." : "Log in"}
+          icon="pi pi-sign-in"
+          loading={loading}
+        />
       </form>
       <p className="form-link">
         Don't have an account?{" "}

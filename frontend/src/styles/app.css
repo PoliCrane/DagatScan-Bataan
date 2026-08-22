@@ -1,4 +1,13 @@
-@layer theme, utilities;
+/* Cascade order for the whole app.
+   Later layers win, so Tailwind utilities can override PrimeReact component
+   styles (needed for layout tweaks like w-full on a Password wrapper).
+   The app's own legacy stylesheets stay unlayered and therefore still win —
+   they are being migrated away batch by batch. */
+@layer primereact, theme, utilities;
+
+@import "./dagatscan-theme.css" layer(primereact);
+@import "primereact/resources/primereact.min.css" layer(primereact);
+@import "primeicons/primeicons.css" layer(primereact);
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 
