@@ -191,7 +191,7 @@ function ErosionAnalysisCards({
     <div className={`analysis-cards-container ${isVisible ? "visible" : "hidden"}`} ref={cardsRef}>
       <div className="analysis-card erosion-card">
         <div className="card-header">
-          <img src="/erosion.png" alt="Analysis" className="card-icon" />
+          <i className="pi pi-chart-line card-icon" aria-hidden="true" />
           <h3 className="card-title">Erosion Analysis</h3>
           {loading && <span className="card-loading">Loading...</span>}
         </div>
@@ -209,7 +209,7 @@ function ErosionAnalysisCards({
             <>
               {selectedSegment && (
                 <div className="card-item">
-                  <img src="/coastal_length.png" alt="Coastline" className="card-icon" />
+                  <i className="pi pi-arrows-h card-icon" aria-hidden="true" />
                   <span className="card-label">Coastline Length</span>
                   <span className="card-value">
                     {erosionData.coastlineLength} <span className="card-unit">km</span>
@@ -219,7 +219,7 @@ function ErosionAnalysisCards({
 
               {erosionData.affectedAreaHa != null && (
                 <div className="card-item">
-                  <img src="/affected.png" alt="Affected Area" className="card-icon" />
+                  <i className="pi pi-map card-icon" aria-hidden="true" />
                   <span className="card-label">Est. Affected Area</span>
                   <span className="card-value">
                     {erosionData.affectedAreaHa} <span className="card-unit">ha</span>
@@ -228,13 +228,13 @@ function ErosionAnalysisCards({
               )}
 
               <div className="card-item">
-                <img src="/rate.png" alt="Erosion Rate" className="card-icon" />
+                <i className="pi pi-chart-line card-icon" aria-hidden="true" />
                 <span className="card-label">Erosion Rate</span>
                 <span className="card-value">{erosionData.erosionRate} <span className="card-unit">m/year</span></span>
               </div>
 
               <div className="card-item">
-                <img src="/risk.png" alt="Risk" className="card-icon" />
+                <i className="pi pi-exclamation-triangle card-icon" aria-hidden="true" />
                 <span className="card-label">Risk Level</span>
                 <span className={`card-value risk-${erosionData.riskLevel.toLowerCase().replace(/_/g, "-")}`}>
                   {SEGMENT_RISK_LEVELS[erosionData.riskLevel] || erosionData.riskLevel}

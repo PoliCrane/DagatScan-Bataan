@@ -36,10 +36,9 @@ export default function SatelliteToggle({ isSatellite, onToggle }) {
           onClick={onToggle}
           title={isSatellite ? "Switch to Street Map" : "Switch to Satellite"}
         >
-          <img 
-            src={isSatellite ? "/satellite.png" : "/street.png"} 
-            alt={isSatellite ? "Satellite" : "Street Map"}
-            className="toggle-icon"
+          <i
+            className={`${isSatellite ? "pi pi-globe" : "pi pi-map"} toggle-icon`}
+            aria-hidden="true"
           />
         </button>
         <span className="toggle-label">{isSatellite ? "Satellite" : "Street"}</span>

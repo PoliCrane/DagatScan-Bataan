@@ -98,7 +98,7 @@ function CoastalSummary({ yearlyData = [], selectedMunicipality = null, segments
     <div className={`coastal-summary-container ${isVisible ? "visible" : "hidden"}`} ref={summaryRef}>
       <div className="summary-card">
         <div className="card-header">
-          <img src="/rate.png" alt="Summary" className="card-icon" />
+          <i className="pi pi-chart-line card-icon" aria-hidden="true" />
           <h3 className="card-title">
             Coastal Summary
           </h3>
@@ -112,7 +112,7 @@ function CoastalSummary({ yearlyData = [], selectedMunicipality = null, segments
           </div>
 
           <div className="card-item">
-            <img src="/rate.png" alt="Rate" className="card-icon" />
+            <i className="pi pi-chart-line card-icon" aria-hidden="true" />
             <span className="card-label">Erosion Rate</span>
             <span className="card-value">
               {overallErosionRate != null ? (

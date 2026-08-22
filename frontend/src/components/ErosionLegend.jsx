@@ -69,7 +69,7 @@ function ErosionLegend() {
   return (
     <div className={`erosion-legend ${isVisible ? "visible" : "hidden"}`} ref={legendRef}>
       <div className="legend-header">
-        <img src="/legend.png" alt="Legend" className="legend-icon" />
+        <i className="pi pi-list legend-icon" aria-hidden="true" />
         <h3 className="legend-title">Legend</h3>
       </div>
 

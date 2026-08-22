@@ -177,15 +177,16 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
             type="button"
             onClick={onPlayTimeline}
             disabled={!canAnalyze}
-            className="mb-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-card transition enabled:hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+            className="ds-timeline-btn"
           >
+            <i className={isPlayingTimeline ? "pi pi-stop-circle" : "pi pi-play-circle"} aria-hidden="true" />
             {isPlayingTimeline ? "Stop Timeline" : "Play Shoreline Timeline"}
           </button>
         )}
         {/* Compare Shoreline Card */}
         <div className="tools-card compare-card">
           <div className="card-header">
-            <img src="/compare.png" alt="Compare" className="card-icon" />
+            <i className="pi pi-sync card-icon" aria-hidden="true" />
             <h3 className="card-title">Compare Shoreline</h3>
           </div>
 
@@ -237,7 +238,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
         {/* Prediction Card */}
         <div className="tools-card prediction-tools-card">
           <div className="card-header">
-            <img src="/simulate.png" alt="Prediction" className="card-icon" />
+            <i className="pi pi-bolt card-icon" aria-hidden="true" />
             <h3 className="card-title">Prediction</h3>
           </div>
 

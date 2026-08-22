@@ -13,7 +13,7 @@ function RiskLevelLegendCard() {
   return (
     <div className="info-box risk-legend-card">
       <div className="info-header-with-icon">
-        <img src="/risk.png" alt="risk-icon" className="info-icon" />
+        <i className="pi pi-exclamation-triangle info-icon" aria-hidden="true" />
         <h3>Erosion Risk Level</h3>
       </div>
       <div className="risk-legend-list">

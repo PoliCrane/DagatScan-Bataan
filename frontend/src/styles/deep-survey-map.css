@@ -1,0 +1,464 @@
+.map-legend.map-legend,
+.erosion-legend.erosion-legend,
+.coastal-summary-container .summary-card,
+.analysis-cards-container .analysis-card,
+.analysis-tools-container .tools-card,
+.prediction-result-card.prediction-result-card,
+.risk-legend-card.risk-legend-card {
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(10, 30, 56, 0.9) 0%, rgba(5, 17, 33, 0.93) 100%);
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow:
+    0 18px 44px -18px rgb(2 10 22 / 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  color: #d3e2ef;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  overflow: hidden;
+}
+
+.analysis-tools-container {
+  width: 252px;
+}
+
+.analysis-cards-container {
+  width: 252px;
+}
+
+.erosion-legend.erosion-legend {
+  width: 340px;
+}
+
+.erosion-legend.erosion-legend .legend-columns {
+  gap: 22px;
+}
+
+.erosion-legend.erosion-legend .legend-label {
+  white-space: nowrap;
+}
+
+/* Header reads as an instrument label strip, not a coloured bar */
+.map-legend.map-legend .legend-header,
+.erosion-legend.erosion-legend .legend-header,
+.analysis-cards-container .analysis-card .card-header,
+.analysis-tools-container .tools-card .card-header,
+.coastal-summary-container .summary-card .card-header,
+.prediction-result-card.prediction-result-card .card-header,
+.risk-legend-card.risk-legend-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 16px 11px;
+  background: rgba(56, 189, 248, 0.07);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+}
+
+.map-legend.map-legend .legend-title,
+.erosion-legend.erosion-legend .legend-title,
+.analysis-cards-container .analysis-card .card-title,
+.analysis-tools-container .tools-card .card-title,
+.coastal-summary-container .summary-card .card-title,
+.prediction-result-card.prediction-result-card .card-title,
+.risk-legend-card.risk-legend-card .card-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #eaf4fd;
+}
+
+.map-legend.map-legend .legend-icon,
+.erosion-legend.erosion-legend .legend-icon,
+.analysis-cards-container .analysis-card .card-header .card-icon,
+.analysis-tools-container .tools-card .card-header .card-icon,
+.coastal-summary-container .summary-card .card-header .card-icon,
+.prediction-result-card.prediction-result-card .card-header .card-icon,
+.risk-legend-card.risk-legend-card .card-header .card-icon {
+  width: auto;
+  height: auto;
+  font-size: 14px;
+  color: var(--color-cyan, #38bdf8);
+  filter: none;
+}
+
+img.card-icon,
+img.legend-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.analysis-cards-container .analysis-card .card-loading {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-cyan, #38bdf8);
+}
+
+/* Bodies */
+.map-legend.map-legend .legend-content,
+.erosion-legend.erosion-legend .legend-content,
+.analysis-cards-container .analysis-card .card-content,
+.analysis-tools-container .tools-card .card-content,
+.coastal-summary-container .summary-card .card-content,
+.prediction-result-card.prediction-result-card .card-content,
+.risk-legend-card.risk-legend-card .card-content {
+  margin: 0;
+  padding: 14px 16px 16px;
+  background: transparent;
+  border-radius: 0;
+  gap: 12px;
+}
+
+.map-legend.map-legend .legend-subtitle,
+.erosion-legend.erosion-legend .legend-subtitle {
+  margin: 0 0 11px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(56, 189, 248, 0.8);
+}
+
+/* Legend entries */
+.map-legend.map-legend .risk-label,
+.erosion-legend.erosion-legend .legend-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #c2d6e6;
+}
+
+.map-legend.map-legend .risk-circle {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 9px rgba(0, 0, 0, 0.5);
+}
+
+.erosion-legend.erosion-legend .legend-line {
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.45);
+}
+
+.map-legend.map-legend .risk-level-item:hover .risk-label,
+.erosion-legend.erosion-legend .legend-item:hover .legend-label {
+  color: #ffffff;
+}
+
+/* Readout rows */
+.analysis-cards-container .analysis-card .card-item,
+.coastal-summary-container .summary-card .card-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.analysis-cards-container .analysis-card .card-item:last-child,
+.coastal-summary-container .summary-card .card-item:last-child {
+  border-bottom: 0;
+}
+
+.analysis-cards-container .analysis-card .card-content i.card-icon,
+.coastal-summary-container .summary-card .card-content i.card-icon {
+  width: auto;
+  height: auto;
+  flex: 0 0 16px;
+  font-size: 13px;
+  color: rgba(56, 189, 248, 0.75);
+  filter: none;
+}
+
+.analysis-cards-container .analysis-card .card-label,
+.coastal-summary-container .summary-card .card-label {
+  flex: 1;
+  font-size: 11.5px;
+  color: #90a9c0;
+}
+
+.analysis-cards-container .analysis-card .card-value,
+.coastal-summary-container .summary-card .card-value {
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-size: 1.15rem;
+  line-height: 1;
+  font-weight: 400;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.analysis-cards-container .analysis-card .card-unit,
+.coastal-summary-container .summary-card .card-unit {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(56, 189, 248, 0.85);
+}
+
+.analysis-cards-container .card-value.risk-high,
+.analysis-cards-container .card-value.risk-very-high,
+.analysis-cards-container .card-value.risk-severe {
+  color: #fca5a5;
+}
+
+.analysis-cards-container .card-value.risk-moderate,
+.analysis-cards-container .card-value.risk-medium {
+  color: #fcd34d;
+}
+
+.analysis-cards-container .card-value.risk-low,
+.analysis-cards-container .card-value.risk-stable {
+  color: #86efac;
+}
+
+/* Empty / placeholder copy */
+.analysis-cards-container .analysis-card .card-content > div:not(.card-item),
+.analysis-cards-container .no-data-message,
+.analysis-cards-container .select-message {
+  color: #8ba3ba;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Form controls sized for real use, not 8px labels */
+.analysis-tools-container .form-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(56, 189, 248, 0.85);
+}
+
+.analysis-tools-container .form-select,
+.analysis-tools-container .form-value {
+  min-height: 38px;
+  padding: 0 11px;
+  font-size: 13px;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  appearance: none;
+}
+
+.analysis-tools-container .form-select {
+  background-image: linear-gradient(45deg, transparent 50%, #7fc9ee 50%),
+    linear-gradient(135deg, #7fc9ee 50%, transparent 50%);
+  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+}
+
+.analysis-tools-container .form-select option {
+  background: #0a1e38;
+  color: #ffffff;
+}
+
+.analysis-tools-container .form-select:hover:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.55);
+  background-color: rgba(56, 189, 248, 0.1);
+}
+
+.analysis-tools-container .form-select:focus-visible,
+.analysis-tools-container .action-btn:focus-visible {
+  outline: none;
+  border-color: var(--color-cyan, #38bdf8);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}
+
+.analysis-tools-container .form-select:disabled,
+.analysis-tools-container .form-value {
+  color: #8ba3ba;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.analysis-tools-container .action-btn {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  border-radius: 9px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.analysis-tools-container .analyze-btn:not(:disabled),
+.analysis-tools-container .simulate-btn:not(:disabled) {
+  background: var(--color-cyan, #38bdf8);
+  color: #04101f;
+  box-shadow: 0 10px 26px -12px rgba(56, 189, 248, 0.95);
+}
+
+.analysis-tools-container .analyze-btn:not(:disabled):hover,
+.analysis-tools-container .simulate-btn:not(:disabled):hover {
+  background: #6acdfb;
+}
+
+.analysis-tools-container .analyze-btn:disabled,
+.analysis-tools-container .simulate-btn:disabled {
+  background: rgba(255, 255, 255, 0.07);
+  color: #6f869c;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.analysis-tools-container .end-comparison-btn,
+.analysis-tools-container .end-simulation-btn {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+}
+
+.analysis-tools-container .end-comparison-btn:hover,
+.analysis-tools-container .end-simulation-btn:hover {
+  background: rgba(248, 113, 113, 0.24);
+  color: #ffffff;
+}
+
+/* Timeline control shares the panel material */
+.ds-timeline-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 42px;
+  margin-bottom: 10px;
+  padding: 0 16px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 11px;
+  background: linear-gradient(180deg, rgba(10, 30, 56, 0.92), rgba(5, 17, 33, 0.94));
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 14px 34px -16px rgb(2 10 22 / 0.85);
+  color: #eaf4fd;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.ds-timeline-btn .pi {
+  font-size: 15px;
+  color: var(--color-cyan, #38bdf8);
+}
+
+.ds-timeline-btn:enabled:hover {
+  border-color: rgba(56, 189, 248, 0.65);
+  background: linear-gradient(180deg, rgba(18, 58, 99, 0.92), rgba(8, 25, 46, 0.94));
+  color: #ffffff;
+}
+
+.ds-timeline-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}
+
+.ds-timeline-btn:disabled {
+  cursor: not-allowed;
+  color: #6f869c;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.ds-timeline-btn:disabled .pi {
+  color: #6f869c;
+}
+
+/* Basemap toggle matches the instrument chrome */
+.satellite-toggle .toggle-content {
+  gap: 8px;
+}
+
+.satellite-toggle .toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(10, 30, 56, 0.92), rgba(5, 17, 33, 0.94));
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 14px 34px -16px rgb(2 10 22 / 0.85);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.satellite-toggle .toggle-button:hover {
+  border-color: rgba(56, 189, 248, 0.65);
+  background: linear-gradient(180deg, rgba(18, 58, 99, 0.92), rgba(8, 25, 46, 0.94));
+}
+
+.satellite-toggle .toggle-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}
+
+.satellite-toggle i.toggle-icon {
+  width: auto;
+  height: auto;
+  font-size: 18px;
+  color: var(--color-cyan, #38bdf8);
+  filter: none;
+}
+
+.satellite-toggle .toggle-label {
+  padding: 0 14px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(10, 30, 56, 0.9), rgba(5, 17, 33, 0.93));
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 14px 34px -16px rgb(2 10 22 / 0.85);
+  color: #eaf4fd;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-tools-container .action-btn,
+  .analysis-tools-container .form-select,
+  .ds-timeline-btn,
+  .satellite-toggle .toggle-button {
+    transition: none;
+  }
+
+  .map-legend.map-legend .risk-level-item:hover,
+  .erosion-legend.erosion-legend .legend-item:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .analysis-tools-container,
+  .analysis-cards-container {
+    width: 244px;
+  }
+
+  .analysis-tools-container .form-select,
+  .analysis-tools-container .form-value {
+    font-size: 13px;
+    min-height: 38px;
+  }
+
+  .analysis-tools-container .action-btn {
+    font-size: 11px;
+    min-height: 40px;
+  }
+}
