@@ -236,3 +236,22 @@ body {
     transition: none;
   }
 }
+
+/* Icon-font rules set width/height to auto so the glyph sizes itself. A raster
+   icon that lands on the same class would then render at its natural pixel
+   size, so every <img> keeps an explicit icon box. */
+img.card-icon,
+img.legend-icon,
+img.stat-icon,
+img.info-icon,
+img.toggle-icon,
+img.dm-search-icon,
+img.at-search-icon,
+img.dm-select-icon,
+img.dm-reset-icon,
+img.reports-search-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  object-fit: contain;
+}

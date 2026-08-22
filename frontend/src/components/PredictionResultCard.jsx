@@ -44,7 +44,7 @@ function PredictionResultCard({
   return (
     <div className="prediction-result-card" ref={cardRef}>
       <div className="card-header">
-        <img src="/prediction.png" alt="Prediction" className="card-icon" />
+        <i className="pi pi-sitemap card-icon" aria-hidden="true" />
         <h3 className="card-title">Prediction Result</h3>
       </div>
 
@@ -93,12 +93,12 @@ function PredictionResultCard({
         )}
 
         {predictionData.validationAccuracyPct != null && (
-          <a href="/validation" className="card-unit" style={{ color: "#0077B6", textDecoration: "underline" }}>
+          <a href="/validation" className="prediction-validation-link">
             View full validation report
           </a>
         )}
 
-        <p className="card-unit" style={{ marginTop: 8, color: "#777" }}>
+        <p className="prediction-caveat">
           Projection assumes the current trend continues, refit as each new year of imagery
           arrives. Storm events, sea-level acceleration, and coastal construction are not modeled.
         </p>
