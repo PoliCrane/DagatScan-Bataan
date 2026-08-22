@@ -30,7 +30,7 @@
    descendant selector rather than a direct sibling one. */
 .map-sidebar:hover ~ .layout-main .analysis-cards-container,
 .admin-sidebar:hover ~ .layout-main .analysis-cards-container {
-  left: calc(224px + 15px);
+  left: calc(264px + 15px);
 }
 
 @keyframes slideInLeft {
@@ -207,7 +207,7 @@
 
   .map-sidebar:hover ~ .layout-main .analysis-cards-container,
   .admin-sidebar:hover ~ .layout-main .analysis-cards-container {
-    left: calc(224px + 10px);
+    left: calc(264px + 10px);
   }
 
   .erosion-card .card-header {

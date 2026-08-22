@@ -18,38 +18,6 @@ function ErosionLegend() {
   ];
 
   useEffect(() => {
-    let sidebar = null;
-    const handleMouseEnter = () => {
-      if (legendRef.current) legendRef.current.style.left = "calc(224px + 15px)";
-    };
-    const handleMouseLeave = () => {
-      if (legendRef.current) legendRef.current.style.left = "calc(65px + 15px)";
-    };
-
-    const findAndObserveSidebar = () => {
-      const mapSidebar = document.querySelector(".map-sidebar");
-      const adminSidebar = document.querySelector(".admin-sidebar");
-      sidebar = mapSidebar || adminSidebar;
-
-      if (sidebar) {
-        sidebar.addEventListener("mouseenter", handleMouseEnter);
-        sidebar.addEventListener("mouseleave", handleMouseLeave);
-      }
-    };
-
-    // wait for the DOM to render before querying
-    const timeoutId = setTimeout(findAndObserveSidebar, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      if (sidebar) {
-        sidebar.removeEventListener("mouseenter", handleMouseEnter);
-        sidebar.removeEventListener("mouseleave", handleMouseLeave);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 

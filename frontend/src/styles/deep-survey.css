@@ -1,6 +1,13 @@
 /* "Deep Survey" shell overrides.
    Unlayered so these win over the legacy page stylesheets they replace. */
 
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 body {
   font-family: var(--font-sans, "Archivo", sans-serif);
   background: var(--color-surface, #f4f8fb);

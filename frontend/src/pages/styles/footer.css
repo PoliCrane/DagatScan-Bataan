@@ -4,7 +4,7 @@ footer {
   color: #060b37;
   margin-top: 60px;
   padding: 0;
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
   border-top: 1px solid #e0e0e0;
   width: 100%;
   box-sizing: border-box;
@@ -151,7 +151,7 @@ footer {
   gap: 8px;
   cursor: pointer;
   padding: 0;
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
   font-weight: 400;
 }
 

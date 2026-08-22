@@ -72,7 +72,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
   border: none;
   outline: none;
   box-shadow: none;
@@ -189,7 +189,7 @@
   font-weight: 500;
   padding: 0 3px;
   cursor: pointer;
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
 }
 
 .sidebar-footer-links button:not(:last-child)::after {
@@ -214,7 +214,7 @@
   font-weight: 500;
   padding: 0 3px;
   cursor: pointer;
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
 }
 
 .footer-link-button:not(:last-child)::after {

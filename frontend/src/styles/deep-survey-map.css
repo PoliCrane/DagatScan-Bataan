@@ -30,6 +30,38 @@
   width: 340px;
 }
 
+.map-legend.map-legend {
+  width: 210px;
+}
+
+.coastal-summary-container .summary-card {
+  width: 100%;
+}
+
+.coastal-summary-container.coastal-summary-container {
+  width: 272px;
+}
+
+@media (max-width: 1366px) and (min-width: 769px) {
+  .coastal-summary-container.coastal-summary-container {
+    width: 272px;
+  }
+}
+
+.map-legend.map-legend .legend-subtitle,
+.coastal-summary-container .summary-card .card-label {
+  white-space: nowrap;
+}
+
+.coastal-summary-container .summary-card .card-item {
+  gap: 8px;
+}
+
+.coastal-summary-container .summary-card .card-value {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .erosion-legend.erosion-legend .legend-columns {
   gap: 22px;
 }
@@ -83,6 +115,9 @@
   filter: none;
 }
 
+.analysis-tools-container img.card-icon,
+.analysis-cards-container img.card-icon,
+.coastal-summary-container img.card-icon,
 img.card-icon,
 img.legend-icon {
   width: 15px;
@@ -461,4 +496,121 @@ img.legend-icon {
     font-size: 11px;
     min-height: 40px;
   }
+}
+
+/* Left-hand panels clear the rail when it expands, instead of hiding under it */
+.map-legend,
+.erosion-legend,
+.analysis-cards-container,
+.coastal-summary-container,
+.prediction-result-card {
+  transition: left 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.layout-container:has(.app-sidebar:hover) .map-legend,
+.layout-container:has(.app-sidebar:focus-within) .map-legend,
+.layout-container:has(.app-sidebar.pinned) .map-legend,
+.layout-container:has(.app-sidebar:hover) .erosion-legend,
+.layout-container:has(.app-sidebar:focus-within) .erosion-legend,
+.layout-container:has(.app-sidebar.pinned) .erosion-legend,
+.layout-container:has(.app-sidebar:hover) .analysis-cards-container,
+.layout-container:has(.app-sidebar:focus-within) .analysis-cards-container,
+.layout-container:has(.app-sidebar.pinned) .analysis-cards-container,
+.layout-container:has(.app-sidebar:hover) .coastal-summary-container,
+.layout-container:has(.app-sidebar:focus-within) .coastal-summary-container,
+.layout-container:has(.app-sidebar.pinned) .coastal-summary-container,
+.layout-container:has(.app-sidebar:hover) .prediction-result-card,
+.layout-container:has(.app-sidebar:focus-within) .prediction-result-card,
+.layout-container:has(.app-sidebar.pinned) .prediction-result-card {
+  left: calc(264px + 15px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-legend,
+  .erosion-legend,
+  .analysis-cards-container,
+  .coastal-summary-container,
+  .prediction-result-card {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-container:has(.app-sidebar:hover) .map-legend,
+  .layout-container:has(.app-sidebar:focus-within) .map-legend,
+  .layout-container:has(.app-sidebar.pinned) .map-legend,
+  .layout-container:has(.app-sidebar:hover) .erosion-legend,
+  .layout-container:has(.app-sidebar:focus-within) .erosion-legend,
+  .layout-container:has(.app-sidebar.pinned) .erosion-legend,
+  .layout-container:has(.app-sidebar:hover) .analysis-cards-container,
+  .layout-container:has(.app-sidebar:focus-within) .analysis-cards-container,
+  .layout-container:has(.app-sidebar.pinned) .analysis-cards-container,
+  .layout-container:has(.app-sidebar:hover) .coastal-summary-container,
+  .layout-container:has(.app-sidebar:focus-within) .coastal-summary-container,
+  .layout-container:has(.app-sidebar.pinned) .coastal-summary-container,
+  .layout-container:has(.app-sidebar:hover) .prediction-result-card,
+  .layout-container:has(.app-sidebar:focus-within) .prediction-result-card,
+  .layout-container:has(.app-sidebar.pinned) .prediction-result-card {
+    left: calc(76px + 10px);
+  }
+}
+
+/* Event context readout sits on the same dark panel as the tools */
+.ds-event-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 14px 16px 16px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #90a9c0;
+}
+
+.ds-event-body > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ds-event-body > div:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.ds-event-value {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.ds-event-body ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.ds-event-body li {
+  margin-top: 3px;
+  color: #c2d6e6;
+}
+
+.ds-event-body li::marker {
+  color: var(--color-cyan, #38bdf8);
+}
+
+.ds-event-sources {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #6f869c;
+}
+
+/* Leaflet ships its own Helvetica/Arial stack; keep the map chrome on one face */
+.leaflet-container,
+.leaflet-container .leaflet-control,
+.leaflet-container .leaflet-control-attribution,
+.leaflet-popup-content,
+.leaflet-tooltip {
+  font-family: var(--font-sans, "Archivo", sans-serif);
 }

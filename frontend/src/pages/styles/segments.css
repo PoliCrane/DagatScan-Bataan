@@ -16,7 +16,7 @@
 
 .segment-marker-popup {
   min-width: 200px;
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
 }
 
 .segment-marker-popup .leaflet-popup-content {

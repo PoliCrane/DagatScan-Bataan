@@ -41,7 +41,7 @@
   --color-risk-very-low: #2980b9;
 
   /* Archivo: technical grotesque for UI. Instrument Serif: display accents. */
-  --font-sans: "Archivo", "Mulish", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Instrument Serif", Georgia, serif;
 
   --radius-card: 0.875rem;

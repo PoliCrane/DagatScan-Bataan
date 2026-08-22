@@ -19,7 +19,7 @@
    descendant selector rather than a direct sibling one. */
 .map-sidebar:hover ~ .layout-main .prediction-result-card,
 .admin-sidebar:hover ~ .layout-main .prediction-result-card {
-  left: calc(224px + 15px);
+  left: calc(264px + 15px);
 }
 
 @keyframes slideInLeft {
@@ -129,7 +129,7 @@
 
   .map-sidebar:hover ~ .layout-main .prediction-result-card,
   .admin-sidebar:hover ~ .layout-main .prediction-result-card {
-    left: calc(224px + 10px);
+    left: calc(264px + 10px);
   }
 
   .prediction-result-card .card-header {
@@ -164,7 +164,7 @@
 
   .map-sidebar:hover ~ .layout-main .prediction-result-card,
   .admin-sidebar:hover ~ .layout-main .prediction-result-card {
-    left: calc(224px + 5px);
+    left: calc(264px + 5px);
   }
 
   .prediction-result-card .card-content {

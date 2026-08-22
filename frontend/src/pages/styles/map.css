@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
 }
 
 .satellite-toggle-btn:hover {

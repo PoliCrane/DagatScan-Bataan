@@ -27,20 +27,20 @@ function EventContextCard({ year }) {
   return (
     <div className="tools-card">
       <div className="card-header">
-        <img src="/warning.png" alt="" className="card-icon" />
+        <i className="pi pi-exclamation-triangle card-icon" aria-hidden="true" />
         <h3 className="card-title">What Happened in {year}</h3>
       </div>
-      <div className="flex flex-col gap-2 p-3 text-[13px] leading-snug text-muted">
+      <div className="ds-event-body">
         {context.enso && (
           <div className="flex items-center justify-between gap-2">
             <span>ENSO state</span>
-            <span className="font-semibold text-ink">{context.enso.state}</span>
+            <span className="ds-event-value">{context.enso.state}</span>
           </div>
         )}
         {context.waves && (
           <div className="flex items-center justify-between gap-2">
             <span>Max wave height</span>
-            <span className="font-semibold text-ink">{context.waves.maxWaveM} m</span>
+            <span className="ds-event-value">{context.waves.maxWaveM} m</span>
           </div>
         )}
         {(context.typhoons || []).length > 0 && (
@@ -48,7 +48,7 @@ function EventContextCard({ year }) {
             <span className="mb-1 block">Typhoons near Bataan:</span>
             <ul className="m-0 list-disc pl-5">
               {context.typhoons.map((t) => (
-                <li key={t.name + t.month} className="text-ink">
+                <li key={t.name + t.month} className="ds-event-value">
                   <span className="font-semibold">{t.name}</span>
                   {t.month ? ` (${MONTHS[t.month]})` : ""}
                 </li>
@@ -56,7 +56,7 @@ function EventContextCard({ year }) {
             </ul>
           </div>
         )}
-        <p className="m-0 mt-1 text-[11px] text-faint">
+        <p className="ds-event-sources">
           Sources: NOAA IBTrACS, CPC ONI, Open-Meteo Marine
         </p>
       </div>

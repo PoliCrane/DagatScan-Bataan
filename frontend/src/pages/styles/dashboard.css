@@ -4,7 +4,7 @@
   margin: 0 auto;
   padding: 30px 40px;
   min-height: calc(100vh - 120px);
-  font-family: 'Muli', sans-serif;
+  font-family: var(--font-sans, "Archivo", sans-serif);
   box-sizing: border-box;
 }
 
