@@ -1,5 +1,8 @@
 import AdminLayout from "../../components/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Tag } from "primereact/tag";
 import "../styles/audit-trail.css";
 import useGuidedTour from "../../hooks/useGuidedTour";
 import TourInfoButton from "../../components/tour/TourInfoButton";
@@ -241,7 +244,6 @@ export default function AuditTrail() {
     fetchLogs();
   }, [fetchLogs]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const handleFilterChange = (setter, value) => {
     setter(value);
@@ -351,91 +353,68 @@ export default function AuditTrail() {
           <p className="user-management-loading">Loading audit logs...</p>
         ) : (
           <div className="at-table-container">
-            <table className="at-table">
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Actor</th>
-                  <th>Action</th>
-                  <th>Target</th>
-                  <th>Details</th>
-                  <th>Severity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.length === 0 ? (
-                  <tr className="at-empty-row">
-                    <td colSpan={6}>
-                      {total === 0 && !category && !severity && !search
-                        ? "No admin actions have been logged yet."
-                        : "No log entries match the selected filters."}
-                    </td>
-                  </tr>
-                ) : (
-                  logs.map((log) => {
-                    const ts = formatTimestamp(log.created_at);
-                    const { target, detail } = describeLog(log);
-                    return (
-                      <tr key={log.id} className="at-row">
-                        <td>
-                          <div>{ts.date}</div>
-                          <div className="at-time">{ts.time}</div>
-                        </td>
-                        <td>
-                          <div className="at-actor">{log.actor_username}</div>
-                          <div className="at-actor-sub">{formatRole(log.actor_role)}</div>
-                        </td>
-                        <td>{formatAction(log.action)}</td>
-                        <td>{target}</td>
-                        <td className="at-details">{detail}</td>
-                        <td>
-                          <span className={`at-severity-badge ${log.severity}`}>
-                            {log.severity === "critical" ? "Critical" : "Normal"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
+            <DataTable
+              value={logs}
+              dataKey="id"
+              className="at-table"
+              stripedRows
+              lazy
+              paginator
+              rows={PAGE_SIZE}
+              totalRecords={total}
+              first={(page - 1) * PAGE_SIZE}
+              onPage={(e) => setPage(e.page + 1)}
+              paginatorClassName="at-pagination"
+              currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+              paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+              emptyMessage={
+                total === 0 && !category && !severity && !search
+                  ? "No admin actions have been logged yet."
+                  : "No log entries match the selected filters."
+              }
+              rowClassName={() => "at-row"}
+              size="small"
+            >
+              <Column
+                header="Timestamp"
+                body={(log) => {
+                  const ts = formatTimestamp(log.created_at);
+                  return (
+                    <>
+                      <div>{ts.date}</div>
+                      <div className="at-time">{ts.time}</div>
+                    </>
+                  );
+                }}
+              />
+              <Column
+                header="Actor"
+                body={(log) => (
+                  <>
+                    <div className="at-actor">{log.actor_username}</div>
+                    <div className="at-actor-sub">{formatRole(log.actor_role)}</div>
+                  </>
                 )}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            {total > 0 && (
-              <div className="at-pagination">
-                <span className="at-pagination-info">
-                  Showing {(page - 1) * PAGE_SIZE + 1} to{" "}
-                  {Math.min(page * PAGE_SIZE, total)} of {total} entries
-                </span>
-                <div className="at-pagination-controls">
-                  <button
-                    className="at-page-btn"
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    aria-label="Previous page"
-                  >
-                    ‹
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                    <button
-                      key={n}
-                      className={`at-page-btn ${n === page ? "active" : ""}`}
-                      onClick={() => setPage(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                  <button
-                    className="at-page-btn"
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === totalPages}
-                    aria-label="Next page"
-                  >
-                    ›
-                  </button>
-                </div>
-              </div>
-            )}
+              />
+              <Column header="Action" body={(log) => formatAction(log.action)} />
+              <Column header="Target" body={(log) => describeLog(log).target} />
+              <Column
+                header="Details"
+                className="at-details"
+                body={(log) => describeLog(log).detail}
+              />
+              <Column
+                header="Severity"
+                style={{ width: "7rem" }}
+                body={(log) => (
+                  <Tag
+                    className={`at-severity-badge ${log.severity}`}
+                    severity={log.severity === "critical" ? "danger" : "info"}
+                    value={log.severity === "critical" ? "Critical" : "Normal"}
+                  />
+                )}
+              />
+            </DataTable>
           </div>
         )}
       </div>

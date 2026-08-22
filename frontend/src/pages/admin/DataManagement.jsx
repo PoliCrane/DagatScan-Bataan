@@ -1,6 +1,10 @@
 import AdminLayout from "../../components/AdminLayout";
 import StatusToggle from "../../components/StatusToggle";
 import { useState, useEffect, useMemo } from "react";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Button } from "primereact/button";
+import { Tag } from "primereact/tag";
 import "../index-organized.css";
 import "../styles/data-management.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
@@ -131,7 +135,6 @@ export default function DataManagement() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
@@ -408,195 +411,188 @@ export default function DataManagement() {
           <p className="user-management-loading">Loading datasets...</p>
         ) : (
           <div className="dm-table-container">
-            <table className="dm-table">
-              <thead>
-                <tr>
-                  <th>Satellite Image</th>
-                  <th>Municipality</th>
-                  <th>Year</th>
-                  <th>Uploaded By</th>
-                  <th>Upload Date</th>
-                  <th>Status</th>
-                  <th>Confidence</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageRows.length === 0 ? (
-                  <tr className="dm-empty-row">
-                    <td colSpan={8}>
-                      {datasets.length === 0
-                        ? "No datasets have been uploaded yet."
-                        : "No datasets match the selected filters."}
-                    </td>
-                  </tr>
-                ) : (
-                  pageRows.map((d) => {
-                    const uploaded = formatUploadDate(d.created_at);
-                    const thumb = resolveThumbUrl(d.thumbnail_url);
-                    return (
-                      <tr key={d.id} className={`dm-row ${!d.active ? "inactive" : ""}`}>
-                        <td>
-                          {thumb && !brokenThumbs.has(thumb) ? (
-                            <img
-                              src={thumb}
-                              alt=""
-                              className="dm-thumb"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
-                                setBrokenThumbs((prev) => new Set(prev).add(thumb));
-                              }}
-                            />
-                          ) : null}
-                          <span
-                            className="dm-thumb-fallback"
-                            style={{ display: thumb && !brokenThumbs.has(thumb) ? "none" : "flex" }}
-                          >
-                            No preview
-                          </span>
-                        </td>
-                        <td>{d.municipality}</td>
-                        <td>{d.year}</td>
-                        <td>
-                          <div className="dm-uploader">{d.uploaded_by || "—"}</div>
-                          <div className="dm-uploader-sub">{formatRole(d.uploaded_by_role)}</div>
-                        </td>
-                        <td>
-                          <div>{uploaded.date}</div>
-                          <div className="dm-time">{uploaded.time}</div>
-                        </td>
-                        <td>
-                          <span className={`dm-status-badge ${d.active ? "active" : "inactive"}`}>
-                            {d.active ? "Active" : "Inactive"}
-                          </span>
-                        </td>
-                        <td>
-                          {d.confidence != null ? (
-                            <span
-                              className={`dm-confidence-badge ${parseFloat(d.confidence) < 0.5 ? "low" : ""}`}
-                              title="Area-level LRR regression confidence — same value for every year of this area"
-                            >
-                              {Math.round(parseFloat(d.confidence) * 100)}%
-                            </span>
-                          ) : (
-                            <span className="dm-confidence-badge">—</span>
-                          )}
-                        </td>
-                        <td>
-                          <div className="action-icons">
-                            <button
-                              type="button"
-                              className="dm-view-btn"
-                              onClick={() => window.open(thumb, "_blank", "noopener,noreferrer")}
-                              disabled={!thumb || brokenThumbs.has(thumb)}
-                              title="View NDWI preview"
-                            >
-                              <img src="/view.png" alt="" className="dm-view-icon" />
-                              View
-                            </button>
-                            <button
-                              type="button"
-                              className="dm-satellite-btn"
-                              onClick={() => handleViewSatelliteImagery(d)}
-                              disabled={!d.has_bounds || loadingImageryId !== null}
-                              title={
-                                d.has_bounds
-                                  ? "Fetch a true-color satellite photo for this area/year (first view queries Earth Engine live, may take a few seconds)"
-                                  : "No location data available for this dataset — satellite imagery can't be fetched"
-                              }
-                            >
-                              {loadingImageryId === d.id ? "Loading..." : "Satellite Imagery"}
-                            </button>
-                            {d.upload_type === "Satellite_Image" && (
-                              <button
-                                type="button"
-                                className="dm-reupload-btn"
-                                onClick={() => handleReupload(d)}
-                                disabled={!d.bounds || reuploadingId !== null}
-                                title={
-                                  d.bounds
-                                    ? "Regenerate NDWI imagery for this area/year"
-                                    : "No stored bounds for this dataset — reupload isn't available"
-                                }
-                              >
-                                <img src="/reupload.png" alt="" className="dm-reupload-icon" />
-                                {reuploadingId === d.id ? "Reuploading..." : "Reupload"}
-                              </button>
-                            )}
-                            {isSuperadmin && (
-                              d.can_deactivate ? (
-                                <StatusToggle
-                                  active={d.active}
-                                  onToggle={() => handleToggleActive(d)}
-                                  disabled={busyId !== null}
-                                  deactivateLabel="Deactivate dataset"
-                                  activateLabel="Reactivate dataset"
-                                />
-                              ) : d.upload_type === "Satellite_Image" && !d.area_id ? (
-                                <button
-                                  type="button"
-                                  className="dm-delete-btn"
-                                  onClick={() => handleDelete(d)}
-                                  disabled={busyId !== null}
-                                  title="Superseded upload — no live data remains. Delete its audit record and file."
-                                >
-                                  <img src="/bin.png" alt="Delete" className="dm-delete-icon" />
-                                </button>
-                              ) : (
-                                <span
-                                  className="dm-toggle-disabled"
-                                  title="This upload was superseded by a later upload for the same area and year, so it no longer contributes to any analysis."
-                                >
-                                  —
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
+            <DataTable
+              value={filtered}
+              dataKey="id"
+              className="dm-table"
+              stripedRows
+              removableSort
+              paginator
+              rows={PAGE_SIZE}
+              first={(currentPage - 1) * PAGE_SIZE}
+              onPage={(e) => setPage(e.page + 1)}
+              paginatorClassName="dm-pagination"
+              currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+              paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+              emptyMessage={
+                datasets.length === 0
+                  ? "No datasets have been uploaded yet."
+                  : "No datasets match the selected filters."
+              }
+              rowClassName={(d) => `dm-row ${!d.active ? "inactive" : ""}`}
+              size="small"
+            >
+              <Column
+                header="Satellite Image"
+                style={{ width: "9rem" }}
+                body={(d) => {
+                  const thumb = resolveThumbUrl(d.thumbnail_url);
+                  return thumb && !brokenThumbs.has(thumb) ? (
+                    <img
+                      src={thumb}
+                      alt=""
+                      className="dm-thumb"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        setBrokenThumbs((prev) => new Set(prev).add(thumb));
+                      }}
+                    />
+                  ) : (
+                    <span className="dm-thumb-fallback">No preview</span>
+                  );
+                }}
+              />
+              <Column field="municipality" header="Municipality" sortable />
+              <Column field="year" header="Year" sortable />
+              <Column
+                field="uploaded_by"
+                header="Uploaded By"
+                sortable
+                body={(d) => (
+                  <>
+                    <div className="dm-uploader">{d.uploaded_by || "\u2014"}</div>
+                    <div className="dm-uploader-sub">{formatRole(d.uploaded_by_role)}</div>
+                  </>
                 )}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            {filtered.length > 0 && (
-              <div className="dm-pagination">
-                <span className="dm-pagination-info">
-                  Showing {(currentPage - 1) * PAGE_SIZE + 1} to{" "}
-                  {Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} entries
-                </span>
-                <div className="dm-pagination-controls">
-                  <button
-                    className="dm-page-btn"
-                    onClick={() => setPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    aria-label="Previous page"
-                  >
-                    ‹
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                    <button
-                      key={n}
-                      className={`dm-page-btn ${n === currentPage ? "active" : ""}`}
-                      onClick={() => setPage(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                  <button
-                    className="dm-page-btn"
-                    onClick={() => setPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    aria-label="Next page"
-                  >
-                    ›
-                  </button>
-                </div>
-              </div>
-            )}
+              />
+              <Column
+                field="created_at"
+                header="Upload Date"
+                sortable
+                body={(d) => {
+                  const uploaded = formatUploadDate(d.created_at);
+                  return (
+                    <>
+                      <div>{uploaded.date}</div>
+                      <div className="dm-time">{uploaded.time}</div>
+                    </>
+                  );
+                }}
+              />
+              <Column
+                field="active"
+                header="Status"
+                sortable
+                body={(d) => (
+                  <Tag severity={d.active ? "success" : "secondary"} value={d.active ? "Active" : "Inactive"} />
+                )}
+              />
+              <Column
+                field="confidence"
+                header="Confidence"
+                sortable
+                body={(d) =>
+                  d.confidence != null ? (
+                    <Tag
+                      severity={parseFloat(d.confidence) < 0.5 ? "warning" : "info"}
+                      value={`${Math.round(parseFloat(d.confidence) * 100)}%`}
+                    />
+                  ) : (
+                    <span className="dm-confidence-badge">—</span>
+                  )
+                }
+              />
+              <Column
+                header="Actions"
+                style={{ minWidth: "16rem" }}
+                body={(d) => {
+                  const thumb = resolveThumbUrl(d.thumbnail_url);
+                  return (
+                    <div className="action-icons flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        label="View"
+                        icon="pi pi-eye"
+                        size="small"
+                        outlined
+                        className="dm-view-btn"
+                        onClick={() => window.open(thumb, "_blank", "noopener,noreferrer")}
+                        disabled={!thumb || brokenThumbs.has(thumb)}
+                        tooltip="View NDWI preview"
+                        tooltipOptions={{ position: "top" }}
+                      />
+                      <Button
+                        type="button"
+                        label={loadingImageryId === d.id ? "Loading..." : "Satellite"}
+                        icon="pi pi-globe"
+                        size="small"
+                        outlined
+                        severity="secondary"
+                        className="dm-satellite-btn"
+                        onClick={() => handleViewSatelliteImagery(d)}
+                        disabled={!d.has_bounds || loadingImageryId !== null}
+                        tooltip={
+                          d.has_bounds
+                            ? "Fetch a true-color satellite photo for this area/year"
+                            : "No location data available for this dataset"
+                        }
+                        tooltipOptions={{ position: "top" }}
+                      />
+                      {d.upload_type === "Satellite_Image" && (
+                        <Button
+                          type="button"
+                          label={reuploadingId === d.id ? "Reuploading..." : "Reupload"}
+                          icon="pi pi-refresh"
+                          size="small"
+                          outlined
+                          severity="secondary"
+                          className="dm-reupload-btn"
+                          onClick={() => handleReupload(d)}
+                          disabled={!d.bounds || reuploadingId !== null}
+                          tooltip={
+                            d.bounds
+                              ? "Regenerate NDWI imagery for this area/year"
+                              : "No stored bounds for this dataset"
+                          }
+                          tooltipOptions={{ position: "top" }}
+                        />
+                      )}
+                      {isSuperadmin &&
+                        (d.can_deactivate ? (
+                          <StatusToggle
+                            active={d.active}
+                            onToggle={() => handleToggleActive(d)}
+                            disabled={busyId !== null}
+                            deactivateLabel="Deactivate dataset"
+                            activateLabel="Reactivate dataset"
+                          />
+                        ) : d.upload_type === "Satellite_Image" && !d.area_id ? (
+                          <Button
+                            type="button"
+                            icon="pi pi-trash"
+                            rounded
+                            text
+                            severity="danger"
+                            className="dm-delete-btn"
+                            onClick={() => handleDelete(d)}
+                            disabled={busyId !== null}
+                            tooltip="Superseded upload \u2014 delete its audit record and file."
+                            tooltipOptions={{ position: "top" }}
+                            aria-label="Delete dataset"
+                          />
+                        ) : (
+                          <span
+                            className="dm-toggle-disabled"
+                            title="This upload was superseded by a later upload for the same area and year."
+                          >
+                            —
+                          </span>
+                        ))}
+                    </div>
+                  );
+                }}
+              />
+            </DataTable>
           </div>
         )}
       </div>

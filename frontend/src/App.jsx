@@ -1,5 +1,6 @@
 import {BrowserRouter,Routes,Route} from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { PrimeReactProvider } from "primereact/api";
 
 import NdwiGenerationWidget from "./components/NdwiGenerationWidget";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -25,6 +26,8 @@ const Register = lazy(() => import("./pages/register"));
 const ValidationReport = lazy(() => import("./pages/ValidationReport"));
 const StyleGuide = lazy(() => import("./pages/StyleGuide"));
 
+const PRIME_CONFIG = { ripple: true, inputStyle: "outlined" };
+
 const pageFallback = (
   <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#0077B6", fontFamily: "sans-serif" }}>
     Loading...
@@ -37,6 +40,7 @@ return(
 
 <>
 
+<PrimeReactProvider value={PRIME_CONFIG}>
 <ErrorBoundary>
 <AuthProvider>
 <NdwiGenerationProvider>
@@ -83,6 +87,7 @@ return(
 </NdwiGenerationProvider>
 </AuthProvider>
 </ErrorBoundary>
+</PrimeReactProvider>
 
 </>
 

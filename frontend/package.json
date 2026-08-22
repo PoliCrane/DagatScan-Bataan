@@ -13,6 +13,8 @@
   "dependencies": {
     "@turf/bbox": "^7.4.0",
     "leaflet": "^1.9.4",
+    "primeicons": "^8.0.0",
+    "primereact": "^10.9.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-joyride": "^3.2.0",

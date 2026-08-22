@@ -5,6 +5,13 @@ import ApproveRequestModal from "../../components/ApproveRequestModal";
 import RejectRequestModal from "../../components/RejectRequestModal";
 import StatusToggle from "../../components/StatusToggle";
 import { useState, useEffect } from "react";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Button } from "primereact/button";
+import { Tag } from "primereact/tag";
+import { InputText } from "primereact/inputtext";
+import { IconField } from "primereact/iconfield";
+import { InputIcon } from "primereact/inputicon";
 import "../index-organized.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
 import { formatRelativeTime } from "../../utils/formatRelativeTime";
@@ -236,64 +243,91 @@ export default function UserManagement() {
     );
   };
 
+  const avatarBody = (account) => (
+    <span className="user-avatar">{account.username.charAt(0).toUpperCase()}</span>
+  );
+
+  const statusBody = (account) => {
+    if (!account.active) return <Tag severity="danger" value="Deactivated" />;
+    return account.verified ? (
+      <Tag severity="success" value="Verified" />
+    ) : (
+      <Tag severity="warning" value="Unverified" />
+    );
+  };
+
+  const actionsBody = (account, allowEdit, allowDeactivate) => (
+    <div className="action-icons flex items-center gap-2">
+      {allowEdit && (
+        <Button
+          type="button"
+          icon="pi pi-pencil"
+          rounded
+          text
+          severity="secondary"
+          className="icon-edit-btn"
+          onClick={() => handleEdit(account)}
+          disabled={deletingUserId !== null}
+          tooltip="Edit account"
+          tooltipOptions={{ position: "top" }}
+          aria-label="Edit account"
+        />
+      )}
+      {allowDeactivate && (
+        <StatusToggle
+          active={account.active}
+          onToggle={() => (account.active ? handleDeactivate(account) : handleReactivate(account))}
+          disabled={deletingUserId !== null}
+        />
+      )}
+    </div>
+  );
+
   const renderTable = (list, allowEdit = true, allowDeactivate = true, showMunicipality = false) => (
     <div className="user-table-container">
-      <table className={`user-table ${showMunicipality ? "with-municipality" : ""}`}>
-        <thead>
-          <tr>
-            <th className="avatar-col"></th>
-            <th>Username</th>
-            <th>Email</th>
-            {showMunicipality && <th>Municipality</th>}
-            <th>Status</th>
-            <th>Joined Date</th>
-            <th>Last Active</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map((account) => (
-            <tr key={account.id} className={`user-row ${!account.active ? "deactivated" : ""}`}>
-              <td className="avatar-col">
-                <span className="user-avatar">{account.username.charAt(0).toUpperCase()}</span>
-              </td>
-              <td>{account.username}</td>
-              <td>{account.email}</td>
-              {showMunicipality && <td>{account.municipality || "—"}</td>}
-              <td>
-                <span className={`status-badge ${account.verified ? "verified" : "unverified"} ${!account.active ? "deactivated" : ""}`}>
-                  {!account.active ? "Deactivated" : (account.verified ? "Verified" : "Unverified")}
-                </span>
-              </td>
-              <td>{formatJoinedDate(account.created_at)}</td>
-              <td>{formatRelativeTime(account.last_login)}</td>
-              <td>
-                <div className="action-icons">
-                  {allowEdit && (
-                    <button
-                      type="button"
-                      className="icon-action-btn icon-edit-btn"
-                      onClick={() => handleEdit(account)}
-                      disabled={deletingUserId !== null}
-                      title="Edit account"
-                      aria-label="Edit account"
-                    >
-                      <img src="/edit.png" alt="" className="icon-action-img" />
-                    </button>
-                  )}
-                  {allowDeactivate && (
-                    <StatusToggle
-                      active={account.active}
-                      onToggle={() => (account.active ? handleDeactivate(account) : handleReactivate(account))}
-                      disabled={deletingUserId !== null}
-                    />
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable
+        value={list}
+        dataKey="id"
+        className="user-table"
+        stripedRows
+        removableSort
+        paginator={list.length > 10}
+        rows={10}
+        rowsPerPageOptions={[10, 25, 50]}
+        emptyMessage="No accounts found."
+        rowClassName={(account) => (!account.active ? "deactivated" : "")}
+        size="small"
+      >
+        <Column body={avatarBody} className="avatar-col" style={{ width: "3.5rem" }} />
+        <Column field="username" header="Username" sortable />
+        <Column field="email" header="Email" sortable />
+        {showMunicipality && (
+          <Column
+            field="municipality"
+            header="Municipality"
+            sortable
+            body={(a) => a.municipality || "\u2014"}
+          />
+        )}
+        <Column header="Status" body={statusBody} sortable sortField="active" />
+        <Column
+          field="created_at"
+          header="Joined Date"
+          sortable
+          body={(a) => formatJoinedDate(a.created_at)}
+        />
+        <Column
+          field="last_login"
+          header="Last Active"
+          sortable
+          body={(a) => formatRelativeTime(a.last_login)}
+        />
+        <Column
+          header="Actions"
+          body={(a) => actionsBody(a, allowEdit, allowDeactivate)}
+          style={{ width: "8rem" }}
+        />
+      </DataTable>
     </div>
   );
 
@@ -312,10 +346,12 @@ export default function UserManagement() {
             <p>Manage all accounts in one place. Review requests, assign roles, and control access.</p>
           </div>
           {isSuperadmin && (
-            <button className="add-admin-btn" onClick={handleAddAdmin}>
-              <img src="/add-admin.png" alt="Add Admin" className="btn-icon" />
-              Add Account
-            </button>
+            <Button
+              label="Add Account"
+              icon="pi pi-user-plus"
+              className="add-admin-btn"
+              onClick={handleAddAdmin}
+            />
           )}
         </div>
 
@@ -326,14 +362,15 @@ export default function UserManagement() {
         )}
 
         <div className="search-bar-wrapper">
-          <img src="/search-bar.png" alt="Search" className="search-icon" />
-          <input
-            type="text"
-            className="search-bar"
-            placeholder="Search by username or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <IconField iconPosition="left" className="w-full">
+            <InputIcon className="pi pi-search" />
+            <InputText
+              className="w-full"
+              placeholder="Search by username or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </IconField>
         </div>
 
         {/* Pending Account Requests Section — municipal-account signups awaiting review */}
@@ -345,63 +382,72 @@ export default function UserManagement() {
             <p className="user-management-empty">No pending account requests.</p>
           ) : (
             <div className="user-table-container">
-              <table className="user-table pending-requests">
-                <thead>
-                  <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Municipality</th>
-                    <th>Contact Number</th>
-                    <th>Position</th>
-                    <th>Request Letter</th>
-                    <th>Requested</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingRequests.map((request) => (
-                    <tr key={request.id} className="user-row">
-                      <td>{request.username}</td>
-                      <td>{request.email}</td>
-                      <td>{request.municipality}</td>
-                      <td>{request.contact_number}</td>
-                      <td>{request.position}</td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn-view-letter-link"
-                          onClick={() => handleViewLetter(request.id)}
-                        >
-                          View Letter
-                        </button>
-                      </td>
-                      <td>{new Date(request.requested_at).toLocaleDateString()}</td>
-                      <td>
-                        <div className="action-icons">
-                          <button
-                            type="button"
-                            className="icon-action-btn"
-                            onClick={() => handleApproveRequest(request)}
-                            title="Approve request"
-                            aria-label="Approve request"
-                          >
-                            <img src="/approve.png" alt="" className="icon-action-img" />
-                          </button>
-                          <button
-                            type="button"
-                            className="icon-action-btn"
-                            onClick={() => handleRejectRequest(request)}
-                            title="Reject request"
-                            aria-label="Reject request"
-                          >
-                            <img src="/reject.png" alt="" className="icon-action-img" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <DataTable
+                value={pendingRequests}
+                dataKey="id"
+                className="user-table pending-requests"
+                stripedRows
+                removableSort
+                paginator={pendingRequests.length > 10}
+                rows={10}
+                emptyMessage="No pending account requests."
+                size="small"
+              >
+                <Column field="username" header="Username" sortable />
+                <Column field="email" header="Email" sortable />
+                <Column field="municipality" header="Municipality" sortable />
+                <Column field="contact_number" header="Contact Number" />
+                <Column field="position" header="Position" />
+                <Column
+                  header="Request Letter"
+                  body={(request) => (
+                    <Button
+                      type="button"
+                      label="View Letter"
+                      icon="pi pi-file-pdf"
+                      link
+                      className="btn-view-letter-link p-0"
+                      onClick={() => handleViewLetter(request.id)}
+                    />
+                  )}
+                />
+                <Column
+                  field="requested_at"
+                  header="Requested"
+                  sortable
+                  body={(request) => new Date(request.requested_at).toLocaleDateString()}
+                />
+                <Column
+                  header="Actions"
+                  style={{ width: "8rem" }}
+                  body={(request) => (
+                    <div className="action-icons flex items-center gap-2">
+                      <Button
+                        type="button"
+                        icon="pi pi-check"
+                        rounded
+                        text
+                        severity="success"
+                        onClick={() => handleApproveRequest(request)}
+                        tooltip="Approve request"
+                        tooltipOptions={{ position: "top" }}
+                        aria-label="Approve request"
+                      />
+                      <Button
+                        type="button"
+                        icon="pi pi-times"
+                        rounded
+                        text
+                        severity="danger"
+                        onClick={() => handleRejectRequest(request)}
+                        tooltip="Reject request"
+                        tooltipOptions={{ position: "top" }}
+                        aria-label="Reject request"
+                      />
+                    </div>
+                  )}
+                />
+              </DataTable>
             </div>
           )}
         </div>
