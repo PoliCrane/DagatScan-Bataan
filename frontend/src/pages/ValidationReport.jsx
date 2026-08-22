@@ -22,14 +22,16 @@ export default function ValidationReport() {
 
   return (
     <Layout>
-      <div style={{ maxWidth: 960, margin: "90px auto 40px", padding: "0 20px", fontFamily: "inherit" }}>
-        <h1 style={{ color: "#0077B6", marginBottom: 4 }}>Accuracy &amp; Validation</h1>
-        <p style={{ color: "#555", marginTop: 0 }}>
+      <div className="validation-container">
+        <div className="validation-header">
+        <h1>Accuracy &amp; Validation</h1>
+        <p>
           Hindcast validation: the trend model is fitted on all but the last {run?.holdoutYears ?? 2} years of
           each area's satellite record, predicts those held-out years, and is scored against what was actually observed.
           The system refits the trend as each new year of imagery arrives — projections are early-warning
           estimates under a continuing-trend assumption, not fixed forecasts.
         </p>
+        </div>
 
         <AsyncSection loading={loading} error={error} empty={!loading && !error && !run}>
           {s && (
@@ -43,9 +45,9 @@ export default function ValidationReport() {
                   ["Mean Model Fit (r²)", num(s.meanR2), "1.0 = perfect linear trend"],
                   ["Leave-One-Out MAE", num(s.leaveOneOutMaeMeters, " m"), "every year held out in turn"],
                 ].map(([label, value, note]) => (
-                  <div key={label} style={{ background: "#eaf4f8", borderRadius: 8, padding: "14px 16px" }}>
+                  <div key={label} className="validation-stat">
                     <div style={{ fontSize: 13, color: "#555" }}>{label}</div>
-                    <div style={{ fontSize: 26, fontWeight: 700, color: "#0077B6" }}>{value}</div>
+                    <div className="validation-stat-value">{value}</div>
                     <div style={{ fontSize: 12, color: "#777" }}>{note}</div>
                   </div>
                 ))}
@@ -53,7 +55,7 @@ export default function ValidationReport() {
 
               {s.leadTimes && s.leadTimes.length > 0 && (
                 <>
-                  <h3 style={{ color: "#0077B6", marginBottom: 6 }}>Accuracy by Lead Time</h3>
+                  <h3 className="validation-section-title">Accuracy by Lead Time</h3>
                   <p style={{ color: "#555", marginTop: 0, fontSize: 13 }}>
                     How far ahead the model can still classify correctly — walk-forward evaluation
                     over every training window in the record.
@@ -61,9 +63,9 @@ export default function ValidationReport() {
                   <div style={{ overflowX: "auto", marginBottom: 20 }}>
                     <table style={{ borderCollapse: "collapse", fontSize: 14 }}>
                       <thead>
-                        <tr style={{ background: "#0077B6", color: "white", textAlign: "left" }}>
+                        <tr className="validation-thead-row">
                           {["Years ahead", "Status accuracy", "MAE (m)", "Samples"].map((h) => (
-                            <th key={h} style={{ padding: "8px 12px" }}>{h}</th>
+                            <th key={h}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -89,9 +91,9 @@ export default function ValidationReport() {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
                   <thead>
-                    <tr style={{ background: "#0077B6", color: "white", textAlign: "left" }}>
+                    <tr className="validation-thead-row">
                       {["Municipality", "Area", "Predicted", "Observed", "Match", "r²", "LOO MAE (m)"].map((h) => (
-                        <th key={h} style={{ padding: "8px 10px" }}>{h}</th>
+                        <th key={h}>{h}</th>
                       ))}
                     </tr>
                   </thead>

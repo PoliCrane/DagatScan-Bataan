@@ -3,6 +3,9 @@ import { resetPass } from "../api/auth";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./index-organized.css";
 import { showError, showSuccess, showLoading } from "../utils/sweetAlertUtils";
+import { InputText } from "primereact/inputtext";
+import { Password } from "primereact/password";
+import { Button } from "primereact/button";
 
 export default function ResetPassword({ email: propEmail, onClose, onSwitchToLogin }) {
   const [email, setEmail] = useState("");
@@ -191,7 +194,7 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
       {success && <div className="success-message">{success}</div>}
 
       <form onSubmit={handleSubmit}>
-        <input
+        <InputText
           className="form-input"
           type="email"
           placeholder="Email"
@@ -201,9 +204,7 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
           required
         />
         
-        <label style={{ fontSize: "12px", color: "#0077B6", fontWeight: "600", marginTop: "15px", display: "block", marginBottom: "10px" }}>
-          Reset Code
-        </label>
+        <label className="reset-code-label">Reset Code</label>
         <div className="verification-code-container">
           {resetCode.map((digit, index) => (
             <input
@@ -223,14 +224,16 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
           ))}
         </div>
 
-        <input
+        <Password
           className="form-input"
-          type="password"
+          inputClassName="w-full"
           placeholder="New Password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           onFocus={() => setExpandPassword(true)}
           onBlur={() => setExpandPassword(false)}
+          feedback={false}
+          toggleMask
           disabled={loading}
           required
         />
@@ -258,18 +261,24 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
             </div>
           </div>
         )}
-        <input
+        <Password
           className="form-input"
-          type="password"
+          inputClassName="w-full"
           placeholder="Confirm Password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          feedback={false}
+          toggleMask
           disabled={loading}
           required
         />
-        <button className="form-btn" type="submit" disabled={loading || resetCode.join("").length !== 6 || !email.trim()}>
-          {loading ? "Resetting..." : "Reset Password"}
-        </button>
+        <Button
+          className="form-btn"
+          type="submit"
+          label={loading ? "Resetting..." : "Reset Password"}
+          loading={loading}
+          disabled={loading || resetCode.join("").length !== 6 || !email.trim()}
+        />
       </form>
       <p className="form-link">
         <button className="link-button" onClick={() => onSwitchToLogin && onSwitchToLogin()}>

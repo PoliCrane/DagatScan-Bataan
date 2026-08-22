@@ -79,6 +79,9 @@
   margin-bottom: 22px;
 }
 
+.layout-main .reports-header h1,
+.layout-main .validation-header h1,
+.layout-main .awareness-hero h1,
 .user-management-header h1,
 .data-management-header h1,
 .audit-trail-header h1,
@@ -312,4 +315,201 @@
   .dashboard-welcome.dashboard-welcome {
     padding: 22px 20px;
   }
+}
+
+.reset-code-label {
+  display: block;
+  margin: 15px 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-primary, #0077b6);
+}
+
+.verification-code-box {
+  min-height: 46px;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* PrimeReact Password wraps its input, so the wrapper must carry the width */
+.form-input.p-password {
+  display: block;
+  width: 100%;
+}
+
+.form-input.p-password > .p-icon-field,
+.form-input.p-password .p-password-input {
+  width: 100%;
+}
+
+/* Filter bars: PrimeReact controls need their own sizing, not the legacy
+   wrappers that assumed a bare <input>/<select>. */
+.dm-filter-bar,
+.at-filter-bar,
+.reports-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-filter-bar .p-icon-field.dm-search-box, .dm-filter-bar .p-iconfield.dm-search-box,
+.at-filter-bar .p-icon-field.at-search-box, .at-filter-bar .p-iconfield.at-search-box,
+.reports-filter-bar .p-icon-field.reports-search-box, .reports-filter-bar .p-iconfield.reports-search-box {
+  flex: 1 1 220px;
+  min-width: 200px;
+  max-width: 420px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.dm-filter-bar .p-icon-field .p-inputtext,
+.at-filter-bar .p-icon-field .p-inputtext,
+.reports-filter-bar .p-icon-field .p-inputtext,
+.dm-filter-bar .p-iconfield .p-inputtext,
+.at-filter-bar .p-iconfield .p-inputtext,
+.reports-filter-bar .p-iconfield .p-inputtext {
+  width: 100%;
+  padding: 0 14px 0 40px;
+}
+
+.dm-filter-bar .p-icon-field .p-input-icon,
+.at-filter-bar .p-icon-field .p-input-icon,
+.reports-filter-bar .p-icon-field .p-input-icon,
+.dm-filter-bar .p-icon-field .p-inputicon,
+.at-filter-bar .p-icon-field .p-inputicon,
+.reports-filter-bar .p-icon-field .p-inputicon {
+  left: 14px;
+  margin-top: 0;
+  transform: translateY(-50%);
+  top: 50%;
+  color: var(--color-muted, #4a5b6c);
+}
+
+.dm-filter-bar .p-dropdown.dm-filter-select,
+.at-filter-bar .p-dropdown.at-filter-select,
+.reports-filter-bar .p-dropdown.filter-dropdown {
+  flex: 0 0 auto;
+  min-width: 178px;
+  min-height: 40px;
+  align-items: center;
+  padding: 0;
+  border-radius: 9px;
+}
+
+.reports-filter-bar .filter-group-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reports-filter-bar .filter-group-inline > label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted, #4a5b6c);
+  white-space: nowrap;
+}
+
+.dm-filter-bar .p-button.dm-reset-btn,
+.at-filter-bar .p-button.at-reset-btn {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* Upload and register forms: PrimeReact controls fill their field slot */
+.form-group .p-dropdown.form-select,
+.form-group .p-dropdown.form-input,
+.form-group .p-inputtext.form-input,
+.form-group .p-inputtextarea.form-textarea {
+  width: 100%;
+}
+
+.form-group .p-dropdown.form-select,
+.form-group .p-dropdown.form-input {
+  align-items: center;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 9px;
+}
+
+.bounds-compass-cell .p-inputtext.form-input {
+  width: 100%;
+}
+
+/* Upload page title joins the same left-aligned scale as every other page */
+.upload-container .upload-title,
+.upload-container .upload-header {
+  text-align: left;
+}
+
+.upload-container .upload-title {
+  color: var(--color-ink, #0b1a2b);
+}
+
+/* Legacy report table adopts the same header voice as the PrimeReact tables */
+.reports-records-panel table thead th,
+.reports-table thead th {
+  background: #eff5fa;
+  color: #33506b;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-line, #dde5ec);
+}
+
+.layout-main .validation-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.awareness-hero h1 {
+  color: #ffffff;
+}
+
+.validation-stat {
+  padding: 16px 18px;
+  border: 1px solid var(--color-line, #dde5ec);
+  border-radius: var(--radius-card, 0.875rem);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.validation-stat-value {
+  margin: 4px 0 2px;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 400;
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--color-ink, #0b1a2b);
+  font-variant-numeric: tabular-nums;
+}
+
+.validation-section-title {
+  margin-bottom: 6px;
+}
+
+.validation-thead-row {
+  text-align: left;
+}
+
+.validation-thead-row th {
+  padding: 10px 12px;
+  background: #eff5fa;
+  color: #33506b;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-line, #dde5ec);
 }

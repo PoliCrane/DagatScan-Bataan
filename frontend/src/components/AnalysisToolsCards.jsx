@@ -3,6 +3,8 @@ import "../pages/styles/analysisToolsCards.css";
 import PredictionResultCard from "./PredictionResultCard";
 import EventContextCard from "./EventContextCard";
 import { showInfo } from "../utils/sweetAlertUtils";
+import { Dropdown } from "primereact/dropdown";
+import { Button } from "primereact/button";
 
 export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline = null, isPlayingTimeline = false, dataYearSpan = null,
   selectedMunicipality,
@@ -193,32 +195,28 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
           <div className="card-content">
             <div className="form-group">
               <label className="form-label">Past Year</label>
-              <select 
+              <Dropdown
                 className="form-select"
                 value={comparePastYear}
-                onChange={handleComparePastYearChange}
-              >
-                {historicalYears.map((year) => (
-                  <option key={year.value} value={year.value}>
-                    {year.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(e) => handleComparePastYearChange({ target: { value: e.value } })}
+                options={historicalYears}
+                optionLabel="label"
+                optionValue="value"
+                aria-label="Past year"
+              />
             </div>
 
             <div className="form-group">
               <label className="form-label">Selected Year</label>
-              <select 
+              <Dropdown
                 className="form-select"
                 value={compareSelectedYear}
-                onChange={(e) => setCompareSelectedYear(e.target.value)}
-              >
-                {getAvailableSelectedYears().map((year) => (
-                  <option key={year.value} value={year.value}>
-                    {year.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(e) => setCompareSelectedYear(e.value)}
+                options={getAvailableSelectedYears()}
+                optionLabel="label"
+                optionValue="value"
+                aria-label="Selected year"
+              />
             </div>
 
             <button
@@ -252,18 +250,16 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
 
             <div className="form-group">
               <label className="form-label">Predict Year</label>
-              <select 
+              <Dropdown
                 className="form-select"
                 value={predictYear}
-                onChange={(e) => setPredictYear(e.target.value)}
+                onChange={(e) => setPredictYear(e.value)}
+                options={futureYears}
+                optionLabel="label"
+                optionValue="value"
                 disabled={!selectedMunicipality}
-              >
-                {futureYears.map((year) => (
-                  <option key={year.value} value={year.value}>
-                    {year.label}
-                  </option>
-                ))}
-              </select>
+                aria-label="Predict year"
+              />
             </div>
 
             <button

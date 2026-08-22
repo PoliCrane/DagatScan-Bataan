@@ -3,6 +3,8 @@ import { forgotPass } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import { showLoading, showSuccess, showError } from "../utils/sweetAlertUtils";
 import "./styles/forgotpass.css";
+import { InputText } from "primereact/inputtext";
+import { Button } from "primereact/button";
 
 export default function ForgotPassword({ onClose, onSwitchToLogin, onSwitchToResetPassword }) {
   const [email, setEmail] = useState("");
@@ -63,7 +65,7 @@ export default function ForgotPassword({ onClose, onSwitchToLogin, onSwitchToRes
         <p style={{ color: "#666", marginBottom: "20px", fontSize: "14px" }}>
           Enter your email address and we'll send you a code to reset your password.
         </p>
-        <input
+        <InputText
           className="form-input"
           type="email"
           placeholder="Email"
@@ -72,9 +74,13 @@ export default function ForgotPassword({ onClose, onSwitchToLogin, onSwitchToRes
           disabled={loading}
           required
         />
-        <button className="form-btn" type="submit" disabled={loading}>
-          {loading ? "Sending..." : "Send Reset Code"}
-        </button>
+        <Button
+          className="form-btn"
+          type="submit"
+          label={loading ? "Sending..." : "Send Reset Code"}
+          loading={loading}
+          disabled={loading}
+        />
       </form>
       <p className="form-link">
         Remember your password? <button className="link-button" onClick={() => onSwitchToLogin && onSwitchToLogin()}>Login</button>

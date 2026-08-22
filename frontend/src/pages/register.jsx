@@ -9,6 +9,10 @@ import IndexNavBar from "./indexNavBar";
 import "./index-organized.css";
 import "./styles/forms.css";
 import "./styles/requestAccount.css";
+import { InputText } from "primereact/inputtext";
+import { InputTextarea } from "primereact/inputtextarea";
+import { Dropdown } from "primereact/dropdown";
+import { Button } from "primereact/button";
 
 const POSITION_OPTIONS = [
   "DENR Officer",
@@ -193,7 +197,7 @@ export default function Register() {
           <div className="form-grid">
             <div className="form-group">
               <label className="form-label">Full Name *</label>
-              <input
+              <InputText
                 className="form-input"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -203,7 +207,7 @@ export default function Register() {
             </div>
             <div className="form-group">
               <label className="form-label">Email Address *</label>
-              <input
+              <InputText
                 className="form-input"
                 type="email"
                 value={email}
@@ -214,21 +218,18 @@ export default function Register() {
             </div>
             <div className="form-group">
               <label className="form-label">Municipal DENR Office *</label>
-              <select
+              <Dropdown
                 className="form-input"
                 value={municipalityId}
-                onChange={(e) => setMunicipalityId(e.target.value)}
+                onChange={(e) => setMunicipalityId(e.value)}
+                options={municipalities.map((m) => ({ label: m.name, value: m.id }))}
+                placeholder="Select municipality"
                 disabled={loading}
-              >
-                <option value="">Select municipality</option>
-                {municipalities.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Contact Number *</label>
-              <input
+              <InputText
                 className="form-input"
                 value={contactNumber}
                 onChange={(e) => setContactNumber(e.target.value.replace(/[^\d+]/g, ""))}
@@ -239,19 +240,16 @@ export default function Register() {
             </div>
             <div className="form-group">
               <label className="form-label">Position / Designation *</label>
-              <select
+              <Dropdown
                 className="form-input"
                 value={positionIsOther ? "Others" : position}
-                onChange={handlePositionChange}
+                onChange={(e) => handlePositionChange({ target: { value: e.value } })}
+                options={POSITION_OPTIONS.map((p) => ({ label: p, value: p }))}
+                placeholder="Select position"
                 disabled={loading}
-              >
-                <option value="">Select position</option>
-                {POSITION_OPTIONS.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
+              />
               {positionIsOther && (
-                <input
+                <InputText
                   className="form-input"
                   style={{ marginTop: 8 }}
                   value={position}
@@ -300,18 +298,23 @@ export default function Register() {
 
           <div className="form-group">
             <label className="form-label">Additional Remarks (Optional)</label>
-            <textarea
+            <InputTextarea
               className="form-textarea"
               value={additionalRemarks}
               onChange={(e) => setAdditionalRemarks(e.target.value)}
               placeholder="Enter any additional information (Optional)"
+              rows={4}
               disabled={loading}
             />
           </div>
 
-          <button className="form-btn" type="submit" disabled={loading}>
-            {loading ? "Submitting..." : "Submit Request"}
-          </button>
+          <Button
+            className="form-btn"
+            type="submit"
+            label={loading ? "Submitting..." : "Submit Request"}
+            loading={loading}
+            disabled={loading}
+          />
           </form>
         </div>
       </div>

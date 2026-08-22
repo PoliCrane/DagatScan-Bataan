@@ -681,7 +681,7 @@ export default function DataUpload() {
                   <div className="bounds-compass">
                     <div className="bounds-compass-cell bounds-compass-north">
                       <label className="form-label">North (lat)</label>
-                      <input
+                      <InputText
                         type="text"
                         className="form-input"
                         value={boundsNorth}
@@ -691,7 +691,7 @@ export default function DataUpload() {
                     </div>
                     <div className="bounds-compass-cell bounds-compass-west">
                       <label className="form-label">West (lng)</label>
-                      <input
+                      <InputText
                         type="text"
                         className="form-input"
                         value={boundsWest}
@@ -700,11 +700,11 @@ export default function DataUpload() {
                       />
                     </div>
                     <div className="bounds-compass-cell bounds-compass-center" aria-hidden="true">
-                      <img src="/coastalmonitoring.png" alt="" style={{ width: '22px', height: '22px', opacity: 0.4 }} />
+                      <i className="pi pi-compass" style={{ fontSize: '22px', opacity: 0.4 }} aria-hidden="true" />
                     </div>
                     <div className="bounds-compass-cell bounds-compass-east">
                       <label className="form-label">East (lng)</label>
-                      <input
+                      <InputText
                         type="text"
                         className="form-input"
                         value={boundsEast}
@@ -714,7 +714,7 @@ export default function DataUpload() {
                     </div>
                     <div className="bounds-compass-cell bounds-compass-south">
                       <label className="form-label">South (lat)</label>
-                      <input
+                      <InputText
                         type="text"
                         className="form-input"
                         value={boundsSouth}
@@ -732,18 +732,13 @@ export default function DataUpload() {
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">Municipality *</label>
-                    <select
+                    <Dropdown
                       className="form-select"
                       value={municipality}
-                      onChange={(e) => setMunicipality(e.target.value)}
-                    >
-                      <option value="">Select Municipality</option>
-                      {municipalities.map((mun) => (
-                        <option key={mun} value={mun}>
-                          {mun}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(e) => setMunicipality(e.value)}
+                      options={municipalities.map((mun) => ({ label: mun, value: mun }))}
+                      placeholder="Select Municipality"
+                    />
                   </div>
 
                   <div className="form-group">
@@ -757,30 +752,26 @@ export default function DataUpload() {
 
                   <div className="form-group">
                     <label className="form-label">Year of Data *</label>
-                    <select
+                    <Dropdown
                       className="form-select"
                       value={yearOfData}
-                      onChange={(e) => setYearOfData(e.target.value)}
-                    >
-                      {years.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(e) => setYearOfData(e.value)}
+                      options={years.map((year) => ({ label: String(year), value: year }))}
+                    />
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Data Quality</label>
-                    <select
+                    <Dropdown
                       className="form-select"
                       value={dataQuality}
-                      onChange={(e) => setDataQuality(e.target.value)}
-                    >
-                      <option value="Measured">Measured (High Confidence)</option>
-                      <option value="Estimated">Estimated (Medium Confidence)</option>
-                      <option value="Simulated">Simulated (Low Confidence)</option>
-                    </select>
+                      onChange={(e) => setDataQuality(e.value)}
+                      options={[
+                        { label: "Measured (High Confidence)", value: "Measured" },
+                        { label: "Estimated (Medium Confidence)", value: "Estimated" },
+                        { label: "Simulated (Low Confidence)", value: "Simulated" },
+                      ]}
+                    />
                   </div>
 
                 </div>

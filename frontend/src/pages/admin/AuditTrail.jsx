@@ -2,6 +2,10 @@ import AdminLayout from "../../components/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { Dropdown } from "primereact/dropdown";
+import { InputText } from "primereact/inputtext";
+import { IconField } from "primereact/iconfield";
+import { InputIcon } from "primereact/inputicon";
 import { Tag } from "primereact/tag";
 import "../styles/audit-trail.css";
 import useGuidedTour from "../../hooks/useGuidedTour";
@@ -309,38 +313,42 @@ export default function AuditTrail() {
 
         {/* Filters */}
         <div className="at-filter-bar">
-          <div className="at-search-box">
-            <img src="/search-bar.png" alt="" className="at-search-icon" onError={(e) => (e.target.style.display = "none")} />
-            <input
-              type="text"
+          <IconField iconPosition="left" className="at-search-box">
+            <InputIcon className="pi pi-search" />
+            <InputText
               placeholder="Search by actor, action, or target..."
               value={search}
               onChange={(e) => handleFilterChange(setSearch, e.target.value)}
+              aria-label="Search audit entries"
             />
-          </div>
+          </IconField>
 
-          <select
+          <Dropdown
             className="at-filter-select"
             value={category}
-            onChange={(e) => handleFilterChange(setCategory, e.target.value)}
+            onChange={(e) => handleFilterChange(setCategory, e.value)}
+            options={[
+              { label: "All Categories", value: "" },
+              { label: "User", value: "user" },
+              { label: "Data", value: "data" },
+              { label: "Auth", value: "auth" },
+            ]}
+            placeholder="All Categories"
             aria-label="Filter by category"
-          >
-            <option value="">All Categories</option>
-            <option value="user">User</option>
-            <option value="data">Data</option>
-            <option value="auth">Auth</option>
-          </select>
+          />
 
-          <select
+          <Dropdown
             className="at-filter-select"
             value={severity}
-            onChange={(e) => handleFilterChange(setSeverity, e.target.value)}
+            onChange={(e) => handleFilterChange(setSeverity, e.value)}
+            options={[
+              { label: "All Severities", value: "" },
+              { label: "Normal", value: "normal" },
+              { label: "Critical", value: "critical" },
+            ]}
+            placeholder="All Severities"
             aria-label="Filter by severity"
-          >
-            <option value="">All Severities</option>
-            <option value="normal">Normal</option>
-            <option value="critical">Critical</option>
-          </select>
+          />
 
           <button className="at-reset-btn" onClick={handleResetFilters}>
             <img src="/resetFilter.png" alt="" className="at-reset-icon" />

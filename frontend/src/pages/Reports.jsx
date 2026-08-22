@@ -1,3 +1,7 @@
+import { Dropdown } from "primereact/dropdown";
+import { InputText } from "primereact/inputtext";
+import { IconField } from "primereact/iconfield";
+import { InputIcon } from "primereact/inputicon";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
@@ -189,47 +193,37 @@ export default function Reports() {
         <div className="reports-filter-bar">
           <div className="filter-group-inline">
             <label htmlFor="municipality-filter">Municipality:</label>
-            <select
-              id="municipality-filter"
+            <Dropdown
+              inputId="municipality-filter"
               className="filter-dropdown"
               value={filters.municipality}
-              onChange={(e) => handleFilterChange("municipality", e.target.value)}
-            >
-              <option value="">All</option>
-              {bataanMunicipalities.map((municipality) => (
-                <option key={municipality} value={municipality}>
-                  {municipality}
-                </option>
-              ))}
-            </select>
+              onChange={(e) => handleFilterChange("municipality", e.value)}
+              options={[{ label: "All", value: "" }, ...bataanMunicipalities.map((m) => ({ label: m, value: m }))]}
+              placeholder="All"
+            />
           </div>
 
           <div className="filter-group-inline">
             <label htmlFor="year-filter">Year:</label>
-            <select
-              id="year-filter"
+            <Dropdown
+              inputId="year-filter"
               className="filter-dropdown"
               value={filters.year}
-              onChange={(e) => handleFilterChange("year", e.target.value)}
-            >
-              <option value="">All</option>
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+              onChange={(e) => handleFilterChange("year", e.value)}
+              options={[{ label: "All", value: "" }, ...years.map((y) => ({ label: String(y), value: y }))]}
+              placeholder="All"
+            />
           </div>
 
-          <div className="reports-search-box">
-            <img src="/search.png" alt="" className="reports-search-icon" onError={(e) => (e.target.style.display = "none")} />
-            <input
-              type="text"
+          <IconField iconPosition="left" className="reports-search-box">
+            <InputIcon className="pi pi-search" />
+            <InputText
               placeholder="Search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search reports"
             />
-          </div>
+          </IconField>
         </div>
 
         {/* Body: Map/Preview + Records table */}

@@ -5,6 +5,10 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { Tag } from "primereact/tag";
+import { Dropdown } from "primereact/dropdown";
+import { InputText } from "primereact/inputtext";
+import { IconField } from "primereact/iconfield";
+import { InputIcon } from "primereact/inputicon";
 import "../index-organized.css";
 import "../styles/data-management.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
@@ -346,64 +350,54 @@ export default function DataManagement() {
 
         {/* Filters */}
         <div className="dm-filter-bar">
-          <div className="dm-search-box">
-            <img src="/search-bar.png" alt="" className="dm-search-icon" onError={(e) => (e.target.style.display = "none")} />
-            <input
-              type="text"
+          <IconField iconPosition="left" className="dm-search-box">
+            <InputIcon className="pi pi-search" />
+            <InputText
               placeholder="Search dataset..."
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
+              aria-label="Search datasets"
             />
-          </div>
+          </IconField>
 
-          <div className="dm-select-wrapper">
-            <img src="/allMunicipalities.png" alt="" className="dm-select-icon" />
-            <select
-              className="dm-filter-select"
-              value={filters.municipality}
-              onChange={(e) => handleFilterChange("municipality", e.target.value)}
-              aria-label="Filter by municipality"
-            >
-              <option value="">All Municipalities</option>
-              {municipalities.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
+          <Dropdown
+            className="dm-filter-select"
+            value={filters.municipality}
+            onChange={(e) => handleFilterChange("municipality", e.value)}
+            options={[{ label: "All Municipalities", value: "" }, ...municipalities.map((m) => ({ label: m, value: m }))]}
+            placeholder="All Municipalities"
+            aria-label="Filter by municipality"
+          />
 
-          <div className="dm-select-wrapper">
-            <img src="/allyears.png" alt="" className="dm-select-icon" />
-            <select
-              className="dm-filter-select"
-              value={filters.year}
-              onChange={(e) => handleFilterChange("year", e.target.value)}
-              aria-label="Filter by year"
-            >
-              <option value="">All Years</option>
-              {years.map((y) => (
-                <option key={y} value={String(y)}>{y}</option>
-              ))}
-            </select>
-          </div>
+          <Dropdown
+            className="dm-filter-select"
+            value={filters.year}
+            onChange={(e) => handleFilterChange("year", e.value)}
+            options={[{ label: "All Years", value: "" }, ...years.map((y) => ({ label: String(y), value: String(y) }))]}
+            placeholder="All Years"
+            aria-label="Filter by year"
+          />
 
-          <div className="dm-select-wrapper">
-            <img src="/allStatus.png" alt="" className="dm-select-icon" />
-            <select
-              className="dm-filter-select"
-              value={filters.status}
-              onChange={(e) => handleFilterChange("status", e.target.value)}
-              aria-label="Filter by status"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+          <Dropdown
+            className="dm-filter-select"
+            value={filters.status}
+            onChange={(e) => handleFilterChange("status", e.value)}
+            options={[
+              { label: "All Status", value: "" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ]}
+            placeholder="All Status"
+            aria-label="Filter by status"
+          />
 
-          <button className="dm-reset-btn" onClick={handleResetFilters}>
-            <img src="/resetFilter.png" alt="" className="dm-reset-icon" />
-            Reset Filters
-          </button>
+          <Button
+            className="dm-reset-btn"
+            outlined
+            icon="pi pi-filter-slash"
+            label="Reset Filters"
+            onClick={handleResetFilters}
+          />
         </div>
 
         {/* Table */}

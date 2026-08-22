@@ -609,3 +609,74 @@ img.legend-icon {
 .leaflet-tooltip {
   font-family: var(--font-sans, "Archivo", sans-serif);
 }
+
+/* PrimeReact controls inside the dark instrument panels */
+.analysis-tools-container .p-dropdown.form-select {
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.analysis-tools-container .p-dropdown.form-select:not(.p-disabled):hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.analysis-tools-container .p-dropdown.form-select:not(.p-disabled).p-focus {
+  border-color: var(--color-cyan, #38bdf8);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}
+
+.analysis-tools-container .p-dropdown.form-select .p-dropdown-label {
+  padding: 0 12px;
+  font-size: 13px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+}
+
+.analysis-tools-container .p-dropdown.form-select .p-dropdown-trigger {
+  width: 34px;
+  color: #7fc9ee;
+}
+
+.analysis-tools-container .p-dropdown.form-select.p-disabled {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.analysis-tools-container .p-dropdown.form-select.p-disabled .p-dropdown-label,
+.analysis-tools-container .p-dropdown.form-select.p-disabled .p-dropdown-trigger {
+  color: #8ba3ba;
+}
+
+/* The overlay panel renders in a portal, so it is styled at the root */
+.p-dropdown-panel {
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(10, 30, 56, 0.98), rgba(5, 17, 33, 0.99));
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 48px -18px rgb(2 10 22 / 0.9);
+}
+
+.p-dropdown-panel .p-dropdown-item {
+  padding: 9px 14px;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 13px;
+  color: #c2d6e6;
+}
+
+.p-dropdown-panel .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+  background: rgba(56, 189, 248, 0.14);
+  color: #ffffff;
+}
+
+.p-dropdown-panel .p-dropdown-item.p-highlight {
+  background: rgba(56, 189, 248, 0.22);
+  color: #ffffff;
+}
