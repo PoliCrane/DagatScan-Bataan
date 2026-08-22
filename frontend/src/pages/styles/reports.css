@@ -3,7 +3,7 @@
 .reports-container {
   padding: 30px;
   background-color: #f5f5f5;
-  min-height: calc(100vh - 80px);
+  min-height: 0;
 }
 
 .reports-header {

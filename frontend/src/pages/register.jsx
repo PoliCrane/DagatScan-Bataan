@@ -180,7 +180,7 @@ export default function Register() {
         showMiddleNav={true}
       />
 
-      <div className="register-apply-container">
+      <div className="register-apply-container public-page-offset">
         <div className="register-card">
           <h1 className="request-account-heading">Account Registration</h1>
           <p className="register-apply-subtitle">

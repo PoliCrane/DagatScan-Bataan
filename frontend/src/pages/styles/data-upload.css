@@ -4,7 +4,7 @@
   width: 100%;
   padding: 30px 20px;
   background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
-  min-height: 100vh;
+  min-height: 0;
 }
 
 /* Header Section */

@@ -1,6 +1,6 @@
 export function StaticPageShell({ title, backgroundImage = "/tempoaboutBG.jpg", children }) {
   return (
-    <div className="w-full px-4 py-6 sm:px-6 md:px-10 md:py-10">
+    <div className="public-page-offset w-full px-4 py-6 sm:px-6 md:px-10 md:py-10">
       <div className="mx-auto max-w-4xl">
         <div
           className="relative mb-8 overflow-hidden rounded-card border border-[#c4e6ff] p-10 text-center shadow-card md:mb-10"

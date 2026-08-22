@@ -18,6 +18,7 @@ import useMunicipalityDataStatus from "../hooks/useMunicipalityDataStatus";
 import TourInfoButton from "../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../tours/pageIds";
 import { coastalMonitoringSteps } from "../tours/steps/coastalMonitoringSteps";
+import MapWorkspace from "../components/MapWorkspace";
 
 function MapController({ geoJsonData, bataanBounds, selectedMunicipality, municipalityBounds }) {
   const map = useMap();
@@ -216,15 +217,38 @@ export default function CoastalMonitoring() {
       {Tour}
       <TourInfoButton onClick={replay} />
       <MapLegend />
-      <CoastalSummary 
-  yearlyData={yearlyShorelineData}
-  selectedMunicipality={selectedMunicipality}
-  segments={segments}
-/>
       <SatelliteToggle isSatellite={isSatellite} onToggle={() => setIsSatellite(!isSatellite)} />
-      
-      <div style={{ padding: "20px", position: "relative" }}>
-        <MapContainer center={centerPoint} zoom={12} scrollWheelZoom={true} zoomControl={false} style={{ height: "100vh", width: "100%" }} minZoom={11} maxZoom={15}>
+
+      <MapWorkspace
+        title="Coastal Monitoring"
+        subject={selectedMunicipality}
+        subjectHint={
+          selectedMunicipality
+            ? `${segments?.length || 0} monitored ${segments?.length === 1 ? "segment" : "segments"}`
+            : null
+        }
+        emptyHint="Click a highlighted municipality on the map to see its coastline segments and current risk levels."
+      >
+        <CoastalSummary
+          yearlyData={yearlyShorelineData}
+          selectedMunicipality={selectedMunicipality}
+          segments={segments}
+        />
+        <SegmentsPanel
+          showPanel={showSegmentsPanel}
+          selectedMunicipality={selectedMunicipality}
+          segments={segments}
+          selectedSegment={selectedSegment}
+          onClose={() => {
+            setSelectedMunicipality(null);
+            setShowSegmentsPanel(false);
+          }}
+          onSelectSegment={setSelectedSegment}
+        />
+      </MapWorkspace>
+
+      <div className="map-stage">
+        <MapContainer center={centerPoint} zoom={12} scrollWheelZoom={true} zoomControl={false} style={{ height: "100%", width: "100%" }} minZoom={11} maxZoom={15}>
           {isSatellite ? (
             <TileLayer
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -353,18 +377,6 @@ export default function CoastalMonitoring() {
           />
         </MapContainer>
 
-        {/* Segments Panel */}
-        <SegmentsPanel
-          showPanel={showSegmentsPanel}
-          selectedMunicipality={selectedMunicipality}
-          segments={segments}
-          selectedSegment={selectedSegment}
-          onClose={() => {
-            setSelectedMunicipality(null);
-            setShowSegmentsPanel(false);
-          }}
-          onSelectSegment={setSelectedSegment}
-        />
       </div>
     </Layout>
   )

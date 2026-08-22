@@ -241,11 +241,9 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
           </div>
 
           <div className="card-content">
-            <div className="form-group">
-              <label className="form-label">Base Year</label>
-              <div className="form-value">
-                {BASE_YEAR} <span style={{ fontSize: "0.85em", color: "#666" }}>(Current)</span>
-              </div>
+            <div className="form-readout">
+              <span className="form-readout-label">Base year</span>
+              <span className="form-readout-value">{BASE_YEAR}</span>
             </div>
 
             <div className="form-group">

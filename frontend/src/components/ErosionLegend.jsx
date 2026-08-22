@@ -1,10 +1,9 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import "../pages/styles/erosionLegend.css";
 
 function ErosionLegend() {
   const legendRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(true);
-  let lastScrollY = 0;
+  const [expanded, setExpanded] = useState(false);
 
   const leftColumn = [
     { color: "#FFEA00", label: "Previous Shoreline" },
@@ -17,29 +16,18 @@ function ErosionLegend() {
     { color: "#7CFC00", label: "Predicted Shoreline" },
   ];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <div className={`erosion-legend ${isVisible ? "visible" : "hidden"}`} ref={legendRef}>
-      <div className="legend-header">
+    <div className={`erosion-legend ${expanded ? "is-expanded" : "is-collapsed"}`} ref={legendRef}>
+      <button
+        type="button"
+        className="legend-header"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
         <i className="pi pi-list legend-icon" aria-hidden="true" />
         <h3 className="legend-title">Legend</h3>
-      </div>
+        <i className={`pi ${expanded ? "pi-chevron-down" : "pi-chevron-up"} legend-chevron`} aria-hidden="true" />
+      </button>
 
       <div className="legend-content">
         <div className="legend-columns">

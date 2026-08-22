@@ -21,6 +21,7 @@ import TourInfoButton from "../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../tours/pageIds";
 import { erosionAnalysisSteps } from "../tours/steps/erosionAnalysisSteps";
 import { API_BASE_URL } from "../config/api";
+import MapWorkspace from "../components/MapWorkspace";
 // Colors match ErosionLegend's meaning-based palette (current/previous/predicted).
 const CURRENT_SHORELINE_COLOR = "#FF3131";
 // Matches the "Erosion Area" legend swatch and the PDF report map's shaded ribbon.
@@ -37,12 +38,23 @@ function MapController({ geoJsonData, bataanBounds, selectedMunicipality, munici
     if (!map) return;
 
     // If municipality selected, zoom to it
+    // the docked analysis panel covers the right edge, so the visible centre
+    // of the map is not the centre of the container
+    const panel = document.querySelector(".map-workspace.is-open");
+    const rightInset = panel ? Math.round(panel.getBoundingClientRect().width) : 0;
+
     if (selectedMunicipality && municipalityBounds) {
-      map.fitBounds(municipalityBounds, { padding: [50, 50] });
+      map.fitBounds(municipalityBounds, {
+        paddingTopLeft: [50, 50],
+        paddingBottomRight: [50 + rightInset, 50],
+      });
     }
     // Otherwise show all Bataan
     else if (geoJsonData && bataanBounds) {
-      map.fitBounds(bataanBounds, { padding: [20, 20] });
+      map.fitBounds(bataanBounds, {
+        paddingTopLeft: [30, 30],
+        paddingBottomRight: [30 + rightInset, 30],
+      });
     }
 
   }, [selectedMunicipality, municipalityBounds, geoJsonData, bataanBounds, map]);
@@ -625,37 +637,56 @@ export default function ErosionAnalysis() {
       {Tour}
       <TourInfoButton onClick={replay} />
       <ErosionLegend />
-      <ErosionAnalysisCards
-        selectedMunicipality={selectedMunicipality}
-        municipalityStats={municipalityStats}
-        yearlyShorelineData={yearlyShorelineData}
-        predictedYear={predictedYear}
-        shorelineSegments={shorelineSegments}
-        selectedSegmentId={selectedSegmentId}
-      />
-      <AnalysisToolsCards
-        onPlayTimeline={handlePlayTimeline}
-        isPlayingTimeline={isPlayingTimeline}
-        contextYear={comparedYear}
-        dataYearSpan={dataYearSpan}
-        selectedMunicipality={selectedMunicipality}
-        onSimulate={handlePredictSimulate}
-        onEndSimulation={handleEndSimulation}
-        onCompare={handleCompare}
-        onEndComparison={handleEndComparison}
-        canAnalyze={canAnalyze}
-        disabledReason={analyzeDisabledReason}
-        predictionResult={predictionResult}
-      />
       <SatelliteToggle isSatellite={isSatellite} onToggle={() => setIsSatellite(!isSatellite)} />
 
-      <div style={{ padding: "20px", position: "relative" }}>
+      <MapWorkspace
+        title="Shoreline Analysis"
+        subject={selectedMunicipality}
+        subjectHint={
+          selectedMunicipality
+            ? dataYearSpan
+              ? `${dataYearSpan}-year satellite record`
+              : "Loading satellite record"
+            : null
+        }
+        emptyHint="Click a highlighted municipality on the map to load its shoreline record, then compare two years or project a future shoreline."
+      >
+        <section className="map-workspace-section">
+          <ErosionAnalysisCards
+            selectedMunicipality={selectedMunicipality}
+            municipalityStats={municipalityStats}
+            yearlyShorelineData={yearlyShorelineData}
+            predictedYear={predictedYear}
+            shorelineSegments={shorelineSegments}
+            selectedSegmentId={selectedSegmentId}
+          />
+        </section>
+
+        <section className="map-workspace-section">
+          <AnalysisToolsCards
+            onPlayTimeline={handlePlayTimeline}
+            isPlayingTimeline={isPlayingTimeline}
+            contextYear={comparedYear}
+            dataYearSpan={dataYearSpan}
+            selectedMunicipality={selectedMunicipality}
+            onSimulate={handlePredictSimulate}
+            onEndSimulation={handleEndSimulation}
+            onCompare={handleCompare}
+            onEndComparison={handleEndComparison}
+            canAnalyze={canAnalyze}
+            disabledReason={analyzeDisabledReason}
+            predictionResult={predictionResult}
+          />
+        </section>
+      </MapWorkspace>
+
+      <div className="map-stage">
         <MapContainer 
           center={centerPoint} 
           zoom={selectedMunicipality ? 14 : 11} 
           scrollWheelZoom={true} 
           zoomControl={false} 
-          style={{ height: "100vh", width: "100%" }} 
+          style={{ height: "100%", width: "100%" }} 
           minZoom={1} 
           maxZoom={18}
         >

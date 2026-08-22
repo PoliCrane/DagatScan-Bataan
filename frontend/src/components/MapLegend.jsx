@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import "../pages/styles/mapLegend.css";
 import { SEGMENT_COLORS, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 
@@ -7,41 +7,25 @@ const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
 
 function MapLegend() {
   const legendRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(true);
-  let lastScrollY = 0;
+  const [expanded, setExpanded] = useState(false);
 
   const riskLevels = RISK_TIER_ORDER.map((key) => ({
     color: SEGMENT_COLORS[`${key}_RISK`],
     label: SEGMENT_RISK_LEVELS[key],
   }));
 
-  const segmentMarkers = [
-    { icon: "S", label: "Segment Marker", color: "var(--primary)" },
-  ];
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <div className={`map-legend ${isVisible ? "visible" : "hidden"}`} ref={legendRef}>
-      <div className="legend-header">
+    <div className={`map-legend ${expanded ? "is-expanded" : "is-collapsed"}`} ref={legendRef}>
+      <button
+        type="button"
+        className="legend-header"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
         <i className="pi pi-list legend-icon" aria-hidden="true" />
         <h3 className="legend-title">Legend</h3>
-      </div>
+        <i className={`pi ${expanded ? "pi-chevron-down" : "pi-chevron-up"} legend-chevron`} aria-hidden="true" />
+      </button>
 
       <div className="legend-content">
         <h4 className="legend-subtitle">Erosion Risk Level</h4>

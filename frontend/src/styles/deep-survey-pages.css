@@ -115,7 +115,7 @@
 }
 
 /* Section headings below the page title */
-.layout-main h2 {
+.layout-main h2:not(.map-workspace-subject) {
   font-family: var(--font-sans, "Archivo", sans-serif);
   font-size: 1.05rem;
   font-weight: 700;
@@ -123,7 +123,7 @@
   color: var(--color-ink, #0b1a2b);
 }
 
-.layout-main h3 {
+.layout-main h3:not([class*="card-title"]):not([class*="legend-title"]):not([class*="segments-panel-title"]) {
   font-family: var(--font-sans, "Archivo", sans-serif);
   font-size: 0.95rem;
   font-weight: 700;
@@ -512,4 +512,10 @@
   letter-spacing: 0.09em;
   text-transform: uppercase;
   border-bottom: 1px solid var(--color-line, #dde5ec);
+}
+
+/* Public pages sit under the fixed 60px .navbar. The app shell offsets
+   itself through .layout-content, so this is per-shell, not on <body>. */
+.public-page-offset {
+  padding-top: 60px;
 }

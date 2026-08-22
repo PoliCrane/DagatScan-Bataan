@@ -3,7 +3,7 @@
   width: 100%;
   margin: 0 auto;
   padding: 30px 40px;
-  min-height: calc(100vh - 120px);
+  min-height: 0;
   font-family: var(--font-sans, "Archivo", sans-serif);
   box-sizing: border-box;
 }
