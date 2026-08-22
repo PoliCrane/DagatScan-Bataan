@@ -74,6 +74,6 @@
   .layout-content:has(.app-sidebar:hover) .analysis-cards-container,
   .layout-content:has(.app-sidebar.pinned) .coastal-summary-container,
   .layout-content:has(.app-sidebar.pinned) .analysis-cards-container {
-    left: calc(248px + 15px);
+    left: calc(264px + 15px);
   }
 }

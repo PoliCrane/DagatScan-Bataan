@@ -1,10 +1,10 @@
-/* Shared role-aware sidebar.
-   Collapsed to an icon rail, expands on hover OR when pinned (pin is the
-   accessible path — hover alone is unusable on touch devices). */
+/* "Deep Survey" navigation rail.
+   An abyssal navy column against the light survey surface — the depth contour
+   texture is drawn from the same bathymetric language the analysis pages use. */
 
 .app-sidebar {
-  --rail-width: 68px;
-  --expanded-width: 248px;
+  --rail-width: 76px;
+  --expanded-width: 264px;
 
   position: fixed;
   left: 0;
@@ -15,26 +15,63 @@
   flex-direction: column;
   width: var(--rail-width);
   padding-top: 58px;
-  background: #ffffff;
-  border-right: 1px solid var(--color-line, #e0e0e0);
-  box-shadow: 0 2px 10px rgb(6 11 55 / 0.06);
   overflow: hidden;
-  transition: width 0.22s ease;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  color: #c7d7e6;
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(56, 189, 248, 0.16), transparent 60%),
+    linear-gradient(180deg, #0a1e38 0%, #061428 58%, #04101f 100%);
+  box-shadow: var(--shadow-abyss, 0 20px 60px -20px rgb(6 20 40 / 0.6));
+  transition: width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Bathymetric contour lines — depth curves receding down the rail */
+.app-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    repeating-radial-gradient(
+      ellipse 160% 40% at -10% 18%,
+      rgba(56, 189, 248, 0.11) 0 1px,
+      transparent 1px 34px
+    );
+  mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+}
+
+/* Hairline edge that catches the light like an instrument bezel */
+.app-sidebar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.5) 0%,
+    rgba(56, 189, 248, 0.12) 30%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
 }
 
 .app-sidebar:hover,
 .app-sidebar.pinned,
 .app-sidebar:focus-within {
   width: var(--expanded-width);
-  box-shadow: 0 8px 24px rgb(6 11 55 / 0.12);
 }
 
 .app-sidebar-scroll {
+  position: relative;
+  z-index: 1;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px 10px;
+  padding: 14px 12px;
   scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
 }
 
 .app-sidebar-group {
@@ -43,20 +80,30 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .app-sidebar-group-label {
-  margin: 18px 0 6px;
-  padding-left: 14px;
-  font-size: 11px;
+  position: relative;
+  margin: 22px 0 8px;
+  padding-left: 16px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--color-faint, #777);
+  color: rgba(56, 189, 248, 0.75);
   white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.18s ease;
+  transition: opacity 0.2s ease;
+}
+
+.app-sidebar-group-label::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: -11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .app-sidebar:hover .app-sidebar-group-label,
@@ -65,54 +112,50 @@
   opacity: 1;
 }
 
-/* Divider above the admin group so the rail still reads as two sections */
-.app-sidebar-group-label::before {
-  content: "";
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  margin-top: -10px;
-  border-top: 1px solid var(--color-line, #e0e0e0);
-}
-
 .app-sidebar-item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
-  /* 48px keeps the touch target above the 44px minimum */
   min-height: 48px;
-  padding: 0 12px;
+  padding: 0 14px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 11px;
   background: transparent;
-  color: var(--color-muted, #555);
+  color: #a8bfd4;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   text-align: left;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.18s ease, color 0.18s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app-sidebar-item:hover {
-  background: var(--color-card, #eaf4f8);
-  color: var(--color-primary, #0077b6);
+  background: rgba(56, 189, 248, 0.09);
+  color: #ffffff;
 }
 
 .app-sidebar-item:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgb(0 119 182 / 0.35);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.8);
 }
 
 .app-sidebar-item.active {
-  background: var(--color-card, #eaf4f8);
-  color: var(--color-primary, #0077b6);
+  color: #ffffff;
+  font-weight: 600;
+  background: linear-gradient(
+    90deg,
+    rgba(56, 189, 248, 0.22) 0%,
+    rgba(56, 189, 248, 0.06) 70%,
+    transparent 100%
+  );
 }
 
-/* Left accent bar: active state is not conveyed by colour alone */
+/* Active marker: a lit indicator bar, not colour alone */
 .app-sidebar-rail {
   position: absolute;
   left: 0;
@@ -120,13 +163,14 @@
   transform: translateY(-50%);
   width: 3px;
   height: 0;
-  border-radius: 0 3px 3px 0;
-  background: var(--color-primary, #0077b6);
-  transition: height 0.18s ease;
+  border-radius: 0 4px 4px 0;
+  background: var(--color-cyan, #38bdf8);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+  transition: height 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .app-sidebar-item.active .app-sidebar-rail {
-  height: 26px;
+  height: 30px;
 }
 
 .app-sidebar-icon {
@@ -134,68 +178,81 @@
   font-size: 19px;
   line-height: 1;
   text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.app-sidebar-item.active .app-sidebar-icon {
+  color: var(--color-cyan, #38bdf8);
+}
+
+.app-sidebar-item:hover .app-sidebar-icon {
+  transform: translateX(1px);
 }
 
 .app-sidebar-label {
   opacity: 0;
-  transition: opacity 0.18s ease;
+  transform: translateX(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .app-sidebar:hover .app-sidebar-label,
 .app-sidebar.pinned .app-sidebar-label,
 .app-sidebar:focus-within .app-sidebar-label {
   opacity: 1;
+  transform: translateX(0);
 }
 
 .app-sidebar-bottom {
-  border-top: 1px solid var(--color-line, #e0e0e0);
-  padding: 8px 10px 12px;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px 14px;
 }
 
 .app-sidebar-pin {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
   min-height: 44px;
-  padding: 0 12px;
+  padding: 0 14px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 11px;
   background: transparent;
-  color: var(--color-faint, #777);
+  color: #7f97ad;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color 0.18s ease, color 0.18s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app-sidebar-pin:hover {
-  background: var(--color-panel, #f5f5f5);
-  color: var(--color-primary, #0077b6);
+  background: rgba(56, 189, 248, 0.09);
+  color: var(--color-cyan, #38bdf8);
 }
 
 .app-sidebar-pin:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgb(0 119 182 / 0.35);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.8);
 }
 
 .app-sidebar-pin .pi {
   flex: 0 0 24px;
-  font-size: 17px;
+  font-size: 16px;
   text-align: center;
 }
 
 .app-sidebar-footer {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-top: 8px;
-  padding-left: 12px;
+  gap: 1px;
+  margin-top: 10px;
+  padding-left: 14px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease;
+  transition: opacity 0.2s ease;
 }
 
 .app-sidebar:hover .app-sidebar-footer,
@@ -209,28 +266,30 @@
   border: 0;
   background: none;
   padding: 3px 0;
-  color: var(--color-primary, #0077b6);
+  color: #7f97ad;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 11.5px;
   text-align: left;
   cursor: pointer;
   white-space: nowrap;
+  transition: color 0.16s ease;
 }
 
 .app-sidebar-footer-link:hover {
-  text-decoration: underline;
+  color: var(--color-cyan, #38bdf8);
 }
 
 .app-sidebar-footer-link:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(0 119 182 / 0.35);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.6);
   border-radius: 4px;
 }
 
 .app-sidebar-copyright {
-  margin: 6px 0 0;
-  font-size: 11px;
-  color: var(--color-faint, #777);
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: #5b7186;
   white-space: nowrap;
 }
 
@@ -239,22 +298,19 @@
   .app-sidebar-item,
   .app-sidebar-label,
   .app-sidebar-rail,
+  .app-sidebar-icon,
   .app-sidebar-footer,
   .app-sidebar-group-label {
     transition: none;
   }
 }
 
-/* Mobile: the drawer in responsive-shell.css controls visibility, so the
-   sidebar is always shown expanded once the drawer slides in. */
 @media (max-width: 768px) {
   .app-sidebar {
     width: var(--expanded-width);
-    /* clears the fixed hamburger/close button in the layout shell */
     padding-top: 104px;
   }
 
-  /* the drawer already controls open/closed on small screens */
   .app-sidebar-pin {
     display: none;
   }
@@ -263,6 +319,7 @@
   .app-sidebar .app-sidebar-footer,
   .app-sidebar .app-sidebar-group-label {
     opacity: 1;
+    transform: none;
     pointer-events: auto;
   }
 }

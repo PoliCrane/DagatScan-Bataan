@@ -1,7 +1,7 @@
 /* Map Legend Modal */
 .map-legend {
   position: fixed;
-  left: calc(68px + 15px);
+  left: calc(76px + 15px);
   top: 65px;
   width: 154px;
   background: #eaf4f8;
@@ -121,7 +121,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .map-legend {
-    left: calc(68px + 10px);
+    left: calc(76px + 10px);
     top: 80px;
     width: 167px;
     padding: 12px;

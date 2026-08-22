@@ -39,9 +39,9 @@ export default function Navbar({ username, isLoggedIn }){
               onMouseEnter={() => setShowDropdown(true)}
               onMouseLeave={() => setShowDropdown(false)}
             >
-              <img src="/user.png" alt="User Profile" className="profile-icon" />
+              <i className="pi pi-user profile-icon" aria-hidden="true" />
               <span className="profile-username">{username || "User"}</span>
-              <img src="/dropdown.png" alt="Dropdown" className="dropdownprofile" />
+              <i className="pi pi-chevron-down dropdownprofile" aria-hidden="true" />
             </button>
 
             {showDropdown && (
@@ -54,11 +54,11 @@ export default function Navbar({ username, isLoggedIn }){
                   setShowPasswordModal(true);
                   setShowDropdown(false);
                 }}>
-                  <img src="/lock.png" alt="Change Password" className="dropdown-icon" />
+                  <i className="pi pi-lock dropdown-icon" aria-hidden="true" />
                   Change Password
                 </button>
                 <button className="dropdown-item logout" onClick={logout}>
-                  <img src="/logout.png" alt="Logout" className="dropdown-icon" />
+                  <i className="pi pi-sign-out dropdown-icon" aria-hidden="true" />
                   Logout
                 </button>
               </div>

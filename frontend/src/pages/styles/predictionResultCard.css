@@ -1,7 +1,7 @@
 /* Prediction Result Card - Left Side Popup */
 .prediction-result-card {
   position: fixed;
-  left: calc(68px + 15px);
+  left: calc(76px + 15px);
   top: calc(200px + 270px);
   width: 200px;
   background: #eaf4f8;
@@ -122,9 +122,9 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .prediction-result-card {
-    left: calc(68px + 10px);
+    left: calc(76px + 10px);
     width: 260px;
-    top: calc(68px + 300px);
+    top: calc(76px + 300px);
   }
 
   .map-sidebar:hover ~ .layout-main .prediction-result-card,
@@ -157,9 +157,9 @@
 
 @media (max-width: 480px) {
   .prediction-result-card {
-    left: calc(68px + 5px);
+    left: calc(76px + 5px);
     width: 240px;
-    top: calc(68px + 300px);
+    top: calc(76px + 300px);
   }
 
   .map-sidebar:hover ~ .layout-main .prediction-result-card,
