@@ -6,6 +6,7 @@ import './pages/index.css'
 import './styles/deep-survey.css'
 import './styles/deep-survey-landing.css'
 import './styles/deep-survey-map.css'
+import './styles/deep-survey-pages.css'
 import App from './App.jsx'
 import 'leaflet/dist/leaflet.css'
 

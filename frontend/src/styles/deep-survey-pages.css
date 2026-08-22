@@ -1,0 +1,315 @@
+/* One page-header rhythm and type scale for every screen in the app shell. */
+
+.layout-main .dashboard-container,
+.layout-main .user-management-container,
+.layout-main .data-management-container,
+.layout-main .audit-trail-container,
+.layout-main .upload-container,
+.layout-main .reports-container,
+.layout-main .validation-container,
+.layout-main .awareness-container {
+  padding: 28px 32px 40px;
+  min-height: 0;
+}
+
+/* Page title band */
+.dashboard-welcome.dashboard-welcome {
+  position: relative;
+  margin-bottom: 26px;
+  padding: 26px 30px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 16px;
+  background:
+    radial-gradient(90% 200% at 8% 0%, rgba(56, 189, 248, 0.18), transparent 60%),
+    linear-gradient(100deg, #0a1e38 0%, #061428 62%, #04101f 100%);
+  background-attachment: scroll;
+  box-shadow: 0 18px 44px -24px rgb(6 20 40 / 0.8);
+  overflow: hidden;
+}
+
+.dashboard-welcome.dashboard-welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image: repeating-radial-gradient(
+    ellipse 120% 70% at 92% 120%,
+    rgba(56, 189, 248, 0.12) 0 1px,
+    transparent 1px 30px
+  );
+  mask-image: linear-gradient(270deg, #000, transparent 62%);
+}
+
+.dashboard-welcome.dashboard-welcome h1 {
+  margin: 0;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: #ffffff;
+}
+
+.dashboard-welcome.dashboard-welcome p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 1;
+  color: #a8c0d6;
+}
+
+.dashboard-welcome.dashboard-welcome .welcome-timestamp {
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(56, 189, 248, 0.85);
+}
+
+/* Every other page header shares one scale */
+.user-management-header,
+.data-management-header,
+.audit-trail-header,
+.reports-header,
+.validation-header,
+.awareness-header,
+.upload-header {
+  margin-bottom: 22px;
+}
+
+.user-management-header h1,
+.data-management-header h1,
+.audit-trail-header h1,
+.reports-header h1,
+.validation-header h1,
+.awareness-header h1,
+.upload-title,
+.reports-container > h1,
+.validation-container > h1,
+.awareness-container > h1 {
+  margin: 0;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--color-ink, #0b1a2b);
+}
+
+.user-management-header p,
+.data-management-header p,
+.audit-trail-header p,
+.reports-header p,
+.validation-header p,
+.awareness-header p,
+.upload-subtitle {
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-muted, #4a5b6c);
+}
+
+/* Section headings below the page title */
+.layout-main h2 {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--color-ink, #0b1a2b);
+}
+
+.layout-main h3 {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.003em;
+  color: var(--color-ink, #0b1a2b);
+}
+
+/* Dashboard stat cards read as instrument readouts */
+.dashboard-stats {
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.dashboard-stats .stat-card {
+  padding: 20px 22px;
+  border: 1px solid var(--color-line, #dde5ec);
+  border-left: 3px solid var(--color-primary, #0077b6);
+  border-radius: var(--radius-card, 0.875rem);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-stats .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.dashboard-stats img.stat-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  margin-bottom: 12px;
+}
+
+.dashboard-stats .stat-icon-warning {
+  color: #d97706;
+}
+
+.dashboard-stats i.stat-icon {
+  display: block;
+  width: auto;
+  height: auto;
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: var(--color-primary, #0077b6);
+}
+
+.dashboard-stats .stat-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted, #4a5b6c);
+}
+
+.dashboard-stats .stat-value {
+  margin-top: 6px;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 400;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--color-ink, #0b1a2b);
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-stats .stat-sublabel,
+.dashboard-stats .stat-note {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-muted, #4a5b6c);
+}
+
+/* Info boxes on the dashboard */
+.info-box {
+  padding: 18px 20px;
+  border: 1px solid var(--color-line, #dde5ec);
+  border-radius: var(--radius-card, 0.875rem);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.info-header-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.info-header-with-icon h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.info-header-with-icon i.info-icon {
+  width: auto;
+  height: auto;
+  font-size: 15px;
+  color: var(--color-primary, #0077b6);
+}
+
+/* One control size across every form on every page */
+.layout-main .p-inputtext,
+.layout-main .p-dropdown,
+.layout-main .p-multiselect,
+.layout-main .p-inputnumber-input,
+.layout-main .p-password-input,
+.layout-main .p-calendar .p-inputtext,
+.form-container .p-inputtext,
+.form-container .p-dropdown,
+.form-container .p-password-input {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  border-radius: 9px;
+}
+
+.layout-main textarea.p-inputtext,
+.form-container textarea.p-inputtext {
+  min-height: 88px;
+  padding: 10px 12px;
+  line-height: 1.5;
+}
+
+.layout-main .p-dropdown .p-dropdown-label,
+.form-container .p-dropdown .p-dropdown-label {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  font-size: 14px;
+}
+
+.layout-main .p-button,
+.form-container .p-button {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 13.5px;
+}
+
+.layout-main .p-button.p-button-icon-only,
+.form-container .p-button.p-button-icon-only {
+  width: 40px;
+  padding: 0;
+}
+
+.layout-main .p-button-sm {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+/* Field labels share one voice */
+.layout-main .field-label,
+.layout-main .form-group > label,
+.form-container .form-group > label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted, #4a5b6c);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-stats .stat-card {
+    transition: none;
+  }
+
+  .dashboard-stats .stat-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-main .dashboard-container,
+  .layout-main .user-management-container,
+  .layout-main .data-management-container,
+  .layout-main .audit-trail-container,
+  .layout-main .upload-container,
+  .layout-main .reports-container,
+  .layout-main .validation-container,
+  .layout-main .awareness-container {
+    padding: 20px 16px 32px;
+  }
+
+  .dashboard-welcome.dashboard-welcome {
+    padding: 22px 20px;
+  }
+}

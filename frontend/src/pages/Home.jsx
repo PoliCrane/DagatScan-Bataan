@@ -173,10 +173,7 @@ export default function Home() {
       <TourInfoButton onClick={replay} />
       <div className="dashboard-container">
         {/* Welcome Section */}
-        <div 
-          className="dashboard-welcome"
-          style={{ backgroundImage: "url('/tempoaboutBG.jpg')" }}
-        >
+        <div className="dashboard-welcome">
           <h1>Welcome back, {username}! </h1>
           <p>Coastal Erosion Monitoring System for {scopeLabel}</p>
           <p className="welcome-timestamp">{currentDate}</p>
@@ -185,25 +182,25 @@ export default function Home() {
         {/* Stats Section */}
         <div className="dashboard-stats">
           <div className="stat-card">
-            <img src="/controller.png" alt="Monitoring Sites" className="stat-icon" />
+            <i className="pi pi-compass stat-icon" aria-hidden="true" />
             <div className="stat-label">Active Monitoring Sites</div>
             <div className="stat-value">{loading ? "..." : stats.activeMonitoringSites}</div>
             <div className="stat-info">Real-time data collection ongoing</div>
           </div>
           <div className="stat-card">
-            <img src="/diagram.png" alt="Erosion Rate" className="stat-icon" />
+            <i className="pi pi-chart-line stat-icon" aria-hidden="true" />
             <div className="stat-label">Latest Erosion Rate</div>
             <div className="stat-value">{loading ? "..." : stats.latestErosionRate} m</div>
             <div className="stat-info">Average annual change</div>
           </div>
           <div className="stat-card">
-            <img src="/datarecord.png" alt="Data Records" className="stat-icon" />
+            <i className="pi pi-database stat-icon" aria-hidden="true" />
             <div className="stat-label">Data Records</div>
             <div className="stat-value">{loading ? "..." : stats.dataRecords.toLocaleString()}</div>
             <div className="stat-info">Historical measurements</div>
           </div>
           <div className="stat-card">
-            <img src="/warning.png" alt="Very High Risk Areas" className="stat-icon stat-icon-warning" />
+            <i className="pi pi-exclamation-triangle stat-icon stat-icon-warning" aria-hidden="true" />
             <div className="stat-label">Very High Risk Areas</div>
             <div className="stat-value">{loading ? "..." : stats.highRiskAreas}</div>
             <div className="stat-info">Critical erosion warning</div>
@@ -275,7 +272,7 @@ export default function Home() {
             {/* Current Focus Area */}
             <div className="info-box focus-area">
               <div className="info-header-with-icon">
-                <img src="/focus.png" alt="focus-icon" className="info-icon" />
+                <i className="pi pi-crosshairs info-icon" aria-hidden="true" />
                 <h3>Current Focus Area</h3>
               </div>
               <p>{scopeLabel} Coastal Zone - {loading ? "..." : stats.activeMonitoringSites} active monitoring sites.</p>
@@ -284,7 +281,7 @@ export default function Home() {
             {/* High Risk Areas Container */}
             <div className="high-risk-container">
               <div className="high-risk-header">
-                <img src="/highrisk.png" alt="risk-icon" className="info-icon" />
+                <i className="pi pi-bell info-icon" aria-hidden="true" />
                 <h3>All Monitoring Segments</h3>
                 <a href="#" className="view-all-link" onClick={(e) => { e.preventDefault(); navigate("/coastalmonitoring"); }}>
                   View all

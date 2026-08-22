@@ -1,6 +1,13 @@
 /* "Deep Survey" shell overrides.
    Unlayered so these win over the legacy page stylesheets they replace. */
 
+/* App shell pages scroll inside .layout-main, never the document */
+html:has(.layout-container),
+body:has(.layout-container) {
+  height: 100%;
+  overflow: hidden;
+}
+
 button,
 input,
 select,

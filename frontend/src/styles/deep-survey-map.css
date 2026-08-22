@@ -3,8 +3,7 @@
 .coastal-summary-container .summary-card,
 .analysis-cards-container .analysis-card,
 .analysis-tools-container .tools-card,
-.prediction-result-card.prediction-result-card,
-.risk-legend-card.risk-legend-card {
+.prediction-result-card.prediction-result-card{
   border: 1px solid rgba(56, 189, 248, 0.22);
   border-radius: 14px;
   background:
@@ -18,20 +17,20 @@
   overflow: hidden;
 }
 
-.analysis-tools-container {
-  width: 252px;
+.analysis-tools-container.analysis-tools-container {
+  width: 310px;
 }
 
-.analysis-cards-container {
-  width: 252px;
+.analysis-cards-container.analysis-cards-container {
+  width: 310px;
 }
 
 .erosion-legend.erosion-legend {
-  width: 340px;
+  width: 384px;
 }
 
 .map-legend.map-legend {
-  width: 210px;
+  width: 244px;
 }
 
 .coastal-summary-container .summary-card {
@@ -39,12 +38,12 @@
 }
 
 .coastal-summary-container.coastal-summary-container {
-  width: 272px;
+  width: 300px;
 }
 
 @media (max-width: 1366px) and (min-width: 769px) {
   .coastal-summary-container.coastal-summary-container {
-    width: 272px;
+    width: 300px;
   }
 }
 
@@ -76,12 +75,11 @@
 .analysis-cards-container .analysis-card .card-header,
 .analysis-tools-container .tools-card .card-header,
 .coastal-summary-container .summary-card .card-header,
-.prediction-result-card.prediction-result-card .card-header,
-.risk-legend-card.risk-legend-card .card-header {
+.prediction-result-card.prediction-result-card .card-header{
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 13px 16px 11px;
+  padding: 14px 18px 12px;
   background: rgba(56, 189, 248, 0.07);
   border-bottom: 1px solid rgba(56, 189, 248, 0.18);
 }
@@ -91,8 +89,7 @@
 .analysis-cards-container .analysis-card .card-title,
 .analysis-tools-container .tools-card .card-title,
 .coastal-summary-container .summary-card .card-title,
-.prediction-result-card.prediction-result-card .card-title,
-.risk-legend-card.risk-legend-card .card-title {
+.prediction-result-card.prediction-result-card .card-title{
   margin: 0;
   font-size: 11px;
   font-weight: 700;
@@ -106,8 +103,7 @@
 .analysis-cards-container .analysis-card .card-header .card-icon,
 .analysis-tools-container .tools-card .card-header .card-icon,
 .coastal-summary-container .summary-card .card-header .card-icon,
-.prediction-result-card.prediction-result-card .card-header .card-icon,
-.risk-legend-card.risk-legend-card .card-header .card-icon {
+.prediction-result-card.prediction-result-card .card-header .card-icon{
   width: auto;
   height: auto;
   font-size: 14px;
@@ -139,10 +135,9 @@ img.legend-icon {
 .analysis-cards-container .analysis-card .card-content,
 .analysis-tools-container .tools-card .card-content,
 .coastal-summary-container .summary-card .card-content,
-.prediction-result-card.prediction-result-card .card-content,
-.risk-legend-card.risk-legend-card .card-content {
+.prediction-result-card.prediction-result-card .card-content{
   margin: 0;
-  padding: 14px 16px 16px;
+  padding: 16px 18px 18px;
   background: transparent;
   border-radius: 0;
   gap: 12px;
@@ -211,14 +206,14 @@ img.legend-icon {
 .analysis-cards-container .analysis-card .card-label,
 .coastal-summary-container .summary-card .card-label {
   flex: 1;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #90a9c0;
 }
 
 .analysis-cards-container .analysis-card .card-value,
 .coastal-summary-container .summary-card .card-value {
   font-family: var(--font-display, "Instrument Serif", Georgia, serif);
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   line-height: 1;
   font-weight: 400;
   color: #ffffff;
@@ -272,7 +267,7 @@ img.legend-icon {
 
 .analysis-tools-container .form-select,
 .analysis-tools-container .form-value {
-  min-height: 38px;
+  min-height: 40px;
   padding: 0 11px;
   font-size: 13px;
   font-family: var(--font-sans, "Archivo", sans-serif);
@@ -317,7 +312,7 @@ img.legend-icon {
 }
 
 .analysis-tools-container .action-btn {
-  min-height: 40px;
+  min-height: 42px;
   padding: 0 14px;
   font-size: 11px;
   font-weight: 700;
@@ -481,9 +476,9 @@ img.legend-icon {
 }
 
 @media (max-width: 768px) {
-  .analysis-tools-container,
-  .analysis-cards-container {
-    width: 244px;
+  .analysis-tools-container.analysis-tools-container,
+  .analysis-cards-container.analysis-cards-container {
+    width: 276px;
   }
 
   .analysis-tools-container .form-select,

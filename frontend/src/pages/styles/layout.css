@@ -2,12 +2,15 @@
 .layout-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .layout-content {
   display: flex;
   flex: 1;
+  min-height: 0;
+  padding-top: 50px;
   background: white;
   position: relative;
 }
@@ -20,14 +23,13 @@
      regardless of scroll position, since the navbar is position:fixed and
      scrolling .layout-main doesn't move it out from under a fixed element.
      Matches the same fix already applied to .admin-sidebar's padding-top. */
-  padding-top: 50px;
   transition: margin-left 0.3s ease;
   animation: fadeIn 0.4s ease-in-out;
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-height: 0;
   overflow-y: auto;
-  min-height: 100%;
 }
 
 /* When sidebar hovers/expands, shift main content */
