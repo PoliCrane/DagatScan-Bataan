@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import "../pages/styles/accountModals.css";
 import { showSuccess, showError, confirmAction, showLoading } from "../utils/sweetAlertUtils";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import { Dropdown } from "primereact/dropdown";
+import { Message } from "primereact/message";
 import { getMunicipalities } from "../api/auth";
 
 import { API_BASE_URL } from "../config/api";
@@ -137,117 +142,91 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
 
   if (!account) return null;
 
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <Button label="Cancel" outlined severity="secondary" onClick={handleCancel} disabled={loading} />
+      <Button
+        label={loading ? "Saving..." : "Save Changes"}
+        icon="pi pi-check"
+        onClick={handleSave}
+        loading={loading}
+      />
+    </div>
+  );
+
   return (
-    <>
-      {isOpen && <div className="modal-overlay" onClick={handleCancel}></div>}
-      <div className={`account-modal ${isOpen ? "open" : ""}`}>
-        <div className="modal-header">
-          <h2>Edit Account</h2>
-          <button className="close-btn" onClick={handleCancel}>
-            ✕
-          </button>
-        </div>
+    <Dialog
+      header="Edit Account"
+      visible={isOpen}
+      onHide={handleCancel}
+      footer={footer}
+      style={{ width: "min(30rem, 92vw)" }}
+      modal
+      draggable={false}
+      dismissableMask
+    >
+      {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
-        <div className="modal-content">
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="id">ID:</label>
-            <input
-              id="id"
-              type="text"
-              value={account.id}
-              disabled
-              className="form-input disabled"
-            />
-            <small className="field-note">Cannot be changed</small>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email:</label>
-            <input
-              id="email"
-              type="email"
-              value={account.email}
-              disabled
-              className="form-input disabled"
-            />
-            <small className="field-note">Cannot be changed</small>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="username">Username *</label>
-            <input
-              id="username"
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Enter username"
-              className="form-input"
-            />
-          </div>
-
-          {isSuperadminAccount ? (
-            <div className="form-group">
-              <label htmlFor="roles">Role:</label>
-              <input
-                id="roles"
-                type="text"
-                value="Superadmin"
-                disabled
-                className="form-input disabled"
-              />
-              <small className="field-note">Cannot be changed here</small>
-            </div>
-          ) : (
-            <div className="form-group">
-              <label htmlFor="roles">Role *</label>
-              <select
-                id="roles"
-                name="roles"
-                value={formData.roles}
-                onChange={handleChange}
-                className="form-input"
-              >
-                <option value="municipal">Municipal</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          )}
-
-          {showMunicipalityField && (
-            <div className="form-group">
-              <label htmlFor="municipality_id">Municipality: *</label>
-              <select
-                id="municipality_id"
-                name="municipality_id"
-                value={formData.municipality_id}
-                onChange={handleChange}
-                className="form-input"
-              >
-                <option value="">Select municipality</option>
-                {municipalities.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-cancel" onClick={handleCancel}>
-            Cancel
-          </button>
-          <button
-            className="btn btn-save"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
+      <div className="form-group">
+        <label htmlFor="id">ID:</label>
+        <InputText id="id" value={String(account.id)} disabled className="form-input disabled w-full" />
+        <small className="field-note">Cannot be changed</small>
       </div>
-    </>
+
+      <div className="form-group">
+        <label htmlFor="email">Email:</label>
+        <InputText id="email" value={account.email} disabled className="form-input disabled w-full" />
+        <small className="field-note">Cannot be changed</small>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="username">Username *</label>
+        <InputText
+          id="username"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder="Enter username"
+          className="form-input w-full"
+        />
+      </div>
+
+      {isSuperadminAccount ? (
+        <div className="form-group">
+          <label htmlFor="roles">Role:</label>
+          <InputText id="roles" value="Superadmin" disabled className="form-input disabled w-full" />
+          <small className="field-note">Cannot be changed here</small>
+        </div>
+      ) : (
+        <div className="form-group">
+          <label htmlFor="roles">Role *</label>
+          <Dropdown
+            id="roles"
+            className="form-input w-full"
+            value={formData.roles}
+            onChange={(e) => handleChange({ target: { name: "roles", value: e.value } })}
+            options={[
+              { label: "Municipal", value: "municipal" },
+              { label: "Admin", value: "admin" },
+            ]}
+          />
+        </div>
+      )}
+
+      {showMunicipalityField && (
+        <div className="form-group">
+          <label htmlFor="municipality_id">Municipality: *</label>
+          <Dropdown
+            id="municipality_id"
+            className="form-input w-full"
+            value={formData.municipality_id}
+            onChange={(e) => handleChange({ target: { name: "municipality_id", value: e.value } })}
+            options={municipalities.map((m) => ({ label: m.name, value: m.id }))}
+            placeholder="Select municipality"
+            filter={municipalities.length > 5}
+          />
+        </div>
+      )}
+    </Dialog>
   );
 }

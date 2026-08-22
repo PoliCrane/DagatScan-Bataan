@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import "../pages/styles/accountModals.css";
 import { showSuccess, showError } from "../utils/sweetAlertUtils";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { InputText } from "primereact/inputtext";
+import { Password } from "primereact/password";
+import { Dropdown } from "primereact/dropdown";
+import { Message } from "primereact/message";
 import { getMunicipalities } from "../api/auth";
 
 import { API_BASE_URL } from "../config/api";
@@ -13,7 +19,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
     email: "",
     password: "",
     confirmPassword: "",
-    roles: "user",
+    roles: "municipal",
     municipality_id: "",
   });
   const [municipalities, setMunicipalities] = useState([]);
@@ -168,155 +174,142 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
     onClose();
   };
 
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <Button label="Cancel" outlined severity="secondary" onClick={handleCancel} disabled={loading} />
+      <Button
+        label={loading ? "Creating..." : "Create Account"}
+        icon="pi pi-user-plus"
+        onClick={handleSave}
+        loading={loading}
+      />
+    </div>
+  );
+
+  const requirementRow = (met, text) => (
+    <div className={`requirement ${met ? "met" : ""}`}>
+      <span className="requirement-icon">{met ? "✓" : "○"}</span>
+      {text}
+    </div>
+  );
+
+  const roleOptions = [
+    { label: "Municipal", value: "municipal" },
+    { label: "Administrator", value: "admin" },
+    ...(isSuperadmin ? [{ label: "Superadmin", value: "superadmin" }] : []),
+  ];
+
+  const onField = (name) => (e) => handleChange({ target: { name, value: e.value ?? e.target.value } });
+
   return (
-    <>
-      {isOpen && <div className="modal-overlay" onClick={handleCancel}></div>}
-      <div className={`account-modal ${isOpen ? "open" : ""}`}>
-        <div className="modal-header">
-          <h2>Add New Account</h2>
-          <button className="close-btn" onClick={handleCancel}>
-            ✕
-          </button>
-        </div>
+    <Dialog
+      header="Add Account"
+      visible={isOpen}
+      onHide={handleCancel}
+      footer={footer}
+      style={{ width: "min(32rem, 92vw)" }}
+      modal
+      draggable={false}
+      dismissableMask
+    >
+      {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
-        <div className="modal-content">
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="username">Username *</label>
-            <input
-              id="username"
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Enter username"
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email *</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter email address"
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password *</label>
-            <div className="password-input-wrapper">
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                onFocus={() => setExpandPassword(true)}
-                onBlur={() => setExpandPassword(false)}
-                placeholder="Enter password"
-                className="form-input"
-              />
-            </div>
-            {expandPassword && (
-              <div className="password-requirements">
-                <div className={`requirement ${passwordRequirements.minLength ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.minLength ? "✓" : "○"}</span>
-                  At least 8 characters
-                </div>
-                <div className={`requirement ${passwordRequirements.hasUppercase ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasUppercase ? "✓" : "○"}</span>
-                  One uppercase letter (A-Z)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasLowercase ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasLowercase ? "✓" : "○"}</span>
-                  One lowercase letter (a-z)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasNumber ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasNumber ? "✓" : "○"}</span>
-                  One number (0-9)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasSpecial ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasSpecial ? "✓" : "○"}</span>
-                  Special Characters (! @ # $ % ^ & * ( ) _ +)
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password *</label>
-            <div className="password-input-wrapper">
-              <input
-                id="confirmPassword"
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Re-enter password"
-                className="form-input"
-              />
-            </div>
-            {formData.confirmPassword && (
-              <div className={`password-match-hint ${formData.password === formData.confirmPassword ? "match" : "mismatch"}`}>
-                {formData.password === formData.confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="roles">Account Role:</label>
-            <select
-              id="roles"
-              name="roles"
-              value={formData.roles}
-              onChange={handleChange}
-              className="form-input"
-            >
-              <option value="municipal">Municipal</option>
-              <option value="admin">Administrator</option>
-              {isSuperadmin && <option value="superadmin">Superadmin</option>}
-            </select>
-          </div>
-
-          {formData.roles === "municipal" && (
-            <div className="form-group">
-              <label htmlFor="municipality_id">Municipality: *</label>
-              <select
-                id="municipality_id"
-                name="municipality_id"
-                value={formData.municipality_id}
-                onChange={handleChange}
-                className="form-input"
-              >
-                <option value="">Select municipality</option>
-                {municipalities.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-cancel" onClick={handleCancel}>
-            Cancel
-          </button>
-          <button
-            className="btn btn-save"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Create Account"}
-          </button>
-        </div>
+      <div className="form-group">
+        <label htmlFor="username">Username *</label>
+        <InputText
+          id="username"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder="Enter username"
+          className="form-input w-full"
+        />
       </div>
-      
-    </>
+
+      <div className="form-group">
+        <label htmlFor="email">Email *</label>
+        <InputText
+          id="email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Enter email address"
+          className="form-input w-full"
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="password">Password *</label>
+        <Password
+          id="password"
+          name="password"
+          className="w-full"
+          inputClassName="form-input w-full"
+          value={formData.password}
+          onChange={handleChange}
+          onFocus={() => setExpandPassword(true)}
+          onBlur={() => setExpandPassword(false)}
+          placeholder="Enter password"
+          toggleMask
+          feedback={false}
+        />
+        {expandPassword && (
+          <div className="password-requirements">
+            {requirementRow(passwordRequirements.minLength, "At least 8 characters")}
+            {requirementRow(passwordRequirements.hasUppercase, "One uppercase letter (A-Z)")}
+            {requirementRow(passwordRequirements.hasLowercase, "One lowercase letter (a-z)")}
+            {requirementRow(passwordRequirements.hasNumber, "One number (0-9)")}
+            {requirementRow(passwordRequirements.hasSpecial, "Special Characters (! @ # $ % ^ & * ( ) _ +)")}
+          </div>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="confirmPassword">Confirm Password *</label>
+        <Password
+          id="confirmPassword"
+          name="confirmPassword"
+          className="w-full"
+          inputClassName="form-input w-full"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Re-enter password"
+          toggleMask
+          feedback={false}
+        />
+        {formData.confirmPassword && (
+          <div className={`password-match-hint ${formData.password === formData.confirmPassword ? "match" : "mismatch"}`}>
+            {formData.password === formData.confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
+          </div>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="roles">Account Role:</label>
+        <Dropdown
+          id="roles"
+          className="form-input w-full"
+          value={formData.roles}
+          onChange={onField("roles")}
+          options={roleOptions}
+        />
+      </div>
+
+      {formData.roles === "municipal" && (
+        <div className="form-group">
+          <label htmlFor="municipality_id">Municipality: *</label>
+          <Dropdown
+            id="municipality_id"
+            className="form-input w-full"
+            value={formData.municipality_id}
+            onChange={onField("municipality_id")}
+            options={municipalities.map((m) => ({ label: m.name, value: m.id }))}
+            placeholder="Select municipality"
+            filter={municipalities.length > 5}
+          />
+        </div>
+      )}
+    </Dialog>
   );
 }

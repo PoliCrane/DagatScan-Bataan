@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { Password } from "primereact/password";
+import { Message } from "primereact/message";
 import "../pages/styles/changePasswordModal.css";
 import { showSuccess, showError, showLoading } from "../utils/sweetAlertUtils";
 
@@ -7,9 +11,6 @@ export default function ChangePasswordModal({ isOpen, onClose, username }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [expandPassword, setExpandPassword] = useState(false);
@@ -89,142 +90,94 @@ export default function ChangePasswordModal({ isOpen, onClose, username }) {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setShowCurrentPassword(false);
-    setShowNewPassword(false);
-    setShowConfirmPassword(false);
     setError("");
     onClose();
   };
 
+  const footer = (
+    <div className="flex justify-end gap-2">
+      <Button label="Cancel" outlined severity="secondary" onClick={handleCancel} disabled={loading} />
+      <Button
+        label={loading ? "Saving..." : "Save"}
+        icon="pi pi-check"
+        onClick={handleSave}
+        loading={loading}
+      />
+    </div>
+  );
+
+  const requirementRow = (met, text) => (
+    <div className={`requirement ${met ? "met" : ""}`}>
+      <span className="requirement-icon">{met ? "✓" : "○"}</span>
+      {text}
+    </div>
+  );
+
   return (
-    <>
-      {isOpen && <div className="modal-overlay" onClick={handleCancel}></div>}
-      <div className={`change-password-modal ${isOpen ? "open" : ""}`}>
-        <div className="modal-header">
-          <h3>Change Password</h3>
-          <button className="close-btn" onClick={handleCancel}>
-            ✕
-          </button>
-        </div>
+    <Dialog
+      header="Change Password"
+      visible={isOpen}
+      onHide={handleCancel}
+      footer={footer}
+      style={{ width: "min(30rem, 92vw)" }}
+      modal
+      draggable={false}
+      dismissableMask
+    >
+      {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
-        <div className="modal-content">
-          {error && <div className="error-message">{error}</div>}
-
-          <div className="form-group">
-            <label htmlFor="current-password">Current Password:</label>
-            <div className="password-input-wrapper">
-              <input
-                id="current-password"
-                type={showCurrentPassword ? "text" : "password"}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password"
-                className="password-input"
-              />
-              <button
-                type="button"
-                className="toggle-password-btn"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-              >
-                <img
-                  src={showCurrentPassword ? "/hide.png" : "/view.png"}
-                  alt={showCurrentPassword ? "Hide" : "Show"}
-                  className="toggle-icon"
-                />
-              </button>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="new-password">New Password:</label>
-            <div className="password-input-wrapper">
-              <input
-                id="new-password"
-                type={showNewPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                onFocus={() => setExpandPassword(true)}
-                onBlur={() => setExpandPassword(false)}
-                placeholder="Enter new password"
-                className="password-input"
-              />
-              <button
-                type="button"
-                className="toggle-password-btn"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-              >
-                <img
-                  src={showNewPassword ? "/hide.png" : "/view.png"}
-                  alt={showNewPassword ? "Hide" : "Show"}
-                  className="toggle-icon"
-                />
-              </button>
-            </div>
-            {expandPassword && (
-              <div className="password-requirements">
-                <div className={`requirement ${passwordRequirements.minLength ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.minLength ? "✓" : "○"}</span>
-                  At least 8 characters
-                </div>
-                <div className={`requirement ${passwordRequirements.hasUppercase ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasUppercase ? "✓" : "○"}</span>
-                  One uppercase letter (A-Z)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasLowercase ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasLowercase ? "✓" : "○"}</span>
-                  One lowercase letter (a-z)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasNumber ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasNumber ? "✓" : "○"}</span>
-                  One number (0-9)
-                </div>
-                <div className={`requirement ${passwordRequirements.hasSpecial ? "met" : ""}`}>
-                  <span className="requirement-icon">{passwordRequirements.hasSpecial ? "✓" : "○"}</span>
-                  Special Characters (! @ # $ % ^ & * ( ) _ +)
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirm-password">Confirm New Password:</label>
-            <div className="password-input-wrapper">
-              <input
-                id="confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                className="password-input"
-              />
-              <button
-                type="button"
-                className="toggle-password-btn"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                <img
-                  src={showConfirmPassword ? "/hide.png" : "/view.png"}
-                  alt={showConfirmPassword ? "Hide" : "Show"}
-                  className="toggle-icon"
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn btn-cancel" onClick={handleCancel}>
-            Cancel
-          </button>
-          <button
-            className="btn btn-save"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save"}
-          </button>
-        </div>
+      <div className="form-group">
+        <label htmlFor="current-password">Current Password:</label>
+        <Password
+          id="current-password"
+          className="w-full"
+          inputClassName="form-input w-full"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          placeholder="Enter current password"
+          toggleMask
+          feedback={false}
+        />
       </div>
-    </>
+
+      <div className="form-group">
+        <label htmlFor="new-password">New Password:</label>
+        <Password
+          id="new-password"
+          className="w-full"
+          inputClassName="form-input w-full"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          onFocus={() => setExpandPassword(true)}
+          onBlur={() => setExpandPassword(false)}
+          placeholder="Enter new password"
+          toggleMask
+          feedback={false}
+        />
+        {expandPassword && (
+          <div className="password-requirements">
+            {requirementRow(passwordRequirements.minLength, "At least 8 characters")}
+            {requirementRow(passwordRequirements.hasUppercase, "One uppercase letter (A-Z)")}
+            {requirementRow(passwordRequirements.hasLowercase, "One lowercase letter (a-z)")}
+            {requirementRow(passwordRequirements.hasNumber, "One number (0-9)")}
+            {requirementRow(passwordRequirements.hasSpecial, "Special Characters (! @ # $ % ^ & * ( ) _ +)")}
+          </div>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="confirm-password">Confirm New Password:</label>
+        <Password
+          id="confirm-password"
+          className="w-full"
+          inputClassName="form-input w-full"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm new password"
+          toggleMask
+          feedback={false}
+        />
+      </div>
+    </Dialog>
   );
 }

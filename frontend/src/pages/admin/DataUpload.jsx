@@ -1,5 +1,10 @@
 import AdminLayout from "../../components/AdminLayout";
 import { useState, useRef, useEffect, useMemo } from "react";
+import { InputText } from "primereact/inputtext";
+import { InputNumber } from "primereact/inputnumber";
+import { Dropdown } from "primereact/dropdown";
+import { Button } from "primereact/button";
+import { ProgressBar } from "primereact/progressbar";
 import "../styles/data-upload.css";
 import { showSuccess, showError } from "../../utils/sweetAlertUtils";
 import useGuidedTour from "../../hooks/useGuidedTour";
@@ -474,9 +479,8 @@ export default function DataUpload() {
               <div className="form-grid" id="ndwi-generator-fields">
                 <div className="form-group">
                   <label className="form-label">Latitude Min (South) *</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                  <InputText
+                    className="form-input w-full"
                     value={ndwiLatMin}
                     onChange={(e) => setNdwiLatMin(e.target.value)}
                     placeholder={`14.6000 or 14°33'0.76"N`}
@@ -484,9 +488,8 @@ export default function DataUpload() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Latitude Max (North) *</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                  <InputText
+                    className="form-input w-full"
                     value={ndwiLatMax}
                     onChange={(e) => setNdwiLatMax(e.target.value)}
                     placeholder={`14.6400 or 14°33'54.17"N`}
@@ -494,9 +497,8 @@ export default function DataUpload() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Longitude Min (West) *</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                  <InputText
+                    className="form-input w-full"
                     value={ndwiLonMin}
                     onChange={(e) => setNdwiLonMin(e.target.value)}
                     placeholder={`120.3800 or 120°22'53.66"E`}
@@ -504,9 +506,8 @@ export default function DataUpload() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Longitude Max (East) *</label>
-                  <input
-                    type="text"
-                    className="form-input"
+                  <InputText
+                    className="form-input w-full"
                     value={ndwiLonMax}
                     onChange={(e) => setNdwiLonMax(e.target.value)}
                     placeholder={`120.4200 or 120°23'37.98"E`}
@@ -514,29 +515,26 @@ export default function DataUpload() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Year *</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    value={ndwiYear}
-                    onChange={(e) => setNdwiYear(e.target.value)}
-                    min="2015"
+                  <InputNumber
+                    className="w-full"
+                    inputClassName="form-input w-full"
+                    value={ndwiYear ? Number(ndwiYear) : null}
+                    onValueChange={(e) => setNdwiYear(e.value == null ? "" : String(e.value))}
+                    min={2015}
                     max={new Date().getFullYear()}
+                    useGrouping={false}
                   />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Municipality *</label>
-                  <select
-                    className="form-select"
+                  <Dropdown
+                    className="form-select w-full"
                     value={ndwiMunicipality}
-                    onChange={(e) => setNdwiMunicipality(e.target.value)}
-                  >
-                    <option value="">Select Municipality</option>
-                    {municipalities.map((mun) => (
-                      <option key={mun} value={mun}>
-                        {mun}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(e) => setNdwiMunicipality(e.value)}
+                    options={municipalities}
+                    placeholder="Select Municipality"
+                    filter
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Coastline Name *</label>
@@ -557,24 +555,25 @@ export default function DataUpload() {
               </div>
 
               <div className="upload-actions" style={{ marginTop: '16px', gap: '10px', flexWrap: 'wrap' }}>
-                <button
+                <Button
                   className="btn-upload"
                   id="generate-ndwi-btn"
+                  icon="pi pi-cloud-download"
                   onClick={handleGenerateNDWI}
                   disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running}
-                >
-                  <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiGeneration.singleYear.generating ? "Generating..." : "Generate & Upload Selected Year"}
-                </button>
-                <button
+                  loading={ndwiGeneration.singleYear.generating}
+                  label={ndwiGeneration.singleYear.generating ? "Generating..." : "Generate & Upload Selected Year"}
+                />
+                <Button
                   className="btn-upload"
                   id="generate-ndwi-all-years-btn"
+                  icon="pi pi-calendar"
+                  severity="secondary"
                   onClick={handleGenerateAllYears}
                   disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running}
-                >
-                  <img src="/generateNDWI.png" alt="" className="btn-icon" />
-                  {ndwiGeneration.running ? "Generating All Years..." : `Generate & Upload All Years (2015–${new Date().getFullYear()})`}
-                </button>
+                  loading={ndwiGeneration.running}
+                  label={ndwiGeneration.running ? "Generating All Years..." : `Generate & Upload All Years (2015–${new Date().getFullYear()})`}
+                />
               </div>
 
               {ndwiGeneration.singleYear.generating && (
@@ -590,9 +589,7 @@ export default function DataUpload() {
                       </p>
                     </div>
                   </div>
-                  <div className="progress-bar-container">
-                    <div className="progress-bar-fill progress-bar-indeterminate" />
-                  </div>
+                  <ProgressBar mode="indeterminate" style={{ height: "6px" }} />
                   <p className="ndwi-single-progress-note">
                     <span className="ndwi-single-progress-note-icon">✓</span>
                     You can safely navigate to another page — we'll show a confirmation when it's done.
@@ -1007,7 +1004,7 @@ function AreaNameField({ municipality, value, onChange, onAreaSelect }) {
   const otherMode = otherSelected || (value !== "" && !isKnownAreaName);
 
   const handleSelectChange = (e) => {
-    const selected = e.target.value;
+    const selected = e.value;
     if (selected === "__other__") {
       setOtherSelected(true);
       onChange("");
@@ -1024,25 +1021,20 @@ function AreaNameField({ municipality, value, onChange, onAreaSelect }) {
 
   return (
     <>
-      <select
-        className="form-select"
-        value={otherMode ? "__other__" : value}
+      <Dropdown
+        className="form-select w-full"
+        value={otherMode ? "__other__" : value || null}
         onChange={handleSelectChange}
-      >
-        <option value="" disabled>
-          {areas.length > 0 ? "Select an area" : "No existing areas yet"}
-        </option>
-        {areas.map((area) => (
-          <option key={area.id} value={area.name}>
-            {area.name}
-          </option>
-        ))}
-        <option value="__other__">Others</option>
-      </select>
+        options={[
+          ...areas.map((area) => ({ label: area.name, value: area.name })),
+          { label: "Others", value: "__other__" },
+        ]}
+        placeholder={areas.length > 0 ? "Select an area" : "No existing areas yet"}
+        filter={areas.length > 5}
+      />
       {otherMode && (
-        <input
-          type="text"
-          className="form-input"
+        <InputText
+          className="form-input w-full"
           style={{ marginTop: 8 }}
           value={value}
           onChange={(e) => onChange(e.target.value)}
