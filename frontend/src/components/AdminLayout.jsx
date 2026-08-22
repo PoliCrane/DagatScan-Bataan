@@ -1,5 +1,5 @@
 import Navbar from "../pages/navbar";
-import AdminSidebar from "../components/AdminSidebar";
+import AppSidebar from "../components/AppSidebar";
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../contexts/useAuth";
@@ -37,7 +37,7 @@ export default function AdminLayout({ children }) {
         <div className="drawer-backdrop md:hidden" onClick={() => setDrawerOpen(false)} />
       )}
       <div className="layout-content">
-        <AdminSidebar />
+        <AppSidebar />
         <div className="layout-main" key={location.pathname}>
           {children}
         </div>

@@ -14,7 +14,7 @@
 
 .layout-main {
   flex: 1;
-  margin-left: 65px;
+  margin-left: 68px;
   /* Clears .main-navbar's fixed 50px height (navbar.css) — without this,
      content near the top of .layout-main renders underneath the navbar
      regardless of scroll position, since the navbar is position:fixed and
@@ -32,8 +32,11 @@
 
 /* When sidebar hovers/expands, shift main content */
 .map-sidebar:hover ~ .layout-main,
-.admin-sidebar:hover ~ .layout-main {
-  margin-left: 224px;
+.admin-sidebar:hover ~ .layout-main,
+.map-sidebar:focus-within ~ .layout-main,
+.admin-sidebar:focus-within ~ .layout-main,
+.app-sidebar.pinned ~ .layout-main {
+  margin-left: 248px;
 }
 
 @keyframes fadeIn {

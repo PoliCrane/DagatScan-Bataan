@@ -2,7 +2,7 @@
 .analysis-tools-container {
   position: fixed;
   right: 20px;
-  top: calc(65px + 48px + 20px);
+  top: calc(68px + 48px + 20px);
   width: 200px;
   display: flex;
   flex-direction: column;

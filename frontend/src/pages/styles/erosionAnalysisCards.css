@@ -1,8 +1,8 @@
 /* Analysis Cards Container */
 .analysis-cards-container {
   position: fixed;
-  left: calc(65px + 15px);
-  top: calc(65px + 120px);
+  left: calc(68px + 15px);
+  top: calc(68px + 120px);
   width: 224px;
   display: flex;
   flex-direction: column;
@@ -199,7 +199,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .analysis-cards-container {
-    left: calc(65px + 10px);
+    left: calc(68px + 10px);
     top: calc(80px + 180px);
     width: 280px;
     gap: 10px;

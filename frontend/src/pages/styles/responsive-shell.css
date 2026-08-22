@@ -70,10 +70,10 @@
     transition: left 0.3s ease;
   }
 
-  .layout-content:has(.map-sidebar:hover) .coastal-summary-container,
-  .layout-content:has(.admin-sidebar:hover) .coastal-summary-container,
-  .layout-content:has(.map-sidebar:hover) .analysis-cards-container,
-  .layout-content:has(.admin-sidebar:hover) .analysis-cards-container {
-    left: calc(224px + 15px);
+  .layout-content:has(.app-sidebar:hover) .coastal-summary-container,
+  .layout-content:has(.app-sidebar:hover) .analysis-cards-container,
+  .layout-content:has(.app-sidebar.pinned) .coastal-summary-container,
+  .layout-content:has(.app-sidebar.pinned) .analysis-cards-container {
+    left: calc(248px + 15px);
   }
 }

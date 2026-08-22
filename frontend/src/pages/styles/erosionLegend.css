@@ -1,7 +1,7 @@
 /* Erosion Analysis Legend Modal */
 .erosion-legend {
   position: fixed;
-  left: calc(65px + 15px);
+  left: calc(68px + 15px);
   top: 65px;
   width: 308px;
   background: #eaf4f8;
@@ -120,7 +120,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .erosion-legend {
-    left: calc(65px + 10px);
+    left: calc(68px + 10px);
     top: 80px;
     width: 286px;
     padding: 12px;

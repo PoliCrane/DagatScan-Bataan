@@ -1,7 +1,5 @@
 import Navbar from "../pages/navbar";
-import MapSidebar from "../components/MapSidebar";
-import AdminSidebar from "../components/AdminSidebar";
-import MunicipalSidebar from "../components/MunicipalSidebar";
+import AppSidebar from "../components/AppSidebar";
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../contexts/useAuth";
@@ -9,7 +7,7 @@ import "../pages/styles/responsive-shell.css";
 
 export default function Layout({ children }) {
   const location = useLocation();
-  const { isLoggedIn, username: authUsername, roles } = useAuth();
+  const { isLoggedIn, username: authUsername } = useAuth();
   const username = authUsername || "User";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [lastPath, setLastPath] = useState(location.pathname);
@@ -19,12 +17,6 @@ export default function Layout({ children }) {
     setDrawerOpen(false);
   }
 
-  const sidebarTier =
-    roles === "admin" || roles === "superadmin"
-      ? "admin"
-      : roles === "municipal"
-      ? "municipal"
-      : "public";
 
   return (
     <div className={`layout-container ${drawerOpen ? "drawer-open" : ""}`}>
@@ -47,9 +39,7 @@ export default function Layout({ children }) {
         <div className="drawer-backdrop md:hidden" onClick={() => setDrawerOpen(false)} />
       )}
       <div className="layout-content">
-        {sidebarTier === "admin" && <AdminSidebar />}
-        {sidebarTier === "municipal" && <MunicipalSidebar />}
-        {sidebarTier === "public" && <MapSidebar />}
+        <AppSidebar />
         <div className="layout-main" key={location.pathname}>
           {children}
         </div>
