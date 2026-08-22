@@ -8,20 +8,30 @@ import "./index-organized.css";
 
 const FEATURES = [
   {
-    icon: "/corefeature1.png",
+    index: "01",
+    icon: "pi pi-map",
     title: "View Coastline",
     text: "Compare past and present coastlines from satellite-derived shoreline data.",
   },
   {
-    icon: "/corefeature2.png",
+    index: "02",
+    icon: "pi pi-chart-line",
     title: "Predict Erosion",
     text: "Project future shoreline positions with confidence bounds and validated accuracy.",
   },
   {
-    icon: "/corefeature3.png",
+    index: "03",
+    icon: "pi pi-file-export",
     title: "Generate Reports",
     text: "Download per-municipality erosion assessment reports and open data.",
   },
+];
+
+const READOUTS = [
+  { value: "12", unit: "municipalities", label: "Coastline under survey" },
+  { value: "2015", unit: "baseline", label: "First imagery epoch" },
+  { value: "10 m", unit: "resolution", label: "Sentinel-2 pixel size" },
+  { value: "\u00b195%", unit: "interval", label: "Prediction confidence" },
 ];
 
 export default function Index() {
@@ -34,7 +44,7 @@ export default function Index() {
   }, [isLoggedIn, navigate]);
 
   return (
-    <div className="bg-white font-sans">
+    <div className="ds-landing font-sans">
       <IndexNavBar
         onLoginClick={() => authModalsRef.current?.openLogin()}
         onRegisterClick={() => navigate("/request-account")}
@@ -47,15 +57,17 @@ export default function Index() {
         className="relative flex min-h-[88vh] items-center justify-center overflow-hidden px-6"
         style={{ backgroundImage: "url('/tempoBG.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
       >
-        <div className="absolute inset-0 bg-linear-to-b from-navy/70 via-navy/50 to-navy/80" />
+        <div className="ds-hero-wash absolute inset-0" />
+        <div className="ds-hero-grid absolute inset-0" />
         <div className="relative mx-auto max-w-3xl py-24 text-center text-white">
-          <span className="mb-5 inline-block rounded-full border border-white/40 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest backdrop-blur">
+          <span className="ds-eyebrow">
+            <span className="ds-eyebrow-dot" />
             Coastal Monitoring for Bataan
           </span>
-          <h1 className="m-0 text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
-            DagatScan <span className="text-accent">Bataan</span>
+          <h1 className="ds-hero-title">
+            DagatScan <span className="ds-hero-accent">Bataan</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base text-white/85 sm:text-lg">
+          <p className="mx-auto mt-5 max-w-xl text-base text-white/85 sm:text-lg">
             A coastal erosion visualization and awareness system — satellite-derived
             shorelines, validated predictions, and risk assessments for all 12 coastal
             municipalities.
@@ -63,36 +75,53 @@ export default function Index() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => navigate("/coastalmonitoring")}
-              className="rounded-lg bg-primary px-7 py-3 text-base font-semibold text-white shadow-raised transition hover:bg-primary-dark"
+              className="ds-cta ds-cta-primary"
             >
+              <i className="pi pi-map-marker" aria-hidden="true" />
               Explore Map
             </button>
             <button
               onClick={() => navigate("/validation")}
-              className="rounded-lg border border-white/50 bg-white/10 px-7 py-3 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20"
+              className="ds-cta ds-cta-ghost"
             >
+              <i className="pi pi-verified" aria-hidden="true" />
               View Accuracy Report
             </button>
           </div>
         </div>
+        <div className="ds-hero-fade" aria-hidden="true" />
+      </section>
+
+      <section className="ds-readout-band" aria-label="Survey parameters">
+        <div className="ds-readout-inner">
+          {READOUTS.map((r) => (
+            <div className="ds-readout" key={r.label}>
+              <span className="ds-readout-value">{r.value}</span>
+              <span className="ds-readout-unit">{r.unit}</span>
+              <span className="ds-readout-label">{r.label}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section id="features" className="mx-auto max-w-5xl px-6 py-16 md:py-20">
-        <h2 className="m-0 text-center text-3xl font-bold text-navy">Core Features</h2>
-        <p className="mx-auto mt-2 max-w-xl text-center text-muted">
+        <p className="ds-section-kicker">What the system does</p>
+        <h2 className="ds-section-title">Core Features</h2>
+        <p className="mx-auto mt-3 max-w-xl text-center text-muted">
           From raw satellite imagery to defensible shoreline-change insight.
         </p>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className="rounded-card border border-line bg-white p-6 text-center shadow-card transition hover:-translate-y-1 hover:shadow-raised"
+              className="ds-feature-card"
             >
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-card">
-                <img src={f.icon} alt="" className="h-9 w-9" />
-              </div>
-              <h3 className="m-0 text-lg font-bold text-primary">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{f.text}</p>
+              <span className="ds-feature-index">{f.index}</span>
+              <span className="ds-feature-icon">
+                <i className={f.icon} aria-hidden="true" />
+              </span>
+              <h3 className="ds-feature-title">{f.title}</h3>
+              <p className="ds-feature-text">{f.text}</p>
             </div>
           ))}
         </div>
@@ -103,10 +132,11 @@ export default function Index() {
         className="relative overflow-hidden px-6 py-20"
         style={{ backgroundImage: "url('/tempoaboutBG.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
       >
-        <div className="absolute inset-0 bg-white/85" />
+        <div className="ds-about-wash absolute inset-0" />
         <div className="relative mx-auto max-w-3xl text-center">
-          <h2 className="m-0 text-3xl font-bold text-navy">About DagatScan Bataan</h2>
-          <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-muted">
+          <p className="ds-section-kicker ds-on-dark">Mission</p>
+          <h2 className="ds-section-title ds-on-dark">About DagatScan Bataan</h2>
+          <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-white/80">
             Our goal is to promote coastal awareness and support coastal monitoring in
             Bataan by providing a clear and accessible system for visualizing coastal
             erosion and changes over time.
