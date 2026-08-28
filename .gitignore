@@ -1,0 +1,11 @@
+# Database dumps — contain real user data (password hashes, emails).
+# backend/.env and backend/config/ee-service-account.json are handled by
+# backend/.gitignore; this file only covers root-level files.
+db_backup_*.sql
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea

@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.5200, 14.6850],
+          [120.5230, 14.6830],
+          [120.5260, 14.6810],
+          [120.5280, 14.6790],
+          [120.5300, 14.6770]
+        ]
+      },
+      "properties": {
+        "erosionRate": -0.6,
+        "specific_area": "Hermosa Coastal Strip",
+        "name": "Hermosa Coastal Strip",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -4.8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.5450, 14.6650],
+          [120.5420, 14.6670],
+          [120.5390, 14.6690],
+          [120.5360, 14.6710],
+          [120.5330, 14.6730]
+        ]
+      },
+      "properties": {
+        "erosionRate": -0.1,
+        "specific_area": "Hermosa Rocky Shore",
+        "name": "Hermosa Rocky Shore",
+        "source": "Landsat 8",
+        "data_quality": "Measured",
+        "cumulativeChange": -0.8
+      }
+    }
+  ]
+}

@@ -1,0 +1,238 @@
+{
+  "generatedAt": "2026-08-18T04:12:39.799Z",
+  "boundingBox": {
+    "latMin": 13.8,
+    "latMax": 15.4,
+    "lonMin": 119.2,
+    "lonMax": 121.2
+  },
+  "wavePoint": {
+    "lat": 14.6,
+    "lon": 120.2
+  },
+  "sources": {
+    "typhoons": "NOAA IBTrACS v04r01 (WP basin)",
+    "enso": "NOAA CPC Oceanic Niño Index",
+    "waves": "Open-Meteo Marine Archive (ERA5)"
+  },
+  "years": {
+    "2015": {
+      "typhoons": [
+        {
+          "year": 2015,
+          "name": "MELOR",
+          "month": 12,
+          "maxWindKt": 65
+        }
+      ],
+      "enso": {
+        "meanAnomaly": 1.47,
+        "peakAnomaly": 2.59,
+        "state": "El Niño"
+      },
+      "waves": null
+    },
+    "2016": {
+      "typhoons": [
+        {
+          "year": 2016,
+          "name": "NOCK-TEN",
+          "month": 12,
+          "maxWindKt": 75
+        }
+      ],
+      "enso": {
+        "meanAnomaly": 0.49,
+        "peakAnomaly": 2.5,
+        "state": "El Niño"
+      },
+      "waves": null
+    },
+    "2017": {
+      "typhoons": [
+        {
+          "year": 2017,
+          "name": "DOKSURI",
+          "month": 9,
+          "maxWindKt": 35
+        },
+        {
+          "year": 2017,
+          "name": "HAIKUI",
+          "month": 11,
+          "maxWindKt": 33
+        }
+      ],
+      "enso": {
+        "meanAnomaly": -0.06,
+        "peakAnomaly": -0.76,
+        "state": "La Niña"
+      },
+      "waves": null
+    },
+    "2018": {
+      "typhoons": [],
+      "enso": {
+        "meanAnomaly": 0.14,
+        "peakAnomaly": 1.05,
+        "state": "El Niño"
+      },
+      "waves": null
+    },
+    "2019": {
+      "typhoons": [
+        {
+          "year": 2019,
+          "name": "KALMAEGI",
+          "month": 11,
+          "maxWindKt": 28
+        }
+      ],
+      "enso": {
+        "meanAnomaly": 0.65,
+        "peakAnomaly": 0.99,
+        "state": "El Niño"
+      },
+      "waves": null
+    },
+    "2020": {
+      "typhoons": [
+        {
+          "year": 2020,
+          "name": "SINLAKU",
+          "month": 7,
+          "maxWindKt": 15
+        },
+        {
+          "year": 2020,
+          "name": "UNNAMED",
+          "month": 10,
+          "maxWindKt": 0
+        },
+        {
+          "year": 2020,
+          "name": "GONI",
+          "month": 11,
+          "maxWindKt": 60
+        },
+        {
+          "year": 2020,
+          "name": "VAMCO",
+          "month": 11,
+          "maxWindKt": 88
+        }
+      ],
+      "enso": {
+        "meanAnomaly": -0.21,
+        "peakAnomaly": -1.11,
+        "state": "La Niña"
+      },
+      "waves": null
+    },
+    "2021": {
+      "typhoons": [
+        {
+          "year": 2021,
+          "name": "CHOI-WAN",
+          "month": 6,
+          "maxWindKt": 30
+        },
+        {
+          "year": 2021,
+          "name": "CONSON",
+          "month": 9,
+          "maxWindKt": 58
+        }
+      ],
+      "enso": {
+        "meanAnomaly": -0.65,
+        "peakAnomaly": -0.99,
+        "state": "La Niña"
+      },
+      "waves": {
+        "maxWaveM": 2.84,
+        "meanWaveM": 0.9,
+        "daysOver2m": 6
+      }
+    },
+    "2022": {
+      "typhoons": [
+        {
+          "year": 2022,
+          "name": "NORU",
+          "month": 9,
+          "maxWindKt": 103
+        },
+        {
+          "year": 2022,
+          "name": "NALGAE",
+          "month": 10,
+          "maxWindKt": 45
+        }
+      ],
+      "enso": {
+        "meanAnomaly": -0.78,
+        "peakAnomaly": -0.89,
+        "state": "La Niña"
+      },
+      "waves": {
+        "maxWaveM": 4.62,
+        "meanWaveM": 0.83,
+        "daysOver2m": 12
+      }
+    },
+    "2023": {
+      "typhoons": [
+        {
+          "year": 2023,
+          "name": "UNNAMED",
+          "month": 4,
+          "maxWindKt": 0
+        }
+      ],
+      "enso": {
+        "meanAnomaly": 0.81,
+        "peakAnomaly": 1.99,
+        "state": "El Niño"
+      },
+      "waves": {
+        "maxWaveM": 3.48,
+        "meanWaveM": 0.87,
+        "daysOver2m": 23
+      }
+    },
+    "2024": {
+      "typhoons": [],
+      "enso": {
+        "meanAnomaly": 0.41,
+        "peakAnomaly": 1.84,
+        "state": "El Niño"
+      },
+      "waves": {
+        "maxWaveM": 4.86,
+        "meanWaveM": 0.88,
+        "daysOver2m": 23
+      }
+    },
+    "2025": {
+      "typhoons": [
+        {
+          "year": 2025,
+          "name": "FENGSHEN",
+          "month": 10,
+          "maxWindKt": 35
+        }
+      ],
+      "enso": {
+        "meanAnomaly": -0.28,
+        "peakAnomaly": -0.61,
+        "state": "La Niña"
+      },
+      "waves": {
+        "maxWaveM": 4.46,
+        "meanWaveM": 0.99,
+        "daysOver2m": 31
+      }
+    }
+  }
+}

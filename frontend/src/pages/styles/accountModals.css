@@ -1,0 +1,299 @@
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 3900;
+  transition: opacity 0.3s ease;
+}
+
+/* Account Modal — shaped to match the login popup (components/Modal.css's
+   .modal-content-login): very rounded corners, a stronger floating shadow,
+   and no internal divider borders between header/content/footer so the
+   whole panel reads as one continuous, uncluttered card. */
+.account-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateY(20px);
+  width: 400px;
+  max-width: 90%;
+  background: #fff;
+  border-radius: 24px;
+  z-index: 3901;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.account-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) translateY(0);
+}
+
+/* Modal Header — no border-bottom (login has no divider at all); the close
+   button matches login's simple floating ✕ (no circle background). */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 30px 10px;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+/* Modal Content — scoped under .account-modal (not just .modal-content) so
+   this always wins over changePasswordModal.css's same-named, unscoped
+   `.modal-content { background: #eaf4f8; font-size: 0; }` rule, regardless
+   of which stylesheet happens to load second. Without an explicit
+   background/font-size here, that rule was the only one declaring either
+   property, so it applied unopposed — showing as an unwanted light-blue
+   background, and (more seriously) zeroing the font-size of any plain text
+   in these modals that isn't inside a sub-element with its own font-size
+   (e.g. RejectRequestModal.jsx's confirmation paragraph was invisible).
+   Same story for box-shadow: components/Modal.css's bare, unscoped
+   `.modal-content { box-shadow: 0 10px 40px rgba(0,0,0,0.3); }` is also
+   loaded on every admin page (via Navbar -> AuthModals -> Modal.jsx) even
+   though these modals don't use that shared component — it was leaking
+   the exact same shadow value already set on the outer .account-modal
+   below, doubling up as a shadow peeking out from behind the rounded
+   outer one. */
+.account-modal .modal-content {
+  padding: 10px 30px 30px;
+  flex: 1;
+  overflow-y: auto;
+  background: none;
+  font-size: 14px;
+  box-shadow: none;
+}
+
+/* Approve/Reject Request summary block (ApproveRequestModal.jsx,
+   RejectRequestModal.jsx) — its own nested card, consistent with the
+   page's card-based layout. changePasswordModal.css sets an unscoped
+   `.modal-content { font-size: 0; }` that otherwise leaks onto plain <p>
+   text here, since both modals share the .modal-content class name
+   globally with no distinguishing parent scope. */
+.approve-request-summary {
+  background: #f7fafc;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.approve-request-summary p {
+  font-size: 14px;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+}
+
+.approve-request-summary a {
+  color: #0077B6;
+  font-weight: 600;
+}
+
+/* "View Letter" link inside the Approve/Reject summary boxes — styled to
+   match Reports' .btn-view-pdf-link (reports.css) instead of the default
+   underlined browser link look. */
+.btn-view-letter-link {
+  background: none;
+  border: none;
+  color: #0077b6;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-view-letter-link:hover {
+  text-decoration: underline;
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #0077B6;
+  box-shadow: 0 0 5px rgba(0, 119, 182, 0.3);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #999;
+}
+
+.form-input.disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  color: #666;
+}
+
+.form-input.disabled:focus {
+  border-color: #ddd;
+}
+
+.field-note {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Error Message */
+.error-message {
+  background: #ffe0e0;
+  color: #d63031;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  border-left: 4px solid #d63031;
+}
+
+.password-match-hint {
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.password-match-hint.match {
+  color: var(--secondary);
+}
+
+.password-match-hint.mismatch {
+  color: #d63031;
+}
+
+/* Modal Footer — no border-top, continues the same 30px side margin as the
+   header/content so nothing reads as a separate bounded toolbar. */
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 0 30px 30px;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+/* Modal Buttons — Cancel reads as plain text (no fill), the primary action
+   is a compact rounded-rect button sized to its own content; neither
+   stretches to fill the footer, so they sit right-aligned as a pair
+   (.modal-footer already has justify-content: flex-end). */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: none;
+  color: #555;
+  padding: 10px 12px;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  color: #1a1a1a;
+}
+
+.btn-save {
+  background: #0077B6;
+  color: white;
+  padding: 12px 28px;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #005a94;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .account-modal {
+    width: 85%;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-modal {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

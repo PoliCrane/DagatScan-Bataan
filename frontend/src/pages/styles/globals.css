@@ -1,0 +1,17 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  background: var(--bg-main);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+}

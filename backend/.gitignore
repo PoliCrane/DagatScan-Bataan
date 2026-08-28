@@ -1,0 +1,19 @@
+node_modules
+.env
+uploads/*
+!uploads/.gitkeep
+
+# Real Google Cloud service-account private key — never commit this.
+config/ee-service-account.json
+
+# One-off local debug/test scripts and artifacts, not part of the app.
+_colorize_ndwi.js
+_verify_auto_bounds.js
+check_sat.js
+make-test-image.js
+test-satellite-2024.png
+
+# Logs
+logs
+*.log
+npm-debug.log*

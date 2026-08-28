@@ -1,0 +1,46 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4900, 14.7500],
+          [120.4930, 14.7480],
+          [120.4960, 14.7460],
+          [120.4980, 14.7440],
+          [120.5000, 14.7420]
+        ]
+      },
+      "properties": {
+        "erosionRate": -1.5,
+        "specific_area": "Dinalupihan Northern Coast",
+        "name": "Dinalupihan Northern Coast",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.5100, 14.7350],
+          [120.5120, 14.7330],
+          [120.5150, 14.7310],
+          [120.5170, 14.7290]
+        ]
+      },
+      "properties": {
+        "erosionRate": -1.7,
+        "specific_area": "Dinalupihan Protected Area",
+        "name": "Dinalupihan Protected Area",
+        "source": "Landsat 8",
+        "data_quality": "Estimated",
+        "cumulativeChange": -13.6
+      }
+    }
+  ]
+}

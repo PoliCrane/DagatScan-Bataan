@@ -1,0 +1,45 @@
+/* z-index 10000 matches the highest existing convention in this app
+   (SweetAlert2 dialogs, see sweetAlertUtils.js) so this sits above
+   absolutely everything, including any alert that could fire underneath. */
+.mobile-block-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 20, 40, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 24px;
+}
+
+.mobile-block-card {
+  background: #ffffff;
+  border-radius: var(--radius-card, 16px);
+  box-shadow: var(--shadow-raised, 0 10px 40px rgba(0, 0, 0, 0.3));
+  padding: 36px 28px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+}
+
+.mobile-block-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.mobile-block-card h2 {
+  margin: 0 0 10px;
+  color: var(--color-ink, #0b1a2b);
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.mobile-block-card p {
+  margin: 0;
+  color: var(--color-muted, #4a5b6c);
+  font-size: 14px;
+  line-height: 1.5;
+}

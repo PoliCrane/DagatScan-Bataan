@@ -1,0 +1,51 @@
+/* Layout Container Styles */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding-top: 50px;
+  background: white;
+  position: relative;
+}
+
+.layout-main {
+  flex: 1;
+  margin-left: 76px;
+  /* Clears .main-navbar's fixed 50px height (navbar.css) — without this,
+     content near the top of .layout-main renders underneath the navbar
+     regardless of scroll position, since the navbar is position:fixed and
+     scrolling .layout-main doesn't move it out from under a fixed element.
+     Matches the same fix already applied to .admin-sidebar's padding-top. */
+  transition: margin-left 0.3s ease;
+  animation: fadeIn 0.4s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* When sidebar hovers/expands, shift main content */
+.map-sidebar:hover ~ .layout-main,
+.admin-sidebar:hover ~ .layout-main,
+.map-sidebar:focus-within ~ .layout-main,
+.admin-sidebar:focus-within ~ .layout-main,
+.app-sidebar.pinned ~ .layout-main {
+  margin-left: 264px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

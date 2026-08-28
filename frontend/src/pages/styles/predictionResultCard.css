@@ -1,0 +1,183 @@
+/* Prediction Result Card - Left Side Popup */
+.prediction-result-card {
+  position: fixed;
+  left: calc(76px + 15px);
+  top: calc(200px + 270px);
+  width: 200px;
+  background: #eaf4f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 3000;
+  animation: slideInLeft 0.3s ease;
+  transition: top 0.2s ease, left 0.3s ease;
+}
+
+/* Shift right when the sidebar hover-expands (65px -> 224px, see
+   sidebar.css/admin-sidebar.css) so this card never overlaps it. Sits
+   inside .layout-main, so the sibling combinator reaches it via a
+   descendant selector rather than a direct sibling one. */
+.map-sidebar:hover ~ .layout-main .prediction-result-card,
+.admin-sidebar:hover ~ .layout-main .prediction-result-card {
+  left: calc(264px + 15px);
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Card Header */
+.prediction-result-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 13px 8px 13px;
+  background: #c4e6ff;
+  border-bottom: none;
+}
+
+.prediction-result-card .card-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.prediction-result-card .card-title {
+  margin: 0;
+  font-size: 12px;
+  color: black;
+  font-weight: 600;
+}
+
+/* Card Content */
+.prediction-result-card .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Card Item */
+.prediction-result-card .card-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prediction-result-card .card-label {
+  font-size: 10px;
+  color: #0077B6;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prediction-result-card .card-value {
+  font-size: 12px;
+  color: #1A1A1A;
+  font-weight: 600;
+}
+
+.prediction-result-card .card-unit {
+  font-size: 10px;
+  color: #666;
+  font-weight: normal;
+  margin-left: 3px;
+}
+
+/* Clear Button */
+.prediction-result-card .clear-btn {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  width: 100%;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.prediction-result-card .clear-btn:hover {
+  background-color: #efefef;
+  border-color: #999;
+}
+
+.prediction-result-card .clear-btn:active {
+  transform: scale(0.98);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .prediction-result-card {
+    left: calc(76px + 10px);
+    width: 260px;
+    top: calc(76px + 300px);
+  }
+
+  .map-sidebar:hover ~ .layout-main .prediction-result-card,
+  .admin-sidebar:hover ~ .layout-main .prediction-result-card {
+    left: calc(264px + 10px);
+  }
+
+  .prediction-result-card .card-header {
+    padding: 8px 11px 6px 11px;
+  }
+
+  .prediction-result-card .card-title {
+    font-size: 11px;
+  }
+
+  .prediction-result-card .card-content {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .prediction-result-card .card-label {
+    font-size: 9px;
+  }
+
+  .prediction-result-card .clear-btn {
+    padding: 7px 11px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .prediction-result-card {
+    left: calc(76px + 5px);
+    width: 240px;
+    top: calc(76px + 300px);
+  }
+
+  .map-sidebar:hover ~ .layout-main .prediction-result-card,
+  .admin-sidebar:hover ~ .layout-main .prediction-result-card {
+    left: calc(264px + 5px);
+  }
+
+  .prediction-result-card .card-content {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .prediction-result-card .card-label {
+    font-size: 8px;
+  }
+
+  .prediction-result-card .clear-btn {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+}

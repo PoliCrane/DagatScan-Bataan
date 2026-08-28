@@ -1,0 +1,40 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "area": "East Beach",
+        "name": "East Beach",
+        "data_quality": "Estimated",
+        "source": "NOAA"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.599968, 14.549968],
+          [120.600048, 14.550048],
+          [120.600128, 14.550128],
+          [120.600208, 14.550208]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "area": "Harbor Zone",
+        "name": "Harbor Zone",
+        "data_quality": "Validated"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.639960, 14.499960],
+          [120.640005, 14.500005],
+          [120.640050, 14.500050],
+          [120.640095, 14.500095]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+/* Satellite Toggle Button */
+.satellite-toggle-btn {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  z-index: 999;
+  padding: 10px 16px;
+  background: white;
+  color: #060b37;
+  border: 2px solid var(--primary);
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+}
+
+.satellite-toggle-btn:hover {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+  transform: translateY(-2px);
+}
+
+.satellite-toggle-btn:active {
+  transform: translateY(0);
+}
+
+/* Map Page Layout */
+.map-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: white;
+}
+
+.map-page-container {
+  display: flex;
+  flex: 1;
+}
+
+.map-page-content {
+  flex: 1;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  margin-left: 0;
+}
+
+.leaflet-bottom.leaflet-right {
+  right: 75px !important;
+  transition: right 0.3s ease !important;
+}
+
+@media (max-width: 768px) {
+  .satellite-toggle-btn {
+    top: 15px;
+    right: 15px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}

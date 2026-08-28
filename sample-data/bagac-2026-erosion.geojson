@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4300, 14.7550],
+          [120.4330, 14.7530],
+          [120.4360, 14.7510],
+          [120.4390, 14.7490]
+        ]
+      },
+      "properties": {
+        "erosionRate": -5.2,
+        "riskLevel": "HIGH",
+        "specific_area": "Bagac Northwest Promontory",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": -41.6,
+        "description": "🔴 SEVERE EROSION: Critical erosion at promontory with rapid retreat (-5.2 m/year)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [120.4150, 14.7400],
+          [120.4180, 14.7380],
+          [120.4210, 14.7360],
+          [120.4240, 14.7340]
+        ]
+      },
+      "properties": {
+        "erosionRate": 0.7,
+        "riskLevel": "STABLE",
+        "specific_area": "Bagac Harbor Zone",
+        "source": "Satellite Analysis 2026",
+        "data_quality": "Measured",
+        "cumulativeChange": 5.6,
+        "description": "🟢 STABLE/ACCRETING: Minor sediment accumulation in harbor area (+0.7 m/year)"
+      }
+    }
+  ]
+}

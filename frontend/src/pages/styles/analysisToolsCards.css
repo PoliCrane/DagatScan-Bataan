@@ -1,0 +1,264 @@
+/* Analysis Tools Container */
+.analysis-tools-container {
+  position: fixed;
+  right: 20px;
+  top: calc(76px + 48px + 20px);
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 500;
+  animation: slideInRight 0.3s ease;
+  transition: right 0.3s ease, opacity 0.3s ease, transform 0.3s ease, top 0.2s ease;
+}
+
+.analysis-tools-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.analysis-tools-container.hidden {
+  opacity: 0;
+  transform: translateY(-30px);
+  pointer-events: none;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Tools Card */
+.tools-card {
+  background: #eaf4f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: slideInRight 0.3s ease;
+}
+
+/* Card Header */
+.tools-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 13px 8px 13px;
+  background: #c4e6ff;
+  border-bottom: none;
+}
+
+.tools-card .card-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  filter: brightness(0) invert(0);
+}
+
+.tools-card .card-title {
+  margin: 0;
+  font-size: 12px;
+  color: black;
+  font-weight: 600;
+}
+
+/* Card Content */
+.tools-card .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Form Label */
+.form-label {
+  font-size: 10px;
+  color: #0077B6;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Form Select */
+.form-select {
+  padding: 6px 8px;
+  font-size: 10px;
+  color: #1A1A1A;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.form-select:hover:not(:disabled) {
+  border-color: #0077B6;
+  background: #f5f7fa;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #0077B6;
+  box-shadow: 0 0 4px rgba(0, 119, 182, 0.2);
+}
+
+.form-select:disabled {
+  background: #e8e8e8;
+  color: #999;
+  cursor: not-allowed;
+  border-color: #ccc;
+}
+
+/* Form Value (static display) */
+.form-value {
+  padding: 6px 8px;
+  font-size: 11px;
+  color: #1A1A1A;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Action Buttons */
+.action-btn {
+  padding: 8px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analyze-btn {
+  background: #0077B6;
+  color: white;
+}
+
+.analyze-btn:hover:not(:disabled) {
+  background: #005fa3;
+}
+
+.analyze-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.analyze-btn:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.end-comparison-btn {
+  background: #a70000;
+  color: white;
+}
+
+.simulate-btn {
+  background: #0077B6;
+  color: white;
+}
+
+.simulate-btn:hover:not(:disabled) {
+  background: #005fa3;
+}
+
+.simulate-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.simulate-btn:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.end-simulation-btn {
+  background: #a70000;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .analysis-tools-container {
+    right: 15px;
+    top: calc(80px + 44px + 15px);
+    width: 260px;
+    gap: 10px;
+  }
+
+  .tools-card .card-header {
+    padding: 8px 11px 6px 11px;
+  }
+
+  .tools-card .card-title {
+    font-size: 11px;
+  }
+
+  .tools-card .card-content {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .form-label {
+    font-size: 9px;
+  }
+
+  .form-select {
+    padding: 5px 7px;
+    font-size: 9px;
+  }
+
+  .action-btn {
+    padding: 7px 11px;
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analysis-tools-container {
+    right: 10px;
+    width: 240px;
+    top: calc(80px + 40px + 10px);
+  }
+
+  .tools-card .card-content {
+    padding: 8px;
+  }
+
+  .form-label {
+    font-size: 8px;
+  }
+
+  .form-select {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+
+  .action-btn {
+    padding: 6px 10px;
+    font-size: 8px;
+  }
+}

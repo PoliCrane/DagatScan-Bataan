@@ -1,0 +1,51 @@
+/* Cascade order for the whole app.
+   Later layers win, so Tailwind utilities can override PrimeReact component
+   styles (needed for layout tweaks like w-full on a Password wrapper).
+   The app's own legacy stylesheets stay unlayered and therefore still win —
+   they are being migrated away batch by batch. */
+@layer primereact, theme, utilities;
+
+@import "./dagatscan-theme.css" layer(primereact);
+@import "primereact/resources/primereact.min.css" layer(primereact);
+@import "primeicons/primeicons.css" layer(primereact);
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  /* Brand — DagatScan ocean blue stays the accent */
+  --color-primary: #0077b6;
+  --color-primary-dark: #005fa3;
+  --color-secondary: #00b894;
+
+  /* "Deep Survey" shell — abyssal navy chrome against a soft survey-paper surface */
+  --color-abyss: #061428;
+  --color-abyss-soft: #0d2340;
+  --color-abyss-line: #14375c;
+  --color-cyan: #38bdf8;
+  --color-surface: #f4f8fb;
+
+  --color-navy: #060b37;
+  --color-card: #eaf4f8;
+  --color-panel: #f5f5f5;
+  --color-danger: #ff6b6b;
+  --color-accent: #ffd93d;
+  --color-ink: #0b1a2b;
+  --color-muted: #4a5b6c;
+  --color-faint: #6b7c8d;
+  --color-line: #dde5ec;
+
+  --color-risk-very-high: #c0392b;
+  --color-risk-high: #e67e22;
+  --color-risk-moderate: #f1c40f;
+  --color-risk-low: #27ae60;
+  --color-risk-very-low: #2980b9;
+
+  /* Mulish carries both UI text and display headings. */
+  --font-sans: "Mulish", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Mulish", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0.875rem;
+  --shadow-card: 0 1px 2px rgb(6 20 40 / 0.06), 0 8px 24px -12px rgb(6 20 40 / 0.18);
+  --shadow-raised: 0 12px 40px -12px rgb(6 20 40 / 0.35);
+  --shadow-abyss: 0 20px 60px -20px rgb(6 20 40 / 0.6);
+}

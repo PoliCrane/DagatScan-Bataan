@@ -1,0 +1,85 @@
+const { test } = require("node:test");
+const assert = require("node:assert");
+const g = require("../services/geoUtils");
+
+const westCoast = [
+  [14.7, 120.25],
+  [14.68, 120.25],
+  [14.66, 120.25],
+];
+const eastCoast = [
+  [14.7, 120.55],
+  [14.68, 120.55],
+  [14.66, 120.55],
+];
+
+test("seaward normal points west on the west coast", () => {
+  const normals = g.seawardUnitNormals(westCoast);
+  assert.ok(normals[1][1] < -0.9, `expected east component ~-1, got ${normals[1][1]}`);
+});
+
+test("seaward normal points east on the east coast", () => {
+  const normals = g.seawardUnitNormals(eastCoast);
+  assert.ok(normals[1][1] > 0.9, `expected east component ~+1, got ${normals[1][1]}`);
+});
+
+test("longitude meters shrink with latitude (cos correction)", () => {
+  const atEquator = g.metersPerDegreeLon(0);
+  const atBataan = g.metersPerDegreeLon(14.7);
+  assert.ok(atBataan < atEquator);
+  assert.ok(Math.abs(atBataan - 107676) < 500);
+});
+
+test("offset then measure round-trips the distance", () => {
+  const moved = g.offsetCoastlineSeaward(westCoast, -50);
+  const changes = g.signedSeawardChanges(westCoast, moved);
+  const net = g.median(changes.map((c) => c.changeMeters));
+  assert.ok(Math.abs(net - -50) < 0.5, `expected ~-50, got ${net}`);
+});
+
+test("alignOrientation reverses a flipped line", () => {
+  const flipped = [...westCoast].reverse();
+  const aligned = g.alignOrientation(westCoast, flipped);
+  assert.deepStrictEqual(aligned[0], westCoast[0]);
+});
+
+test("haversine distance matches a known value", () => {
+  const d = g.haversineMeters([14.7, 120.25], [14.7, 120.26]);
+  assert.ok(Math.abs(d - 1076) < 10, `expected ~1076 m, got ${d}`);
+});
+
+test("simplifyCoastline drops collinear points but keeps shape", () => {
+  const dense = [];
+  for (let i = 0; i <= 100; i++) dense.push([14.7 - i * 0.0005, 120.25]);
+  dense[50] = [14.675, 120.253];
+  const simplified = g.simplifyCoastline(dense, 5);
+  assert.ok(simplified.length < 10, `expected <10 points, got ${simplified.length}`);
+  assert.deepStrictEqual(simplified[0], dense[0]);
+  assert.deepStrictEqual(simplified[simplified.length - 1], dense[dense.length - 1]);
+  assert.ok(simplified.some((p) => p[1] > 120.252), "the deviation point must survive");
+});
+
+test("simplifyCoastline keeps fine detail under a small tolerance", () => {
+  const wiggly = [];
+  for (let i = 0; i <= 20; i++) wiggly.push([14.7 - i * 0.001, 120.25 + (i % 2) * 0.0002]);
+  const simplified = g.simplifyCoastline(wiggly, 5);
+  assert.ok(simplified.length > 10, `20m wiggles must survive 5m tolerance, got ${simplified.length}`);
+});
+
+test("otsu threshold splits a bimodal NDWI distribution", () => {
+  const { otsuThreshold } = require("../services/imageThresholds");
+  const values = [];
+  for (let i = 0; i < 500; i++) values.push(0.25 + (i % 10) * 0.005);
+  for (let i = 0; i < 500; i++) values.push(-0.3 - (i % 10) * 0.005);
+  const t = otsuThreshold(values, 0.0);
+  assert.ok(t > -0.31 && t < 0.25, `threshold must separate the modes, got ${t}`);
+  assert.notStrictEqual(t, 0.0);
+});
+
+test("otsu falls back on flat or implausible data", () => {
+  const { otsuThreshold } = require("../services/imageThresholds");
+  assert.strictEqual(otsuThreshold(new Array(100).fill(0.5), 0.0), 0.0);
+  const shifted = [];
+  for (let i = 0; i < 200; i++) shifted.push(0.6 + (i % 20) * 0.01);
+  assert.strictEqual(otsuThreshold(shifted, 0.0), 0.0);
+});

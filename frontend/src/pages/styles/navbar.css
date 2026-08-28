@@ -1,0 +1,299 @@
+/* Navbar container */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 40px;
+  background: white;
+  color: black;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 900;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 60px;
+}
+
+/* Navbar middle section */
+.navbar-middle {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.navbar-middle-btn {
+  padding: 0px 0;
+  margin-top: 5px;
+  margin-left: 50px;
+  border: none;
+  background: none;
+  color: #060b37;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 15px;
+}
+
+.navbar-middle-btn:hover {
+  color: #0077B6;
+}
+
+/* Logo / Title Container */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Logo Image */
+.navbar-logo {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
+/* Logo / Title */
+.navbar-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+}
+
+/* Navigation buttons container */
+.navbar-buttons {
+  display: flex;
+  align-items: center;
+}
+
+/* Default button style */
+.navbar-btn {
+  margin-right: 10px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  background: white;
+  color: black;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.navbar-btn2 {
+  margin-right: 10px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 5px;
+  background: #006ab6;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* Hover effect */
+.navbar-btn:hover {
+  background: #caf0f8;
+}
+
+/* Logout button */
+.logout-btn {
+  margin-right: 10px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 5px;
+  background: #FF6B6B;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: #e85a5a;
+}
+
+.main-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 40px;
+  background: white;
+  color: black;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 50px;
+}
+
+.main-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.main-navbar-logo {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
+.main-navbar-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #060b37;
+  font-weight: 600;
+}
+
+.main-navbar-header h3 span {
+  color: #0077B6;
+}
+
+/* Groups the online-status badge with whichever right-side content (profile
+   dropdown or guest actions) is active, so .main-navbar's space-between
+   still only sees two children: brand on the left, this group on the right. */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Same palette as .profile-btn (background/border/text) so the two sit
+   together as one visual family, just with the badge's background made
+   translucent to read as lighter-weight than the actual profile control. */
+.online-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(234, 244, 248, 0.55);
+  border: 1px solid #ddd;
+  color: var(--text-primary);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.online-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
+  flex-shrink: 0;
+}
+
+/* Profile Dropdown Container */
+.profile-dropdown-container {
+  position: relative;
+}
+
+/* Groups the anonymous-visitor "Back to Main" + "Login" buttons so they sit
+   together on the right instead of being spread apart by .main-navbar's
+   space-between. */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 8px 12px;
+  background: #eaf4f8;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.profile-btn:hover {
+  border-color: var(--primary);
+  background: #f0f8ff;
+}
+
+.profile-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.dropdownprofile {
+  width: 15px;
+  height: 15px;
+  margin-left: auto;
+}
+
+.profile-username {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+/* Profile Dropdown Menu */
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 0px);
+  right: 0;
+  background: #eaf4f8;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  font-weight: 500;
+  gap: 8px;
+}
+
+.dropdown-item:hover {
+  background: #f0f8ff;
+  color: var(--primary);
+}
+
+.dropdown-item.logout {
+  border-top: 1px solid #eee;
+  color: black;
+  border-radius: 0;
+}
+
+.dropdown-item.logout:hover {
+
+  color: black;
+}
+
+.dropdown-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}

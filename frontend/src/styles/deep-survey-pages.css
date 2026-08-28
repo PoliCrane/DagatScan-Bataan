@@ -1,0 +1,521 @@
+/* One page-header rhythm and type scale for every screen in the app shell. */
+
+.layout-main .dashboard-container,
+.layout-main .user-management-container,
+.layout-main .data-management-container,
+.layout-main .audit-trail-container,
+.layout-main .upload-container,
+.layout-main .reports-container,
+.layout-main .validation-container,
+.layout-main .awareness-container {
+  padding: 28px 32px 40px;
+  min-height: 0;
+}
+
+/* Page title band */
+.dashboard-welcome.dashboard-welcome {
+  position: relative;
+  margin-bottom: 26px;
+  padding: 26px 30px;
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: 16px;
+  background:
+    radial-gradient(90% 200% at 8% 0%, rgba(56, 189, 248, 0.18), transparent 60%),
+    linear-gradient(100deg, #0a1e38 0%, #061428 62%, #04101f 100%);
+  background-attachment: scroll;
+  box-shadow: 0 18px 44px -24px rgb(6 20 40 / 0.8);
+  overflow: hidden;
+}
+
+.dashboard-welcome.dashboard-welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image: repeating-radial-gradient(
+    ellipse 120% 70% at 92% 120%,
+    rgba(56, 189, 248, 0.12) 0 1px,
+    transparent 1px 30px
+  );
+  mask-image: linear-gradient(270deg, #000, transparent 62%);
+}
+
+.dashboard-welcome.dashboard-welcome h1 {
+  margin: 0;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: #ffffff;
+}
+
+.dashboard-welcome.dashboard-welcome p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 1;
+  color: #a8c0d6;
+}
+
+.dashboard-welcome.dashboard-welcome .welcome-timestamp {
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(56, 189, 248, 0.85);
+}
+
+/* Every other page header shares one scale */
+.user-management-header,
+.data-management-header,
+.audit-trail-header,
+.reports-header,
+.validation-header,
+.awareness-header,
+.upload-header {
+  margin-bottom: 22px;
+}
+
+.layout-main .reports-header h1,
+.layout-main .validation-header h1,
+.layout-main .awareness-hero h1,
+.user-management-header h1,
+.data-management-header h1,
+.audit-trail-header h1,
+.reports-header h1,
+.validation-header h1,
+.awareness-header h1,
+.upload-title,
+.reports-container > h1,
+.validation-container > h1,
+.awareness-container > h1 {
+  margin: 0;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: var(--color-ink, #0b1a2b);
+}
+
+.user-management-header p,
+.data-management-header p,
+.audit-trail-header p,
+.reports-header p,
+.validation-header p,
+.awareness-header p,
+.upload-subtitle {
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-muted, #4a5b6c);
+}
+
+/* Section headings below the page title */
+.layout-main h2:not(.map-workspace-subject) {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--color-ink, #0b1a2b);
+}
+
+.layout-main h3:not([class*="card-title"]):not([class*="legend-title"]):not([class*="segments-panel-title"]) {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.003em;
+  color: var(--color-ink, #0b1a2b);
+}
+
+/* Dashboard stat cards read as instrument readouts */
+.dashboard-stats {
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.dashboard-stats .stat-card {
+  padding: 20px 22px;
+  border: 1px solid var(--color-line, #dde5ec);
+  border-left: 3px solid var(--color-primary, #0077b6);
+  border-radius: var(--radius-card, 0.875rem);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-stats .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+
+.dashboard-stats img.stat-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  margin-bottom: 12px;
+}
+
+.dashboard-stats .stat-icon-warning {
+  color: #d97706;
+}
+
+.dashboard-stats i.stat-icon {
+  display: block;
+  width: auto;
+  height: auto;
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: var(--color-primary, #0077b6);
+}
+
+.dashboard-stats .stat-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted, #4a5b6c);
+}
+
+.dashboard-stats .stat-value {
+  margin-top: 6px;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 700;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--color-ink, #0b1a2b);
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-stats .stat-sublabel,
+.dashboard-stats .stat-note {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-muted, #4a5b6c);
+}
+
+/* Info boxes on the dashboard */
+.info-box {
+  padding: 18px 20px;
+  border: 1px solid var(--color-line, #dde5ec);
+  border-radius: var(--radius-card, 0.875rem);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.info-header-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.info-header-with-icon h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.info-header-with-icon i.info-icon {
+  width: auto;
+  height: auto;
+  font-size: 15px;
+  color: var(--color-primary, #0077b6);
+}
+
+/* One control size across every form on every page */
+.layout-main .p-inputtext,
+.layout-main .p-dropdown,
+.layout-main .p-multiselect,
+.layout-main .p-inputnumber-input,
+.layout-main .p-password-input,
+.layout-main .p-calendar .p-inputtext,
+.form-container .p-inputtext,
+.form-container .p-dropdown,
+.form-container .p-password-input {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  border-radius: 9px;
+}
+
+.layout-main textarea.p-inputtext,
+.form-container textarea.p-inputtext {
+  min-height: 88px;
+  padding: 10px 12px;
+  line-height: 1.5;
+}
+
+.layout-main .p-dropdown .p-dropdown-label,
+.form-container .p-dropdown .p-dropdown-label {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  font-size: 14px;
+}
+
+.layout-main .p-button,
+.form-container .p-button {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 13.5px;
+}
+
+.layout-main .p-button.p-button-icon-only,
+.form-container .p-button.p-button-icon-only {
+  width: 40px;
+  padding: 0;
+}
+
+.layout-main .p-button-sm {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+/* Field labels share one voice */
+.layout-main .field-label,
+.layout-main .form-group > label,
+.form-container .form-group > label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted, #4a5b6c);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-stats .stat-card {
+    transition: none;
+  }
+
+  .dashboard-stats .stat-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-main .dashboard-container,
+  .layout-main .user-management-container,
+  .layout-main .data-management-container,
+  .layout-main .audit-trail-container,
+  .layout-main .upload-container,
+  .layout-main .reports-container,
+  .layout-main .validation-container,
+  .layout-main .awareness-container {
+    padding: 20px 16px 32px;
+  }
+
+  .dashboard-welcome.dashboard-welcome {
+    padding: 22px 20px;
+  }
+}
+
+.reset-code-label {
+  display: block;
+  margin: 15px 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-primary, #0077b6);
+}
+
+.verification-code-box {
+  min-height: 46px;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* PrimeReact Password wraps its input, so the wrapper must carry the width */
+.form-input.p-password {
+  display: block;
+  width: 100%;
+}
+
+.form-input.p-password > .p-icon-field,
+.form-input.p-password .p-password-input {
+  width: 100%;
+}
+
+/* Filter bars: PrimeReact controls need their own sizing, not the legacy
+   wrappers that assumed a bare <input>/<select>. */
+.dm-filter-bar,
+.at-filter-bar,
+.reports-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.dm-filter-bar .p-icon-field.dm-search-box, .dm-filter-bar .p-iconfield.dm-search-box,
+.at-filter-bar .p-icon-field.at-search-box, .at-filter-bar .p-iconfield.at-search-box,
+.reports-filter-bar .p-icon-field.reports-search-box, .reports-filter-bar .p-iconfield.reports-search-box {
+  flex: 1 1 220px;
+  min-width: 200px;
+  max-width: 420px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.dm-filter-bar .p-icon-field .p-inputtext,
+.at-filter-bar .p-icon-field .p-inputtext,
+.reports-filter-bar .p-icon-field .p-inputtext,
+.dm-filter-bar .p-iconfield .p-inputtext,
+.at-filter-bar .p-iconfield .p-inputtext,
+.reports-filter-bar .p-iconfield .p-inputtext {
+  width: 100%;
+  padding: 0 14px 0 40px;
+}
+
+.dm-filter-bar .p-icon-field .p-input-icon,
+.at-filter-bar .p-icon-field .p-input-icon,
+.reports-filter-bar .p-icon-field .p-input-icon,
+.dm-filter-bar .p-icon-field .p-inputicon,
+.at-filter-bar .p-icon-field .p-inputicon,
+.reports-filter-bar .p-icon-field .p-inputicon {
+  left: 14px;
+  margin-top: 0;
+  transform: translateY(-50%);
+  top: 50%;
+  color: var(--color-muted, #4a5b6c);
+}
+
+.dm-filter-bar .p-dropdown.dm-filter-select,
+.at-filter-bar .p-dropdown.at-filter-select,
+.reports-filter-bar .p-dropdown.filter-dropdown {
+  flex: 0 0 auto;
+  min-width: 178px;
+  min-height: 40px;
+  align-items: center;
+  padding: 0;
+  border-radius: 9px;
+}
+
+.reports-filter-bar .filter-group-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reports-filter-bar .filter-group-inline > label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted, #4a5b6c);
+  white-space: nowrap;
+}
+
+.dm-filter-bar .p-button.dm-reset-btn,
+.at-filter-bar .p-button.at-reset-btn {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* Upload and register forms: PrimeReact controls fill their field slot */
+.form-group .p-dropdown.form-select,
+.form-group .p-dropdown.form-input,
+.form-group .p-inputtext.form-input,
+.form-group .p-inputtextarea.form-textarea {
+  width: 100%;
+}
+
+.form-group .p-dropdown.form-select,
+.form-group .p-dropdown.form-input {
+  align-items: center;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 9px;
+}
+
+.bounds-compass-cell .p-inputtext.form-input {
+  width: 100%;
+}
+
+/* Upload page title joins the same left-aligned scale as every other page */
+.upload-container .upload-title,
+.upload-container .upload-header {
+  text-align: left;
+}
+
+.upload-container .upload-title {
+  color: var(--color-ink, #0b1a2b);
+}
+
+/* Legacy report table adopts the same header voice as the PrimeReact tables */
+.reports-records-panel table thead th,
+.reports-table thead th {
+  background: #eff5fa;
+  color: #33506b;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-line, #dde5ec);
+}
+
+.layout-main .validation-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.awareness-hero h1 {
+  color: #ffffff;
+}
+
+.validation-stat {
+  padding: 16px 18px;
+  border: 1px solid var(--color-line, #dde5ec);
+  border-radius: var(--radius-card, 0.875rem);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.validation-stat-value {
+  margin: 4px 0 2px;
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-weight: 700;
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--color-ink, #0b1a2b);
+  font-variant-numeric: tabular-nums;
+}
+
+.validation-section-title {
+  margin-bottom: 6px;
+}
+
+.validation-thead-row {
+  text-align: left;
+}
+
+.validation-thead-row th {
+  padding: 10px 12px;
+  background: #eff5fa;
+  color: #33506b;
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-line, #dde5ec);
+}
+
+/* Public pages sit under the fixed 60px .navbar. The app shell offsets
+   itself through .layout-content, so this is per-shell, not on <body>. */
+.public-page-offset {
+  padding-top: 60px;
+}

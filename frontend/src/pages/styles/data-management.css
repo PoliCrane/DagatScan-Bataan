@@ -1,0 +1,600 @@
+/* Data Management Page Styles
+   Prefixed .dm-* rather than reusing the generic .stat-card/.user-table
+   names, because several stylesheets in this project already collide on
+   shared class names (see the scoping notes in accountModals.css and
+   changePasswordModal.css). A distinct prefix keeps this page's look
+   independent of load order. */
+
+.data-management-container {
+  padding: 40px 60px;
+}
+
+.data-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.data-management-header h1 {
+  margin-bottom: 6px;
+  color: #1a1a1a;
+}
+
+.data-management-header p {
+  color: #666;
+  margin: 0;
+}
+
+/* Summary cards */
+
+.dm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.dm-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.dm-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 119, 182, 0.12);
+}
+
+/* Icon badges — the source PNGs are plain solid-black glyphs, so the
+   pastel-circle + tinted-icon look comes entirely from CSS: mask-image
+   punches the glyph's shape out of a solid background-color, giving an
+   exact target tint rather than the approximate result you'd get from
+   filter: hue-rotate() (the technique dashboard.css's .stat-icon uses). */
+.dm-stat-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dm-stat-icon-badge .dm-stat-icon {
+  width: 22px;
+  height: 22px;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.dm-stat-icon-badge.blue { background: #e7f0fe; }
+.dm-stat-icon-badge.blue .dm-stat-icon {
+  background-color: #3b6ff0;
+  -webkit-mask-image: url('/TotalDataset.png');
+  mask-image: url('/TotalDataset.png');
+}
+
+.dm-stat-icon-badge.green { background: #e6f9ed; }
+.dm-stat-icon-badge.green .dm-stat-icon {
+  background-color: #16a34a;
+  -webkit-mask-image: url('/activeData.png');
+  mask-image: url('/activeData.png');
+}
+
+.dm-stat-icon-badge.orange { background: #fff1e0; }
+.dm-stat-icon-badge.orange .dm-stat-icon {
+  background-color: #f59e0b;
+  -webkit-mask-image: url('/InactiveData.png');
+  mask-image: url('/InactiveData.png');
+}
+
+.dm-stat-icon-badge.purple { background: #efeafc; }
+.dm-stat-icon-badge.purple .dm-stat-icon {
+  background-color: #7c5cfc;
+  -webkit-mask-image: url('/totaluploadedBy.png');
+  mask-image: url('/totaluploadedBy.png');
+}
+
+.dm-stat-label {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.dm-stat-value {
+  color: #1a1a1a;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.dm-stat-info {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+/* Filter bar */
+
+.dm-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.dm-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 220px;
+}
+
+.dm-search-icon {
+  position: absolute;
+  left: 12px;
+  width: 15px;
+  height: 15px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dm-search-box input {
+  width: 100%;
+  padding: 9px 14px 9px 34px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.dm-search-box input:focus {
+  outline: none;
+  border-color: #0077b6;
+  box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+}
+
+/* Wraps a Year/Status <select> with an icon, matching the search box's
+   icon-inside-the-field treatment (a <select>'s own contents can't hold an
+   <img>, so the icon sits as an absolutely-positioned sibling instead). */
+.dm-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dm-select-icon {
+  position: absolute;
+  left: 10px;
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.dm-filter-select {
+  padding: 9px 12px 9px 32px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  color: #344054;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dm-filter-select:focus {
+  outline: none;
+  border-color: #0077b6;
+  box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
+}
+
+.dm-reset-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+.dm-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.dm-reset-btn:hover {
+  background: #f7f9fa;
+  border-color: #0077b6;
+  color: #0077b6;
+}
+
+/* Table */
+
+.dm-table-container {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dm-table thead tr {
+  background: #f9fafb;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.dm-table th {
+  padding: 13px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #475467;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.dm-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #1a1a1a;
+  vertical-align: middle;
+}
+
+.dm-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dm-row:hover {
+  background: #fbfdfe;
+}
+
+/* Deactivated datasets stay readable but visibly de-emphasized — they're
+   excluded from every erosion calculation, so they shouldn't read as
+   equally current. */
+.dm-row.inactive td {
+  opacity: 0.55;
+}
+
+.dm-thumb {
+  width: 64px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  background: #f2f4f7;
+  display: block;
+}
+
+.dm-thumb-fallback {
+  width: 64px;
+  height: 44px;
+  border-radius: 6px;
+  border: 1px dashed #d0d5dd;
+  background: #f9fafb;
+  color: #98a2b3;
+  font-size: 9px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.dm-uploader {
+  font-weight: 500;
+}
+
+.dm-uploader-sub,
+.dm-time {
+  color: #98a2b3;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.dm-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dm-status-badge.active {
+  background: #e7f6ec;
+  color: #027a48;
+}
+
+.dm-status-badge.inactive {
+  background: #fef3e2;
+  color: #b54708;
+}
+
+/* Area-level LRR confidence — flagged red below 50% so a low-confidence
+   area's rows are easy to spot at a glance (the fix is reuploading a year
+   for that area, .dm-reupload-btn in the same row). */
+.dm-confidence-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.dm-confidence-badge.low {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.dm-empty-row td {
+  text-align: center;
+  color: #98a2b3;
+  padding: 36px 16px;
+  font-style: italic;
+}
+
+.dm-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1.5px solid #0077b6;
+  color: #0077b6;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dm-view-btn:hover:not(:disabled) {
+  background: #e7f0fe;
+}
+
+.dm-view-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dm-view-icon {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  /* Tint the black glyph the same blue as the button's text/border. */
+  filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1729%) hue-rotate(175deg) brightness(96%) contrast(101%);
+}
+
+/* Paired with .dm-view-btn — same pill shape/sizing so the two read as one
+   set of view actions, differentiated only by an inverted fill (solid vs
+   outline) since this one is the slower, live-Earth-Engine-query action. */
+.dm-satellite-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0077b6;
+  border: 1.5px solid #0077b6;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.dm-satellite-btn:hover:not(:disabled) {
+  background: #005a94;
+  border-color: #005a94;
+}
+
+.dm-satellite-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Third pill in the same set as .dm-view-btn/.dm-satellite-btn — green to
+   read as a distinct "regenerate" action rather than a view action. */
+.dm-reupload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1.5px solid #10b981;
+  color: #10b981;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.dm-reupload-btn:hover:not(:disabled) {
+  background: #ecfdf5;
+}
+
+.dm-reupload-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dm-reupload-icon {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  /* Tint the black glyph the same green as the button's text/border. */
+  filter: brightness(0) saturate(100%) invert(64%) sepia(46%) saturate(526%) hue-rotate(107deg) brightness(94%) contrast(88%);
+}
+
+.dm-toggle-disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  color: #c9c9c9;
+  cursor: help;
+}
+
+/* Replaces .dm-toggle-disabled specifically for superseded uploads (satellite
+   type, no area_id — a later re-upload already overwrote their data). Same
+   compact single-glyph footprint as the placeholder it replaces, not the
+   wider labeled .dm-view-btn/.dm-satellite-btn pills. */
+.dm-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dm-delete-btn:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+.dm-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* mask-image tints the solid-black bin.png glyph exactly, same technique as
+   .dm-stat-icon-badge above — more precise than a filter hue-rotate guess. */
+.dm-delete-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #dc2626;
+  -webkit-mask-image: url('/bin.png');
+  mask-image: url('/bin.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* Pagination */
+
+.dm-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid #f0f0f0;
+  background: #fff;
+}
+
+.dm-pagination-info {
+  color: #667085;
+  font-size: 12px;
+}
+
+.dm-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dm-page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dm-page-btn:hover:not(:disabled):not(.active) {
+  border-color: #0077b6;
+  color: #0077b6;
+}
+
+.dm-page-btn.active {
+  background: #0077b6;
+  border-color: #0077b6;
+  color: #fff;
+}
+
+.dm-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+
+@media (max-width: 1024px) {
+  .data-management-container {
+    padding: 30px 24px;
+  }
+
+  .dm-table-container {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .dm-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dm-reset-btn {
+    margin-left: 0;
+  }
+
+  .dm-pagination {
+    justify-content: center;
+  }
+}

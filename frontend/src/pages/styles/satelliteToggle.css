@@ -1,0 +1,126 @@
+/* Satellite Toggle Button */
+.satellite-toggle {
+  position: fixed;
+  right: 20px;
+  top: 65px;
+  z-index: 500;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.satellite-toggle.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.satellite-toggle.hidden {
+  opacity: 0;
+  transform: translateY(-30px);
+  pointer-events: none;
+}
+
+.toggle-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggle-button {
+  background: #fff;
+  border: 2px solid #0077B6;
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+  background: #f0f8ff;
+  box-shadow: 0 4px 16px rgba(0, 119, 182, 0.2);
+  transform: scale(1.05);
+}
+
+.toggle-button:active {
+  transform: scale(0.95);
+}
+
+.toggle-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.toggle-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  background: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .satellite-toggle {
+    right: 15px;
+    top: 80px;
+  }
+
+  .toggle-content {
+    gap: 10px;
+  }
+
+  .toggle-button {
+    width: 44px;
+    height: 44px;
+    padding: 6px;
+  }
+
+  .toggle-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .toggle-label {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .satellite-toggle {
+    right: 10px;
+    top: 70px;
+  }
+
+  .toggle-content {
+    gap: 8px;
+  }
+
+  .toggle-button {
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+    border: 1.5px solid #0077B6;
+  }
+
+  .toggle-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .toggle-label {
+    font-size: 11px;
+    padding: 7px 10px;
+    border: 0.5px solid #e0e0e0;
+  }
+}
