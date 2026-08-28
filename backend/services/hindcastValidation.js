@@ -247,29 +247,28 @@ async function runHindcast({ municipalityId = null } = {}) {
   };
 }
 
-async function storeRun(scope, result) {
+async function storeRun(municipalityId, result) {
   const inserted = await pool.query(
-    `INSERT INTO validation_runs (scope, holdout_years, summary, details)
+    `INSERT INTO validation_runs (municipality_id, holdout_years, summary, details)
      VALUES ($1, $2, $3, $4)
      RETURNING id, run_at`,
-    [scope, HOLDOUT_YEARS, result.summary, JSON.stringify(result.details)]
+    [municipalityId, HOLDOUT_YEARS, result.summary, JSON.stringify(result.details)]
   );
   return inserted.rows[0];
 }
 
-async function getLatestRun(scope = null) {
-  const params = [];
-  let filter = "";
-  if (scope) {
-    params.push(scope);
-    filter = `WHERE scope = $1`;
-  }
+// municipalityId omitted (or null) fetches the latest province-wide ("all") run —
+// IS NOT DISTINCT FROM treats that the same as an explicit NULL match, unlike =.
+async function getLatestRun(municipalityId = null) {
   const result = await pool.query(
-    `SELECT id, run_at, scope, holdout_years, summary, details
-     FROM validation_runs ${filter}
-     ORDER BY run_at DESC
+    `SELECT vr.id, vr.run_at, vr.municipality_id, m.name AS municipality,
+            vr.holdout_years, vr.summary, vr.details
+     FROM validation_runs vr
+     LEFT JOIN municipalities m ON m.id = vr.municipality_id
+     WHERE vr.municipality_id IS NOT DISTINCT FROM $1
+     ORDER BY vr.run_at DESC
      LIMIT 1`,
-    params
+    [municipalityId]
   );
   return result.rows[0] || null;
 }

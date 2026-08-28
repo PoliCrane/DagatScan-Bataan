@@ -13,8 +13,13 @@ async function main() {
       CREATE INDEX IF NOT EXISTS idx_audit_log_created_at
       ON audit_log (created_at DESC)
     `);
+    // A migration from 2026-07-21 already created an index under this exact name,
+    // but as a single-column index on (status) alone — CREATE INDEX IF NOT EXISTS
+    // only checks the name, so it would otherwise silently skip and never upgrade
+    // to the composite definition the status-listing query actually needs.
+    await client.query(`DROP INDEX IF EXISTS idx_account_requests_status`);
     await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_account_requests_status
+      CREATE INDEX idx_account_requests_status
       ON account_requests (status, requested_at DESC)
     `);
     await client.query("COMMIT");

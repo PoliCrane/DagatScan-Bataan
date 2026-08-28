@@ -190,19 +190,22 @@ router.post("/validation/run", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality } = req.body || {};
     let municipalityId = null;
-    let scope = "all";
     if (municipality) {
       municipalityId = await getMunicipalityId(municipality);
       if (!municipalityId) {
         return res.status(404).json({ error: `Unknown municipality: ${municipality}` });
       }
-      scope = municipality.toLowerCase();
     }
 
     const result = await runHindcast({ municipalityId });
-    const stored = await storeRun(scope, result);
+    const stored = await storeRun(municipalityId, result);
 
-    res.json({ runId: stored.id, runAt: stored.run_at, scope, ...result });
+    res.json({
+      runId: stored.id,
+      runAt: stored.run_at,
+      scope: municipality ? municipality.toLowerCase() : "all",
+      ...result,
+    });
   } catch (err) {
     logger.error("Hindcast validation failed:", err);
     res.status(500).json({ error: "Hindcast validation failed" });
@@ -212,10 +215,16 @@ router.post("/validation/run", verifyToken, verifyAdmin, async (req, res) => {
 router.get("/validation/latest", async (req, res) => {
   try {
     const { municipality } = req.query;
-    const scope = municipality ? municipality.toLowerCase() : "all";
-    let run = await getLatestRun(scope);
-    if (!run && scope !== "all") {
-      run = await getLatestRun("all");
+    let municipalityId = null;
+    if (municipality) {
+      municipalityId = await getMunicipalityId(municipality);
+      if (!municipalityId) {
+        return res.status(404).json({ error: `Unknown municipality: ${municipality}` });
+      }
+    }
+    let run = await getLatestRun(municipalityId);
+    if (!run && municipalityId) {
+      run = await getLatestRun(null);
     }
     if (!run) {
       return res.status(404).json({ error: "No validation run recorded yet" });
@@ -223,7 +232,7 @@ router.get("/validation/latest", async (req, res) => {
     res.json({
       runId: run.id,
       runAt: run.run_at,
-      scope: run.scope,
+      scope: run.municipality ? run.municipality.toLowerCase() : "all",
       holdoutYears: run.holdout_years,
       summary: run.summary,
       details: run.details,
