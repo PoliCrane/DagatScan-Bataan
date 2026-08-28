@@ -208,6 +208,11 @@ body {
   overflow: hidden;
 }
 
+.p-datatable .p-sortable-column-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
 /* ── Buttons ────────────────────────────────────────────────────────── */
 .p-button {
   font-family: var(--font-sans, "Archivo", sans-serif);
@@ -248,6 +253,11 @@ body {
 .p-dialog .p-dialog-content {
   background: transparent;
   color: #ffffff;
+}
+
+.p-dialog .p-dialog-footer {
+  background: transparent;
+  border-top: 1px solid rgba(56, 189, 248, 0.22);
 }
 
 .p-dialog .p-dialog-title {

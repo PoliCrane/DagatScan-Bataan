@@ -4,7 +4,7 @@ const { runHindcast, storeRun } = require("../services/hindcastValidation");
 
 async function main() {
   const result = await runHindcast();
-  const stored = await storeRun("all", result);
+  const stored = await storeRun(null, result);
   const s = result.summary;
 
   console.log("Hindcast validation complete.");

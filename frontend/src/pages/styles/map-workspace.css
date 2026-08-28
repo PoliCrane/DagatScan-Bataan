@@ -264,51 +264,6 @@
   }
 }
 
-/* Segment list inside the workspace */
-.map-workspace-body .segments-panel.hidden {
-  display: none;
-}
-
-.map-workspace-body .segments-panel-header {
-  padding: 0 0 10px;
-  background: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.map-workspace-body .segments-panel-title {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #eaf4fd;
-}
-
-.map-workspace-body .segments-panel-subtitle {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: #90a9c0;
-}
-
-.map-workspace-body .segments-panel-close {
-  color: #7f97ad;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.map-workspace-body .segments-panel-close:hover {
-  color: #ffffff;
-}
-
-.map-workspace-body .segment-item {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #c2d6e6;
-}
-
-.map-workspace-body .segment-item:hover {
-  border-color: rgba(56, 189, 248, 0.45);
-  background: rgba(56, 189, 248, 0.1);
-}
+/* Segment list styling (header, items, close button) now lives directly in
+   segmentsPanel.css as its base dark theme — SegmentsPanel is only ever
+   rendered inside MapWorkspace, so no separate override layer is needed here. */

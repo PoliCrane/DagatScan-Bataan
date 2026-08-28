@@ -246,6 +246,16 @@ img.legend-icon {
   color: #86efac;
 }
 
+/* Location's value is a place name/description, not a short numeric readout —
+   give it its own smaller, regular-weight treatment instead of the numeric stat style. */
+.analysis-cards-container .analysis-card .card-item--location .card-value {
+  font-family: var(--font-sans, "Archivo", sans-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: normal;
+  text-align: right;
+}
+
 /* Empty / placeholder copy */
 .analysis-cards-container .analysis-card .card-content > div:not(.card-item),
 .analysis-cards-container .no-data-message,
@@ -550,9 +560,16 @@ img.legend-icon {
 }
 
 /* Satellite toggle clears the panel's own collapse handle (26px wide) plus a real gap,
-   and clears the panel itself instead of sitting under it when the panel is open */
+   and clears the panel itself instead of sitting under it when the panel is open.
+   Position/top/z-index/transition live here only — satelliteToggle.css used to
+   declare its own competing position/right/top, and being a component-level
+   import reached later in the module graph, it silently won the cascade tie and
+   reverted this offset. This is now the single source of truth for placement. */
 .satellite-toggle {
+  position: fixed;
+  top: 65px;
   right: 64px;
+  z-index: 500;
   transition: right 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -566,9 +583,21 @@ img.legend-icon {
   }
 }
 
+@media (max-width: 768px) {
+  .satellite-toggle {
+    top: 80px;
+  }
+}
+
 @media (max-width: 600px) {
   .layout-container:has(.map-workspace.is-open) .satellite-toggle {
     right: 64px;
+  }
+}
+
+@media (max-width: 480px) {
+  .satellite-toggle {
+    top: 70px;
   }
 }
 

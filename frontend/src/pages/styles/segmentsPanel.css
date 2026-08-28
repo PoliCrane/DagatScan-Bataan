@@ -1,70 +1,66 @@
-/* Segments Panel Component */
-
-.segments-panel {
-  position: absolute;
-  right: 50px;
-  bottom: 40px;
-  z-index: 999;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-height: 400px;
-  width: 320px;
-  overflow-y: auto;
-}
+/* Segments Panel Component — content only; layout/position/scroll region are
+   handled by MapWorkspace, the only place this component is rendered. */
 
 .segments-panel.hidden {
-  transform: translateY(450px);
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 .segments-panel-header {
-  padding: 16px;
-  border-bottom: 2px solid var(--bg-panel);
-  background: #c4e6ff;
-  color: black;
-  border-radius: 10px 10px 0 0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: relative;
+  padding: 0 0 10px;
+  background: none;
+  color: inherit;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .segments-panel-title {
   margin: 0;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
   font-weight: 700;
-  margin-right: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #eaf4fd;
 }
 
 .segments-panel-subtitle {
-  margin: 4px 0 0 0;
+  margin: 6px 0 0;
   font-size: 12px;
-  opacity: 0.9;
+  color: #90a9c0;
 }
 
 .segments-panel-content {
-  padding: 12px;
+  padding: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .segment-item {
   padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  background: var(--bg-card);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 4px solid var(--primary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .segment-item:hover {
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.1);
+  transform: translateX(2px);
+}
+
+.segment-item.is-selected {
+  background: rgba(0, 119, 182, 0.16);
 }
 
 .segment-item-name {
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
   font-size: 13px;
   margin-bottom: 4px;
   display: flex;
@@ -78,12 +74,12 @@
   border-radius: 3px;
   font-size: 11px;
   font-weight: 600;
-  color: white;
+  color: #ffffff;
 }
 
 .segment-item-description {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #90a9c0;
   margin-bottom: 6px;
   line-height: 1.4;
 }
@@ -92,35 +88,37 @@
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: var(--text-secondary);
-  background: white;
+  color: #90a9c0;
+  background: rgba(255, 255, 255, 0.04);
   padding: 6px;
   border-radius: 3px;
+  margin-top: 4px;
 }
 
 .segment-item-rate-value {
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
 }
 
 .segments-panel-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(255, 255, 255, 0);
+  top: 0;
+  right: 0;
+  background: transparent;
   border: none;
-  color: black;
+  color: #7f97ad;
   width: 28px;
   height: 28px;
   border-radius: 50%;
   cursor: pointer;
   font-size: 16px;
-  transition: all 0.2s;
+  transition: color 0.2s ease, background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .segments-panel-close:hover {
-  background: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  background: rgba(56, 189, 248, 0.14);
 }

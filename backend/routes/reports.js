@@ -144,6 +144,12 @@ router.get("/:zoneId/pdf", async (req, res) => {
     const filename = `Coastal-Erosion-Assessment-${row.municipality}-${row.year}-${row.id}.pdf`;
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    // Helmet's defaults (X-Frame-Options: SAMEORIGIN, CSP frame-ancestors 'self') block the
+    // frontend's inline <iframe> preview since it's a different origin from this API. Scope the
+    // relaxation to just the actual frontend origin, not a wildcard.
+    const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.removeHeader("X-Frame-Options");
+    res.setHeader("Content-Security-Policy", `frame-ancestors 'self' ${frontendOrigin}`);
 
     const doc = new PDFDocument({ size: "A4", margin: 50 });
     doc.pipe(res);

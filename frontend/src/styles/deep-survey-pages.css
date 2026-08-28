@@ -359,7 +359,8 @@
 
 .dm-filter-bar .p-icon-field.dm-search-box, .dm-filter-bar .p-iconfield.dm-search-box,
 .at-filter-bar .p-icon-field.at-search-box, .at-filter-bar .p-iconfield.at-search-box,
-.reports-filter-bar .p-icon-field.reports-search-box, .reports-filter-bar .p-iconfield.reports-search-box {
+.reports-filter-bar .p-icon-field.reports-search-box, .reports-filter-bar .p-iconfield.reports-search-box,
+.search-bar-wrapper .p-icon-field.um-search-box, .search-bar-wrapper .p-iconfield.um-search-box {
   flex: 1 1 220px;
   min-width: 200px;
   max-width: 420px;
@@ -374,7 +375,9 @@
 .reports-filter-bar .p-icon-field .p-inputtext,
 .dm-filter-bar .p-iconfield .p-inputtext,
 .at-filter-bar .p-iconfield .p-inputtext,
-.reports-filter-bar .p-iconfield .p-inputtext {
+.reports-filter-bar .p-iconfield .p-inputtext,
+.search-bar-wrapper .p-icon-field .p-inputtext,
+.search-bar-wrapper .p-iconfield .p-inputtext {
   width: 100%;
   padding: 0 14px 0 40px;
 }
@@ -384,7 +387,9 @@
 .reports-filter-bar .p-icon-field .p-input-icon,
 .dm-filter-bar .p-icon-field .p-inputicon,
 .at-filter-bar .p-icon-field .p-inputicon,
-.reports-filter-bar .p-icon-field .p-inputicon {
+.reports-filter-bar .p-icon-field .p-inputicon,
+.search-bar-wrapper .p-icon-field .p-input-icon,
+.search-bar-wrapper .p-icon-field .p-inputicon {
   left: 14px;
   margin-top: 0;
   transform: translateY(-50%);

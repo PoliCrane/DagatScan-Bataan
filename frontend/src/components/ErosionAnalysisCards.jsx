@@ -241,7 +241,7 @@ function ErosionAnalysisCards({
                 </span>
               </div>
 
-              <div className="card-item">
+              <div className="card-item card-item--location">
                 <i className="pi pi-map-marker card-icon" aria-hidden="true" />
                 <span className="card-label">Location</span>
                 <span className="card-value">{erosionData.municipalityName}</span>

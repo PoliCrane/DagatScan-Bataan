@@ -48,14 +48,11 @@ function SegmentsPanel({
           const isSelected = selectedSegment?.id === segment.id;
 
           return (
-            <div 
+            <div
               key={segment.id}
-              className="segment-item"
+              className={`segment-item ${isSelected ? 'is-selected' : ''}`}
               onClick={() => onSelectSegment(isSelected ? null : segment)}
-              style={{
-                borderLeftColor: riskColor,
-                background: isSelected ? 'rgba(0, 119, 182, 0.1)' : 'var(--bg-card)',
-              }}
+              style={{ borderLeftColor: riskColor }}
               role="button"
               tabIndex={0}
               onKeyPress={(e) => {

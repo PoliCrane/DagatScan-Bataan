@@ -362,7 +362,7 @@ export default function UserManagement() {
         )}
 
         <div className="search-bar-wrapper">
-          <IconField iconPosition="left" className="w-full">
+          <IconField iconPosition="left" className="w-full um-search-box">
             <InputIcon className="pi pi-search" />
             <InputText
               className="w-full"
