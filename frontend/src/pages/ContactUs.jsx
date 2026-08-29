@@ -5,6 +5,7 @@ import IndexNavBar from "./indexNavBar";
 import Layout from "../components/Layout";
 import { StaticPageShell, StaticPageSection } from "../components/StaticPageShell";
 import "./styles/footer.css";
+import "./styles/requestAccount.css";
 
 export default function ContactUs() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function ContactUs() {
             </div>
           ))}
         </div>
-        <p className="mt-6 rounded-card bg-primary/5 p-5 text-[15px] leading-relaxed text-muted">
+        <p className="mt-6 rounded-card border border-line bg-card/60 p-5 text-[15px] leading-relaxed text-muted">
           For official coastal assessments and environmental data validation, users
           are advised to refer to the Department of Environment and Natural
           Resources (DENR) – Bataan.
@@ -84,7 +85,7 @@ export default function ContactUs() {
   }
 
   return (
-    <div>
+    <div className="ds-landing font-sans">
       <IndexNavBar
         onLoginClick={() => authModalsRef.current?.openLogin()}
         onRegisterClick={() => navigate("/request-account")}

@@ -12,7 +12,17 @@
    disabled — index.jsx's actual landing content still wants .ds-landing's
    default background where nothing else covers it. */
 .ds-landing:has(.request-account-section),
-.ds-landing:has(.register-apply-container) {
+.ds-landing:has(.register-apply-container),
+.ds-landing:has(.static-page-shell) {
+  background: transparent;
+}
+
+/* Logged-in rendering (Layout-wrapped, not .ds-landing): .layout-content/.layout-main
+   each paint their own opaque background (layout.css, deep-survey.css) which — same
+   issue as .ds-landing above — sits in front of the fixed z-index: -1 backdrop below
+   in normal stacking order, hiding it. */
+.layout-content:has(.static-page-shell),
+.layout-main:has(.static-page-shell) {
   background: transparent;
 }
 
@@ -29,6 +39,20 @@
    eventually replaces this "temporary" one. */
 .request-account-section::before,
 .register-apply-container::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(70% 55% at 50% 30%, rgba(6, 20, 40, 0.25), transparent 65%),
+    linear-gradient(180deg, rgba(4, 16, 31, 0.45) 0%, rgba(6, 20, 40, 0.2) 40%, rgba(4, 16, 31, 0.55) 100%),
+    url("/temporaryreq.jpg") center / cover no-repeat;
+  z-index: -1;
+}
+
+/* Same photo as Request Access, not tempoaboutBG.jpg — that file is a flat
+   gradient blob, not an actual photo, so reusing it here read as "just a
+   color" rather than an image. */
+.static-page-shell::before {
   content: "";
   position: fixed;
   inset: 0;

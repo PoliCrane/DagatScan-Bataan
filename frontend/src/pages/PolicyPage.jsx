@@ -5,6 +5,7 @@ import IndexNavBar from "./indexNavBar";
 import Layout from "../components/Layout";
 import { StaticPageShell, StaticPageSection } from "../components/StaticPageShell";
 import "./styles/footer.css";
+import "./styles/requestAccount.css";
 
 export default function PolicyPage() {
   const navigate = useNavigate();
@@ -90,7 +91,7 @@ export default function PolicyPage() {
   }
 
   return (
-    <div>
+    <div className="ds-landing font-sans">
       <IndexNavBar
         onLoginClick={() => authModalsRef.current?.openLogin()}
         onRegisterClick={() => navigate("/request-account")}

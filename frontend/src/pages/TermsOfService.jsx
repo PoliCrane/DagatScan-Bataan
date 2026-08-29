@@ -5,6 +5,7 @@ import IndexNavBar from "./indexNavBar";
 import Layout from "../components/Layout";
 import { StaticPageShell, StaticPageSection } from "../components/StaticPageShell";
 import "./styles/footer.css";
+import "./styles/requestAccount.css";
 
 export default function TermsOfService() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function TermsOfService() {
   const content = (
     <>
       <StaticPageShell title="Terms of Service">
-        <div className="mb-6 rounded-card bg-primary/5 p-5 md:p-6">
+        <div className="mb-6 rounded-card border border-line bg-card/60 p-5 md:p-6">
           <h2 className="m-0 mb-2 font-sans text-xl font-bold text-navy">Introduction</h2>
           <p className="m-0 text-[15px] leading-relaxed text-muted">
             DagatScan Bataan is a web-based coastal erosion visualization and awareness system developed
@@ -91,7 +92,7 @@ export default function TermsOfService() {
   }
 
   return (
-    <div>
+    <div className="ds-landing font-sans">
       <IndexNavBar
         onLoginClick={() => authModalsRef.current?.openLogin()}
         onRegisterClick={() => navigate("/request-account")}
