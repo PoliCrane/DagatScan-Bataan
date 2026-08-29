@@ -61,7 +61,7 @@ export default function TermsOfService() {
                 </div>
               </div>
               <div className="footer-data-source">
-                <h4>Data Sources</h4>
+                <h4 className="footer-chip-heading">Data Sources</h4>
                 <ul>
                   <li>DENR - Bataan</li>
                 </ul>
@@ -69,7 +69,7 @@ export default function TermsOfService() {
             </div>
 
             <div className="footer-column footer-right">
-              <h4>Legal & Information</h4>
+              <h4 className="footer-chip-heading">Legal &amp; Information</h4>
               <ul className="footer-links">
                 <li><button onClick={() => navigate("/terms-of-service")} className="footer-link-btn">Terms of Service</button></li>
                 <li><button onClick={() => navigate("/privacy-policy")} className="footer-link-btn">Privacy Policy</button></li>

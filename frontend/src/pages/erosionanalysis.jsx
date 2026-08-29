@@ -97,7 +97,10 @@ export default function ErosionAnalysis() {
   // Derived from the same per-segment EPR data used to draw the predicted shoreline
   const [predictionResult, setPredictionResult] = useState(null);
 
-  const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.EROSION_ANALYSIS, erosionAnalysisSteps);
+  const mapWorkspaceRef = useRef(null);
+  const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.EROSION_ANALYSIS, erosionAnalysisSteps, {
+    onBeforeStart: () => mapWorkspaceRef.current?.open(),
+  });
 
   // *IsEstimated arrays flag whether a shoreline is real uploaded geometry or an EPR-offset approximation
   const [comparedYear, setComparedYear] = useState(null);
@@ -640,6 +643,7 @@ export default function ErosionAnalysis() {
       <SatelliteToggle isSatellite={isSatellite} onToggle={() => setIsSatellite(!isSatellite)} />
 
       <MapWorkspace
+        ref={mapWorkspaceRef}
         title="Shoreline Analysis"
         subject={selectedMunicipality}
         subjectHint={

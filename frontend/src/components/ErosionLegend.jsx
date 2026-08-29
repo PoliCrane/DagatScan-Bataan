@@ -3,7 +3,7 @@ import "../pages/styles/erosionLegend.css";
 
 function ErosionLegend() {
   const legendRef = useRef(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const leftColumn = [
     { color: "#FFEA00", label: "Previous Shoreline" },

@@ -375,6 +375,12 @@ router.get("/account-requests/:id/letter", async (req, res) => {
       return res.redirect(signedUrl);
     }
 
+    // Legacy rows from before request letters moved to the private bucket store a full
+    // public-bucket URL directly — just redirect to it.
+    if (storagePath && storagePath.startsWith("http")) {
+      return res.redirect(storagePath);
+    }
+
     res.status(404).json({ error: "Request letter file is not available" });
   } catch (err) {
     logger.error("Failed to serve request letter:", err.message);

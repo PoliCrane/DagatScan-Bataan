@@ -15,6 +15,20 @@ const PREVIOUS_SHORELINE_COLOR = "#FFEA00";
 const CURRENT_SHORELINE_COLOR = "#FF3131";
 const EROSION_AREA_COLOR = "#fc4c00";
 
+const EVENT_CONTEXT_MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// Same cache-on-first-read pattern as GET /api/shoreline/context/:year (shorelineData.js) —
+// same underlying file, so the PDF's "What Happened in {year}" section matches the live card.
+let eventContextCache = null;
+function getEventContextForYear(year) {
+  if (!eventContextCache) {
+    const contextPath = require("path").join(__dirname, "../data/eventContext.json");
+    if (!require("fs").existsSync(contextPath)) return null;
+    eventContextCache = JSON.parse(require("fs").readFileSync(contextPath, "utf8"));
+  }
+  return eventContextCache.years?.[year] || null;
+}
+
 // Bounding box (with padding) from [lon, lat] coordinate arrays; used when no stored image bounds exist.
 function bboxFromCoordinateSets(coordinateSets, paddingRatio = 0.2) {
   const points = coordinateSets.flat();
@@ -295,6 +309,24 @@ router.get("/:zoneId/pdf", async (req, res) => {
       "Erosion Rate:",
       erosionRate !== null ? `${erosionRate.toFixed(2)} m/year` : "No data (baseline year)"
     );
+
+    // What Happened in {year} — ENSO/wave/typhoon context, when available for this year
+    const eventContext = getEventContextForYear(String(row.year));
+    if (eventContext && (eventContext.enso || eventContext.waves || (eventContext.typhoons || []).length > 0)) {
+      addSectionHeader(`What Happened in ${row.year}`);
+      if (eventContext.enso) {
+        addRow("ENSO State:", eventContext.enso.state);
+      }
+      if (eventContext.waves) {
+        addRow("Max Wave Height:", `${eventContext.waves.maxWaveM} m`);
+      }
+      if ((eventContext.typhoons || []).length > 0) {
+        const typhoonList = eventContext.typhoons
+          .map((t) => `${t.name}${t.month ? ` (${EVENT_CONTEXT_MONTHS[t.month]})` : ""}`)
+          .join(", ");
+        addRow("Typhoons Near Bataan:", typhoonList);
+      }
+    }
 
     // Interpretation
     addSectionHeader("Interpretation");

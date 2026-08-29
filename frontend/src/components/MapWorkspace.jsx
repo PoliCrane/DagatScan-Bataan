@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import "../pages/styles/map-workspace.css";
 
-export default function MapWorkspace({
-  title,
-  subject,
-  subjectHint,
-  emptyHint,
-  children,
-  footer,
-}) {
+const MapWorkspace = forwardRef(function MapWorkspace(
+  { title, subject, subjectHint, emptyHint, children, footer },
+  ref
+) {
   const [open, setOpen] = useState(true);
+
+  // Lets a page force the panel open before a guided-tour step that targets
+  // something inside it — closing it only translates it off-screen, so a
+  // tour step can otherwise end up pointing at an invisible target.
+  useImperativeHandle(ref, () => ({
+    open: () => setOpen(true),
+  }));
 
   return (
     <>
@@ -50,4 +53,6 @@ export default function MapWorkspace({
       </aside>
     </>
   );
-}
+});
+
+export default MapWorkspace;

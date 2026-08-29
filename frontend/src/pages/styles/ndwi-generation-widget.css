@@ -209,17 +209,43 @@
   object-fit: contain;
 }
 
+/* This widget mounts at the App root, outside .layout-container, so it can't reuse the
+   .layout-container:has(.map-workspace.is-open) pattern used by the satellite toggle /
+   tour button — body is the nearest shared ancestor with the workspace panel. */
+body:has(.map-workspace.is-open) .ndwi-widget-card,
+body:has(.map-workspace.is-open) .ndwi-widget-pill {
+  right: calc(356px + 24px);
+  transition: right 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (max-width: 900px) {
+  body:has(.map-workspace.is-open) .ndwi-widget-card,
+  body:has(.map-workspace.is-open) .ndwi-widget-pill {
+    right: calc(320px + 24px);
+  }
+}
+
+@media (max-width: 600px) {
+  /* .map-workspace docks to the bottom below this width, so it no longer sits beside content. */
+  body:has(.map-workspace.is-open) .ndwi-widget-card,
+  body:has(.map-workspace.is-open) .ndwi-widget-pill {
+    right: 24px;
+  }
+}
+
 @media (max-width: 480px) {
   /* TourInfoButton.css shrinks to 40px/16px-offset at this breakpoint —
      clear it plus a gap (40px button + 16px offset + 16px gap). */
-  .ndwi-widget-card {
+  .ndwi-widget-card,
+  body:has(.map-workspace.is-open) .ndwi-widget-card {
     left: 16px;
     right: 16px;
     width: auto;
     bottom: 72px;
   }
 
-  .ndwi-widget-pill {
+  .ndwi-widget-pill,
+  body:has(.map-workspace.is-open) .ndwi-widget-pill {
     bottom: 72px;
     right: 16px;
   }

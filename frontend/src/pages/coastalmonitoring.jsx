@@ -8,7 +8,6 @@ import { useEffect, useState, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./index-organized.css";
-import "./styles/segments.css";
 import { extractCoastline, smoothCoastline, filterSegmentsToCoastalOnly } from "../utils/coastlineUtils";
 import { getShorelineData } from "../api/shorelineData";
 import { fetchAreaSegments } from "../utils/areaSegments";
@@ -56,7 +55,10 @@ export default function CoastalMonitoring() {
   // Store original segment coordinates to prevent cumulative drift
   const originalSegmentsRef = useRef([]);
 
-  const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.COASTAL_MONITORING, coastalMonitoringSteps);
+  const mapWorkspaceRef = useRef(null);
+  const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.COASTAL_MONITORING, coastalMonitoringSteps, {
+    onBeforeStart: () => mapWorkspaceRef.current?.open(),
+  });
 
   useEffect(() => {
     const loadGeoJson = async () => {
@@ -220,6 +222,7 @@ export default function CoastalMonitoring() {
       <SatelliteToggle isSatellite={isSatellite} onToggle={() => setIsSatellite(!isSatellite)} />
 
       <MapWorkspace
+        ref={mapWorkspaceRef}
         title="Coastal Monitoring"
         subject={selectedMunicipality}
         subjectHint={

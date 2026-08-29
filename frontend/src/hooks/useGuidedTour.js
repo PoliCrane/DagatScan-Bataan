@@ -5,7 +5,9 @@ import { TOUR_LOCALE, TOUR_OPTIONS, TOUR_STYLES, TOUR_FLOATING_OPTIONS } from ".
 
 // Reusable guided-tour state machine: auto-plays a page's tour once per
 // account, and always allows a manual replay via the returned `replay()`.
-export default function useGuidedTour(pageId, steps) {
+// `onBeforeStart`, if given, runs right before the tour starts (auto-play or
+// replay alike) — e.g. to force open a panel some steps target.
+export default function useGuidedTour(pageId, steps, { onBeforeStart } = {}) {
   const { controls, on, Tour } = useJoyride({
     continuous: true,
     steps,
@@ -51,12 +53,14 @@ export default function useGuidedTour(pageId, steps) {
     if (!hasSeenTour(pageId)) {
       // Reset scroll first: some targets hide themselves past 100px scroll.
       resetScroll();
+      onBeforeStart?.();
       controls.start();
     }
   }, [controls, pageId]);
 
   const replay = () => {
     resetScroll();
+    onBeforeStart?.();
     controls.reset(true);
   };
 

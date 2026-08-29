@@ -7,7 +7,7 @@ const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
 
 function MapLegend() {
   const legendRef = useRef(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const riskLevels = RISK_TIER_ORDER.map((key) => ({
     color: SEGMENT_COLORS[`${key}_RISK`],
