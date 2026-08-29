@@ -23,11 +23,7 @@ function SegmentsPanel({
     <div className={`segments-panel ${!showPanel ? 'hidden' : ''}`}>
       <div className="segments-panel-header">
         <h3 className="segments-panel-title">
-          <img 
-            src="coastalmonitoring.png" 
-            alt="Location" 
-            style={{ width: '20px', height: '20px', marginRight: '8px' }} 
-          />
+          <i className="pi pi-map" style={{ marginRight: '8px', color: 'var(--color-cyan, #38bdf8)' }} aria-hidden="true" />
           {selectedMunicipality} Municipality
         </h3>
         <p className="segments-panel-subtitle">
@@ -63,11 +59,7 @@ function SegmentsPanel({
             >
               <div className="segment-item-name">
                 <span>
-                  <img 
-                    src="pin.png" 
-                    alt="Location" 
-                    style={{ width: '20px', height: '20px' }} 
-                  />
+                  <i className="pi pi-map-marker" style={{ color: 'var(--color-cyan, #38bdf8)' }} aria-hidden="true" />
                 </span>
                 {segment.name}
               </div>

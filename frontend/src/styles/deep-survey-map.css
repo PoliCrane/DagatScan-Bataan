@@ -761,12 +761,18 @@ img.legend-icon {
 .erosion-legend.erosion-legend {
   top: auto;
   bottom: 22px;
+  /* Legacy mapLegend.css/erosionLegend.css still apply their own padding —
+     the header below owns all its own spacing now, so neutralize it here
+     rather than relying on that legacy file's negative-margin trick. */
+  padding: 0;
 }
 
 .map-legend.map-legend .legend-header,
 .erosion-legend.erosion-legend .legend-header {
   width: 100%;
+  margin: 0;
   border: 0;
+  border-radius: 14px 14px 0 0;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -798,6 +804,7 @@ img.legend-icon {
 .map-legend.is-collapsed .legend-header,
 .erosion-legend.is-collapsed .legend-header {
   border-bottom: 0;
+  border-radius: 14px;
 }
 
 .map-legend.is-collapsed,

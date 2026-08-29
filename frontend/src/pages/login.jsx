@@ -82,7 +82,8 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
         />
 
         <p className="form-footer">
-          <button 
+          <button
+            type="button"
             onClick={() => onSwitchToForgotPassword && onSwitchToForgotPassword()}
             style={{
               background: "none",
@@ -108,6 +109,7 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
       <p className="form-link">
         Don't have an account?{" "}
         <button
+          type="button"
           onClick={() => {
             if (onClose) onClose();
             navigate("/request-account");

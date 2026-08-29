@@ -83,7 +83,7 @@ export default function ForgotPassword({ onClose, onSwitchToLogin, onSwitchToRes
         />
       </form>
       <p className="form-link">
-        Remember your password? <button className="link-button" onClick={() => onSwitchToLogin && onSwitchToLogin()}>Login</button>
+        Remember your password? <button type="button" className="link-button" onClick={() => onSwitchToLogin && onSwitchToLogin()}>Login</button>
       </p>
     </div>
   );
