@@ -80,13 +80,6 @@ export default function Index() {
               <i className="pi pi-map-marker" aria-hidden="true" />
               Explore Map
             </button>
-            <button
-              onClick={() => navigate("/validation")}
-              className="ds-cta ds-cta-ghost"
-            >
-              <i className="pi pi-verified" aria-hidden="true" />
-              View Accuracy Report
-            </button>
           </div>
         </div>
         <div className="ds-hero-fade" aria-hidden="true" />

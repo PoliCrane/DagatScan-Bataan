@@ -138,8 +138,19 @@ export default function Home() {
           (z) => z.erosionRate !== null && z.erosionRate !== undefined
         );
 
+        // "Active" means currently monitored, i.e. this year's uploads — not every
+        // site ever monitored across all history. Falls back to the latest year
+        // that actually has data if the current year has nothing uploaded yet,
+        // so this doesn't show a misleading 0 right after the calendar rolls over.
+        const currentYear = new Date().getFullYear();
+        const yearsWithData = [...new Set(zonesWithData.map((z) => z.year))];
+        const activeYear = yearsWithData.includes(currentYear)
+          ? currentYear
+          : (yearsWithData.length ? Math.max(...yearsWithData) : currentYear);
+        const activeYearZones = zonesWithData.filter((z) => z.year === activeYear);
+
         // Count distinct physical monitoring locations (municipality + specific area)
-        const totalSites = new Set(zonesWithData.map(z => `${z.municipality}::${z.specificArea}`)).size;
+        const totalSites = new Set(activeYearZones.map(z => `${z.municipality}::${z.specificArea}`)).size;
 
         // Count total historical measurement records
         const totalRecords = zonesWithData.length;

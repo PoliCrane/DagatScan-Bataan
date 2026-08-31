@@ -57,7 +57,9 @@ return(
 <Route path="/coastalmonitoring" element={<MapPage/>}/>
 <Route path="/erosion-analysis" element={<ErosionAnalysis/>}/>
 <Route path="/reports" element={<Reports/>}/>
-<Route path="/validation" element={<ValidationReport/>}/>
+<Route path="/validation" element={
+  <ProtectedRoute allowedRoles={["admin","superadmin"]}><ValidationReport/></ProtectedRoute>
+}/>
 {import.meta.env.DEV && <Route path="/style-guide" element={<StyleGuide/>}/>}
 <Route path="/coastal-awareness" element={<CoastalAwareness/>}/>
 <Route path="/admin/data-upload" element={

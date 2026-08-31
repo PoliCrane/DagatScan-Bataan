@@ -6,7 +6,8 @@ import { showInfo } from "../utils/sweetAlertUtils";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 
-export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline = null, isPlayingTimeline = false, dataYearSpan = null,
+export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline = null, isPlayingTimeline = false, isTimelinePaused = false, dataYearSpan = null,
+  availableYears = null,
   selectedMunicipality,
   onSimulate,
   onEndSimulation,
@@ -25,10 +26,20 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
 
   const BASE_YEAR = new Date().getFullYear();
 
+  // Which of these years actually have real uploaded shoreline data — when known,
+  // years without data are shown but disabled rather than silently comparable
+  // against nothing. Null/omitted means "unknown," so nothing gets disabled.
+  const availableYearSet = availableYears ? new Set(availableYears.map((y) => y.toString())) : null;
+
   // 2015 (Sentinel-2/Earth Engine's earliest available year) through current year
   const historicalYears = Array.from({ length: BASE_YEAR - 2015 + 1 }, (_, i) => {
     const year = 2015 + i;
-    return { value: year.toString(), label: year === BASE_YEAR ? `${year} (Current)` : year.toString() };
+    const value = year.toString();
+    return {
+      value,
+      label: year === BASE_YEAR ? `${year} (Current)` : value,
+      disabled: availableYearSet ? !availableYearSet.has(value) : false,
+    };
   });
 
   // horizons are capped at ~half the observed data span — extrapolating further than the
@@ -181,8 +192,8 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
             disabled={!canAnalyze}
             className="ds-timeline-btn"
           >
-            <i className={isPlayingTimeline ? "pi pi-stop-circle" : "pi pi-play-circle"} aria-hidden="true" />
-            {isPlayingTimeline ? "Stop Timeline" : "Play Shoreline Timeline"}
+            <i className={isPlayingTimeline ? "pi pi-pause-circle" : "pi pi-play-circle"} aria-hidden="true" />
+            {isPlayingTimeline ? "Pause Timeline" : isTimelinePaused ? "Resume Timeline" : "Play Shoreline Timeline"}
           </button>
         )}
         {/* Compare Shoreline Card */}
@@ -202,6 +213,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
                 options={historicalYears}
                 optionLabel="label"
                 optionValue="value"
+                optionDisabled="disabled"
                 aria-label="Past year"
               />
             </div>
@@ -215,6 +227,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
                 options={getAvailableSelectedYears()}
                 optionLabel="label"
                 optionValue="value"
+                optionDisabled="disabled"
                 aria-label="Selected year"
               />
             </div>

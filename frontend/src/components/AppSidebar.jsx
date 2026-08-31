@@ -9,7 +9,7 @@ const MAIN_ITEMS = [
   { path: "/coastalmonitoring", label: "Coastal Monitoring", icon: "pi-map" },
   { path: "/erosion-analysis", label: "Erosion Analysis", icon: "pi-chart-line" },
   { path: "/reports", label: "Reports", icon: "pi-file" },
-  { path: "/validation", label: "Accuracy Report", icon: "pi-verified" },
+  { path: "/validation", label: "Accuracy Report", icon: "pi-verified", roles: ["admin", "superadmin"] },
   { path: "/coastal-awareness", label: "Coastal Awareness", icon: "pi-book" },
 ];
 

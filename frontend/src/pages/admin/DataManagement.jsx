@@ -268,11 +268,15 @@ export default function DataManagement() {
     }
   };
 
-  // Only offered for superseded uploads with no live data left; just clears
-  // the orphaned audit row and its file.
+  // Superseded uploads have no live data left, so deleting them just clears
+  // the orphaned audit row and its file. Live/active uploads carry real
+  // shoreline data, so deleting one also removes that data and recalculates
+  // the area's erosion baseline (same recompute deactivate already triggers).
   const handleDelete = async (dataset) => {
     const confirmed = await confirmAction(
-      `Delete <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>This upload was superseded and has no live data left — only its audit record and file will be removed. This can't be undone.</small>`
+      dataset.can_deactivate
+        ? `Delete <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>This permanently removes that year's shoreline data — not just a soft deactivate — and the affected area's erosion figures will be recalculated. This can't be undone.</small>`
+        : `Delete <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>This upload was superseded and has no live data left — only its audit record and file will be removed. This can't be undone.</small>`
     );
     if (!confirmed) return;
 
@@ -501,6 +505,7 @@ export default function DataManagement() {
                 style={{ minWidth: "16rem" }}
                 body={(d) => {
                   const thumb = resolveThumbUrl(d.thumbnail_url);
+                  const canDelete = d.can_deactivate || (d.upload_type === "Satellite_Image" && !d.area_id);
                   return (
                     <div className="action-icons flex flex-wrap items-center gap-2">
                       <Button
@@ -551,8 +556,9 @@ export default function DataManagement() {
                           tooltipOptions={{ position: "top" }}
                         />
                       )}
-                      {isSuperadmin &&
-                        (d.can_deactivate ? (
+                      {isSuperadmin && (
+                        <>
+                        {d.can_deactivate && (
                           <StatusToggle
                             active={d.active}
                             onToggle={() => handleToggleActive(d)}
@@ -560,7 +566,8 @@ export default function DataManagement() {
                             deactivateLabel="Deactivate dataset"
                             activateLabel="Reactivate dataset"
                           />
-                        ) : d.upload_type === "Satellite_Image" && !d.area_id ? (
+                        )}
+                        {canDelete ? (
                           <Button
                             type="button"
                             icon="pi pi-trash"
@@ -570,7 +577,11 @@ export default function DataManagement() {
                             className="dm-delete-btn"
                             onClick={() => handleDelete(d)}
                             disabled={busyId !== null}
-                            tooltip="Superseded upload \u2014 delete its audit record and file."
+                            tooltip={
+                              d.can_deactivate
+                                ? "Permanently delete this dataset's shoreline data \u2014 can't be undone"
+                                : "Superseded upload \u2014 delete its audit record and file."
+                            }
                             tooltipOptions={{ position: "top" }}
                             aria-label="Delete dataset"
                           />
@@ -581,7 +592,9 @@ export default function DataManagement() {
                           >
                             —
                           </span>
-                        ))}
+                        )}
+                        </>
+                      )}
                     </div>
                   );
                 }}

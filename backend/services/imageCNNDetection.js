@@ -143,7 +143,7 @@ function resizeFloatNearest(data, srcW, srcH, dstW, dstH) {
 // Run scripts/verifyNdwiPolarity.js against any NDWI GeoTIFF to confirm empirically.
 function ndwiMaskFromArray(ndwi, threshold = 0.0) {
   const mask = new Uint8Array(ndwi.length);
-  for (let i = 0; i < ndwi.length; i++) mask[i] = ndwi[i] > threshold ? 1 : 0;
+  for (let i = 0; i < ndwi.length; i++) mask[i] = isFinite(ndwi[i]) && ndwi[i] > threshold ? 1 : 0;
   return mask;
 }
 
@@ -178,8 +178,17 @@ function medianFilter(data, size, radius) {
       for (let iy = y0; iy <= y1; iy++) {
         const rowBase = iy * size;
         for (let ix = x0; ix <= x1; ix++) {
-          windowValues.push(data[rowBase + ix]);
+          // Cloud-masked source pixels come through as NaN — skip them so one
+          // cloudy neighbor can't corrupt an otherwise-valid pixel's median
+          // (a NaN mixed into the sort has no defined position/outcome).
+          const v = data[rowBase + ix];
+          if (isFinite(v)) windowValues.push(v);
         }
+      }
+      if (windowValues.length === 0) {
+        // Whole neighborhood is cloud-covered — nothing real to smooth from.
+        out[y * size + x] = data[y * size + x];
+        continue;
       }
       windowValues.sort((a, b) => a - b);
       out[y * size + x] = windowValues[windowValues.length >> 1];
@@ -620,7 +629,15 @@ async function buildWaterMasks(imagePath) {
     }
     const range = ndwiMax - ndwiMin || 1;
     const normalized = new Float32Array(denoised.length);
-    for (let i = 0; i < denoised.length; i++) normalized[i] = (denoised[i] - ndwiMin) / range;
+    for (let i = 0; i < denoised.length; i++) {
+      const v = denoised[i];
+      // A pixel can still be NaN here only if its entire neighborhood was
+      // cloud-covered (medianFilter had nothing real to fill it from) — feed
+      // the CNN a neutral value instead of raw NaN, which would otherwise
+      // propagate through training/prediction and corrupt far more than
+      // just this one pixel.
+      normalized[i] = isFinite(v) ? (v - ndwiMin) / range : 0.5;
+    }
     const inputData3ch = singleChannelTo3ChannelTensorData(normalized);
 
     const pseudoWaterCount = thresholdMask.reduce((s, v) => s + v, 0);

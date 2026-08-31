@@ -359,36 +359,65 @@ export default function ErosionAnalysis() {
   };
 
   const timelineRef = useRef(null);
+  // Survives across pause/resume — a plain closure variable would lose the
+  // in-progress index the moment the interval is cleared to pause.
+  const timelineStateRef = useRef(null);
   const [isPlayingTimeline, setIsPlayingTimeline] = useState(false);
+  const [isTimelinePaused, setIsTimelinePaused] = useState(false);
+  const TIMELINE_STEP_MS = 3000;
 
-  const stopTimeline = () => {
+  const stopTimelineInterval = () => {
     if (timelineRef.current) {
       clearInterval(timelineRef.current);
       timelineRef.current = null;
     }
+  };
+
+  // Full reset — used when ending comparison entirely, changing municipality, or unmounting.
+  const stopTimeline = () => {
+    stopTimelineInterval();
+    timelineStateRef.current = null;
     setIsPlayingTimeline(false);
+    setIsTimelinePaused(false);
+  };
+
+  const advanceTimeline = () => {
+    const state = timelineStateRef.current;
+    if (!state) return;
+    state.idx += 1;
+    if (state.idx >= state.steps.length) {
+      stopTimeline();
+      return;
+    }
+    handleCompare(state.steps[state.idx], state.latest);
   };
 
   const handlePlayTimeline = () => {
     if (isPlayingTimeline) {
-      stopTimeline();
+      // Pause in place — keep the current position, just stop advancing.
+      stopTimelineInterval();
+      setIsPlayingTimeline(false);
+      setIsTimelinePaused(true);
       return;
     }
+
+    if (isTimelinePaused && timelineStateRef.current) {
+      // Resume from wherever it was paused, not from the beginning.
+      setIsPlayingTimeline(true);
+      setIsTimelinePaused(false);
+      timelineRef.current = setInterval(advanceTimeline, TIMELINE_STEP_MS);
+      return;
+    }
+
     const years = [...new Set(shorelineSegments.flatMap((s) => s.yearsAvailable || []))].sort();
     if (years.length < 2) return;
     const latest = years[years.length - 1];
     const steps = years.slice(0, -1);
-    let idx = 0;
+    timelineStateRef.current = { steps, latest, idx: 0 };
     setIsPlayingTimeline(true);
-    handleCompare(steps[idx], latest);
-    timelineRef.current = setInterval(() => {
-      idx += 1;
-      if (idx >= steps.length) {
-        stopTimeline();
-        return;
-      }
-      handleCompare(steps[idx], latest);
-    }, 1500);
+    setIsTimelinePaused(false);
+    handleCompare(steps[0], latest);
+    timelineRef.current = setInterval(advanceTimeline, TIMELINE_STEP_MS);
   };
 
   useEffect(() => () => stopTimeline(), []);
@@ -670,8 +699,10 @@ export default function ErosionAnalysis() {
           <AnalysisToolsCards
             onPlayTimeline={handlePlayTimeline}
             isPlayingTimeline={isPlayingTimeline}
+            isTimelinePaused={isTimelinePaused}
             contextYear={comparedYear}
             dataYearSpan={dataYearSpan}
+            availableYears={[...new Set(shorelineSegments.flatMap((s) => s.yearsAvailable || []))]}
             selectedMunicipality={selectedMunicipality}
             onSimulate={handlePredictSimulate}
             onEndSimulation={handleEndSimulation}

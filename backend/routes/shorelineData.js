@@ -212,7 +212,7 @@ router.post("/validation/run", verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-router.get("/validation/latest", async (req, res) => {
+router.get("/validation/latest", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality } = req.query;
     let municipalityId = null;
