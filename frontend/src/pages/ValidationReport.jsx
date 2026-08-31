@@ -12,7 +12,7 @@ export default function ValidationReport() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api("/api/shoreline/validation/latest")
+    api("/api/shoreline/validation/latest", { auth: true })
       .then(setRun)
       .catch((err) => setError(err.status === 404 ? "No validation run has been recorded yet. Run scripts/runHindcastValidation.js on the server to generate one." : err.message))
       .finally(() => setLoading(false));

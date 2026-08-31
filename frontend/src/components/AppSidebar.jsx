@@ -9,13 +9,13 @@ const MAIN_ITEMS = [
   { path: "/coastalmonitoring", label: "Coastal Monitoring", icon: "pi-map" },
   { path: "/erosion-analysis", label: "Erosion Analysis", icon: "pi-chart-line" },
   { path: "/reports", label: "Reports", icon: "pi-file" },
-  { path: "/validation", label: "Accuracy Report", icon: "pi-verified", roles: ["admin", "superadmin"] },
   { path: "/coastal-awareness", label: "Coastal Awareness", icon: "pi-book" },
 ];
 
 const ADMIN_ITEMS = [
   { path: "/admin/data-upload", label: "Data Upload", icon: "pi-cloud-upload", roles: ["admin", "superadmin"] },
   { path: "/admin/data-management", label: "Data Management", icon: "pi-database", roles: ["admin", "superadmin"] },
+  { path: "/validation", label: "Accuracy Report", icon: "pi-verified", roles: ["admin", "superadmin"] },
   { path: "/admin/user-management", label: "User Management", icon: "pi-users", roles: ["superadmin"] },
   { path: "/admin/audit-trail", label: "Audit Trail", icon: "pi-history", roles: ["superadmin"] },
 ];
