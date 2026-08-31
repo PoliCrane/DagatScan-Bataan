@@ -162,7 +162,9 @@ export default function Home() {
           highRiskAreas: summaryData.riskDistribution?.veryHighRisk || 0
         });
 
-        setAllZones(zonesWithData);
+        // The segment list below should reflect the same "active year" as the
+        // stat card above, not every year ever uploaded.
+        setAllZones(activeYearZones);
         console.log("✓ Dashboard data loaded successfully");
       }
     } catch (error) {
