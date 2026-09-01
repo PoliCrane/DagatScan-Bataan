@@ -202,7 +202,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
     // Masthead
     const mastheadTop = doc.y;
     try {
-      doc.image(LOGO_PATH, doc.page.width / 2 - 20, mastheadTop, { width: 40, height: 40 });
+      doc.image(LOGO_PATH, doc.page.width / 2 - 20, mastheadTop, { fit: [40, 40], align: "center", valign: "center" });
     } catch (logoErr) {
       logger.warn("Report logo failed to load:", logoErr.message);
     }
@@ -266,7 +266,11 @@ router.get("/:zoneId/pdf", async (req, res) => {
 
       const pillText = riskLabel.toUpperCase();
       doc.font("Body-Bold").fontSize(9);
-      const textW = doc.widthOfString(pillText);
+      const charSpacing = 0.5;
+      // widthOfString() doesn't account for characterSpacing, so pad enough extra
+      // room for it (plus slack) — a too-tight width box can force an unwanted
+      // wrap even with lineBreak:false, which broke multi-word labels like "VERY HIGH".
+      const textW = doc.widthOfString(pillText) + pillText.length * charSpacing;
       const padX = 10, pillH = 16;
       doc
         .roundedRect(240, y - 1, textW + padX * 2, pillH, pillH / 2)
@@ -274,7 +278,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
         .stroke(color);
       doc
         .fillColor(color)
-        .text(pillText, 240 + padX, y + 3, { width: textW + 4, lineBreak: false, characterSpacing: 0.5 });
+        .text(pillText, 240 + padX, y + 3, { width: textW + 12, lineBreak: false, characterSpacing: charSpacing });
 
       doc.font("Body").fontSize(11);
       doc.moveDown(0.8);

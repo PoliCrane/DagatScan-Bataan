@@ -161,9 +161,10 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
         targetType: "user",
         targetId: user.id,
       });
-      return res.status(403).json({
-        error: "This account has been deactivated. Please contact an administrator."
-      });
+      // Same message and status as every other login failure below — a distinct
+      // message/status here would let someone probe which emails exist in the
+      // system and are deactivated, before ever getting the password right.
+      return res.status(400).json({ error: "Invalid email or password" });
     }
 
     const validPassword = await bcrypt.compare(password, user.password_hash);
