@@ -2,6 +2,7 @@
 
 const logger = require("../utils/logger");
 const express = require("express");
+const path = require("path");
 const PDFDocument = require("pdfkit");
 const pool = require("../db");
 const { extractCoordinatesFromGeoJSON } = require("../services/eprAutoCalculator");
@@ -14,6 +15,27 @@ const router = express.Router();
 const PREVIOUS_SHORELINE_COLOR = "#FFEA00";
 const CURRENT_SHORELINE_COLOR = "#FF3131";
 const EROSION_AREA_COLOR = "#fc4c00";
+
+// Report palette/typography — same design tokens the live app uses in light contexts
+// (frontend/src/styles/app.css), not the dark "Deep Survey" theme: a printed report
+// needs a light background, so this borrows the accent color and type system rather
+// than the dark chrome itself.
+const INK = "#0b1a2b"; // --color-ink
+const MUTED = "#4a5b6c"; // --color-muted
+const PRIMARY = "#0077b6"; // --color-primary
+const LINE = "#dde5ec"; // --color-line
+const BAND_BG = "#eaf6fb"; // pale cyan tint for section header bands / map placeholder
+const MAP_BORDER = "#c2e4fd";
+
+// Real static TTFs, not @fontsource's woff2 files — fontkit's WOFF2 subset/embedding path
+// hits an internal encoder bug in this environment (crashes/renders blank text), confirmed
+// by testing plain TTF embedding side by side, which works correctly.
+const FONTS = {
+  body: path.join(__dirname, "../assets/fonts/Mulish-Regular.ttf"),
+  bodyBold: path.join(__dirname, "../assets/fonts/Mulish-Bold.ttf"),
+  display: path.join(__dirname, "../assets/fonts/InstrumentSerif-Regular.ttf"),
+};
+const LOGO_PATH = path.join(__dirname, "../assets/DSLogo.png");
 
 const EVENT_CONTEXT_MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -173,38 +195,88 @@ router.get("/:zoneId/pdf", async (req, res) => {
     const doc = new PDFDocument({ size: "A4", margin: 50 });
     doc.pipe(res);
 
-    // Header
+    doc.registerFont("Body", FONTS.body);
+    doc.registerFont("Body-Bold", FONTS.bodyBold);
+    doc.registerFont("Display", FONTS.display);
+
+    // Masthead
+    const mastheadTop = doc.y;
+    try {
+      doc.image(LOGO_PATH, doc.page.width / 2 - 20, mastheadTop, { width: 40, height: 40 });
+    } catch (logoErr) {
+      logger.warn("Report logo failed to load:", logoErr.message);
+    }
+    doc.y = mastheadTop + 48;
     doc
-      .fillColor("#1a3a52")
-      .fontSize(20)
-      .font("Helvetica-Bold")
+      .fillColor(INK)
+      .fontSize(24)
+      .font("Display")
       .text("Coastal Erosion Assessment Report", { align: "center" });
     doc
       .fontSize(13)
-      .fillColor("#0077b6")
-      .font("Helvetica")
+      .fillColor(PRIMARY)
+      .font("Body-Bold")
       .text(`Municipality of ${row.municipality}`, { align: "center" });
     doc.moveDown(0.2);
     doc
       .fontSize(9)
-      .fillColor("#888")
+      .fillColor(MUTED)
+      .font("Body")
       .text("DagatScan Bataan — Coastal Erosion Monitoring System", { align: "center" });
-    doc.moveDown(1.2);
+    doc.moveDown(0.6);
+    doc.strokeColor(PRIMARY).lineWidth(1.5).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.moveDown(1);
 
+    // Section header: pale band + colored accent bar, echoing the app's card-header look
     const addSectionHeader = (title) => {
       doc.x = 50;
       doc.moveDown(0.4);
-      doc.font("Helvetica-Bold").fontSize(13).fillColor("#1a3a52").text(title, 50, doc.y, { width: 495 });
-      const y = doc.y + 3;
-      doc.strokeColor("#c2e4fd").lineWidth(1.5).moveTo(50, y).lineTo(545, y).stroke();
-      doc.y = y;
-      doc.moveDown(0.7);
+      const bandY = doc.y;
+      const bandH = 22;
+      doc.rect(50, bandY, 495, bandH).fill(BAND_BG);
+      doc.rect(50, bandY, 4, bandH).fill(PRIMARY);
+      doc
+        .font("Body-Bold")
+        .fontSize(11)
+        .fillColor(INK)
+        .text(title.toUpperCase(), 64, bandY + 6, { width: 470, characterSpacing: 1.2 });
+      doc.y = bandY + bandH + 10;
     };
 
-    const addRow = (label, value, valueColor = "#333") => {
+    // Label/value row: uppercase letter-spaced label + plain value, echoing .card-label/.card-value
+    const addRow = (label, value, valueColor = INK) => {
       const y = doc.y;
-      doc.font("Helvetica-Bold").fontSize(11).fillColor("#1a3a52").text(label, 50, y, { width: 180 });
-      doc.font("Helvetica").fontSize(11).fillColor(valueColor).text(value, 240, y, { width: 300 });
+      doc
+        .font("Body-Bold")
+        .fontSize(10)
+        .fillColor(MUTED)
+        .text(label.toUpperCase(), 50, y, { width: 180, characterSpacing: 0.6 });
+      doc.font("Body").fontSize(11).fillColor(valueColor).text(value, 240, y, { width: 300 });
+      doc.moveDown(0.8);
+    };
+
+    // Risk level as a bordered pill (colored border + text, no fill), echoing .card-value.risk-*
+    const addRiskRow = (label, riskLabel, color) => {
+      const y = doc.y;
+      doc
+        .font("Body-Bold")
+        .fontSize(10)
+        .fillColor(MUTED)
+        .text(label.toUpperCase(), 50, y, { width: 180, characterSpacing: 0.6 });
+
+      const pillText = riskLabel.toUpperCase();
+      doc.font("Body-Bold").fontSize(9);
+      const textW = doc.widthOfString(pillText);
+      const padX = 10, pillH = 16;
+      doc
+        .roundedRect(240, y - 1, textW + padX * 2, pillH, pillH / 2)
+        .lineWidth(1.2)
+        .stroke(color);
+      doc
+        .fillColor(color)
+        .text(pillText, 240 + padX, y + 3, { width: textW + 4, lineBreak: false, characterSpacing: 0.5 });
+
+      doc.font("Body").fontSize(11);
       doc.moveDown(0.8);
     };
 
@@ -244,10 +316,10 @@ router.get("/:zoneId/pdf", async (req, res) => {
 
     if (mapImageBuffer) {
       doc.image(mapImageBuffer, mapBox.x, mapBox.y, { width: mapBox.w, height: mapBox.h });
-      doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).lineWidth(1).stroke("#c2e4fd");
+      doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).lineWidth(1).stroke(MAP_BORDER);
     } else {
-      doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).fill("#eaf6fb");
-      doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).lineWidth(1).stroke("#c2e4fd");
+      doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).fill(BAND_BG);
+      doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).lineWidth(1).stroke(MAP_BORDER);
 
       if (currentCoords && currentCoords.length > 1) {
         const coordinateSets = baselineCoords && baselineCoords.length > 1
@@ -277,7 +349,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
 
         doc.restore();
       } else {
-        doc.font("Helvetica").fontSize(10).fillColor("#888").text(
+        doc.font("Body").fontSize(10).fillColor(MUTED).text(
           "No shoreline geometry available for this record.",
           mapBox.x + 16,
           mapBox.y + mapBox.h / 2 - 6,
@@ -300,7 +372,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
       doc.save();
       doc.rect(legendX, legendY + 2, 14, 8).fillColor(item.color, item.faded ? 0.3 : 1).fill();
       doc.restore();
-      doc.font("Helvetica").fontSize(9).fillColor("#444").text(item.label, legendX + 20, legendY, { width: 160 });
+      doc.font("Body").fontSize(9).fillColor(MUTED).text(item.label, legendX + 20, legendY, { width: 160 });
       legendX += 175;
     });
     doc.x = 50;
@@ -309,7 +381,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
 
     // Coastal Erosion Summary
     addSectionHeader("Coastal Erosion Summary");
-    addRow("Risk Level:", RISK_LABELS[riskLevel] || riskLevel, RISK_COLORS[riskLevel] || "#333");
+    addRiskRow("Risk Level:", RISK_LABELS[riskLevel] || riskLevel, RISK_COLORS[riskLevel] || INK);
     addRow(
       "Erosion Rate:",
       erosionRate !== null ? `${erosionRate.toFixed(2)} m/year` : "No data (baseline year)"
@@ -342,15 +414,15 @@ router.get("/:zoneId/pdf", async (req, res) => {
       erosionRate,
       riskLevel,
     });
-    doc.font("Helvetica").fontSize(10.5).fillColor("#333").text(interpretation, { align: "left", lineGap: 3 });
+    doc.font("Body").fontSize(10.5).fillColor(INK).text(interpretation, { align: "left", lineGap: 3 });
 
     doc.moveDown(1.5);
-    doc.strokeColor("#ddd").moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+    doc.strokeColor(LINE).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
     doc.moveDown(0.7);
     doc
-      .font("Helvetica")
+      .font("Body")
       .fontSize(9)
-      .fillColor("#999")
+      .fillColor(MUTED)
       .text(`Report generated on ${generatedOn}. Values are auto-computed from satellite-derived shoreline data using the End Point Rate (EPR) methodology.`);
 
     doc.end();
