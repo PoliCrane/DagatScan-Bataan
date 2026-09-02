@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 // Shared footer used by both the landing page (index.jsx) and the Request
 // an Account page (requestAccount.jsx) so it isn't duplicated across the two.
@@ -6,7 +7,13 @@ export default function SiteFooter() {
   const navigate = useNavigate();
 
   return (
-    <footer className="footer">
+    <motion.footer
+      className="footer"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
       <div className="footer-content">
 
         <div className="footer-column footer-left">
@@ -41,6 +48,6 @@ export default function SiteFooter() {
       <div className="footer-bottom">
         <p>&copy; 2026 DagatScan Bataan. All rights reserved.</p>
       </div>
-    </footer>
+    </motion.footer>
   );
 }

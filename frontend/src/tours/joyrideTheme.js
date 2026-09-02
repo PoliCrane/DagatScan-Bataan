@@ -14,9 +14,17 @@ export const TOUR_OPTIONS = {
   closeButtonAction: "skip",
   primaryColor: "#0077B6",
   overlayColor: "rgba(6, 11, 55, 0.6)",
+  // TourSpotlight.jsx renders our own overlay/cutout instead — react-joyride's
+  // built-in one fully clears the spotlight between every step change (no
+  // continuous shape to animate), which a plain positioned box avoids.
+  hideOverlay: true,
   showProgress: true,
   spotlightPadding: 8,
   skipBeacon: true,
+  // Joyride's own default (300ms) still feels like a jump between steps —
+  // a longer, gentler scroll reads as noticeably smoother without any new dependency.
+  scrollDuration: 550,
+  scrollOffset: 40,
   targetWaitTimeout: 2000,
   // navbar.css puts .profile-dropdown at z-index 1001 — Joyride's own
   // default (100) would render the overlay/tooltip underneath it.

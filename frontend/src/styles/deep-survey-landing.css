@@ -258,77 +258,218 @@ body:has(.ds-landing) {
   color: #ffffff;
 }
 
-.ds-feature-card {
-  position: relative;
-  padding: 30px 26px 28px;
-  border: 1px solid var(--color-line, #dde5ec);
+/* Core Features showcase: a selector list on one side, a crossfading
+   preview panel on the other — see index.jsx's activeFeatureIndex state. */
+.ds-feature-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.ds-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-feature-tab {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid transparent;
   border-radius: var(--radius-card, 0.875rem);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.ds-feature-tab:hover {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.ds-feature-tab-active {
   background: #ffffff;
+  border-color: var(--color-line, #dde5ec);
   box-shadow: var(--shadow-card);
-  overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.ds-feature-card::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-cyan, #38bdf8), rgba(56, 189, 248, 0));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
-
-.ds-feature-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: var(--shadow-raised);
-}
-
-.ds-feature-card:hover::after {
-  transform: scaleX(1);
-}
-
-.ds-feature-index {
-  position: absolute;
-  top: 18px;
-  right: 22px;
-  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
-  font-size: 2.6rem;
-  line-height: 1;
-  color: rgba(11, 26, 43, 0.07);
-}
-
-.ds-feature-icon {
+.ds-feature-tab-icon {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 18px;
-  border-radius: 13px;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
   background: linear-gradient(145deg, #0a1e38, #123a63);
   color: var(--color-cyan, #38bdf8);
-  font-size: 22px;
+  font-size: 18px;
   box-shadow: 0 10px 24px -12px rgb(6 20 40 / 0.8);
 }
 
-.ds-feature-title {
-  margin: 0;
-  font-size: 1.2rem;
+.ds-feature-tab-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ds-feature-tab-title {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--color-ink, #0b1a2b);
 }
 
-.ds-feature-text {
-  margin: 9px 0 0;
-  font-size: 14px;
-  line-height: 1.65;
+.ds-feature-tab-index {
+  font-family: var(--font-display, "Instrument Serif", Georgia, serif);
+  font-size: 0.9rem;
+  color: var(--color-primary, #0077b6);
+}
+
+.ds-feature-tab-text {
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--color-muted, #4a5b6c);
+}
+
+.ds-feature-preview {
+  position: relative;
+  min-height: 280px;
+}
+
+.ds-feature-preview-panel {
+  position: relative;
+  height: 100%;
+  padding: 32px;
+  border-radius: var(--radius-card, 0.875rem);
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 119, 182, 0.05) 0 1px, transparent 1px 32px),
+    repeating-linear-gradient(0deg, rgba(0, 119, 182, 0.05) 0 1px, transparent 1px 32px),
+    var(--color-surface, #f4f8fb);
+  border: 1px solid var(--color-line, #dde5ec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* View Coastline / Predict Erosion: a bordered "map box" matching the
+   generated PDF's map section (backend/routes/reports.js — MAP_BORDER),
+   showing a real satellite crop with the shoreline lines already baked in
+   (mockup-coastline-map.png / mockup-predict-map.png — same
+   renderShorelineMap pipeline the PDF itself uses) plus a legend row below,
+   mirroring the PDF's own rect-swatch + label legend. */
+.ds-mockup-map {
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Fixed, compact preview window — object-fit:cover crops into whichever
+   source image is passed rather than displaying it at full size, so this
+   stays a small preview regardless of the generated PNG's own dimensions
+   (no need to show the whole crop, just a representative slice of it). */
+.ds-mockup-map-box {
+  aspect-ratio: 4 / 3;
+  border: 1px solid #c2e4fd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-raised);
+}
+
+.ds-mockup-map-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ds-mockup-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+}
+
+.ds-mockup-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--color-muted, #4a5b6c);
+}
+
+.ds-mockup-map-legend-swatch {
+  flex: none;
+  width: 14px;
+  height: 8px;
+  border-radius: 1px;
+}
+
+/* Generate Reports: the round-2 dark PDF-preview card, restored as its own
+   self-contained dark card (the panel around it is light-neutral now,
+   unlike round 2 where the whole panel carried this gradient). */
+.ds-mockup-pdf-card {
+  width: 100%;
+  max-width: 260px;
+  padding: 24px 22px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, #0a1e38, #0d2340 55%, #123a63);
+  box-shadow: var(--shadow-raised);
+}
+
+.ds-mockup-report-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 13px;
+  font-weight: 600;
+  color: #dce9f5;
+}
+
+.ds-mockup-report-line {
+  height: 8px;
+  margin: 10px 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.ds-mockup-report-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.ds-mockup-report-pill {
+  flex: none;
+  padding: 5px 12px;
+  border: 1px solid var(--color-risk-high, #e67e22);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-risk-high, #e67e22);
+}
+
+@media (max-width: 820px) {
+  .ds-feature-showcase {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-feature-preview {
+    min-height: 220px;
+    order: -1;
+  }
 }
 
 .ds-about-wash {
@@ -378,12 +519,7 @@ body:has(.ds-landing) {
   }
 
   .ds-cta,
-  .ds-feature-card,
-  .ds-feature-card::after {
+  .ds-feature-tab {
     transition: none;
-  }
-
-  .ds-feature-card:hover {
-    transform: none;
   }
 }

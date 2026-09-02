@@ -303,6 +303,36 @@
 .user-table tbody tr {
   border-bottom: 1px solid #ddd;
   transition: background-color 0.2s ease;
+  animation: user-row-in 0.28s ease both;
+}
+
+@keyframes user-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-table tbody tr:nth-child(1) { animation-delay: 0s; }
+.user-table tbody tr:nth-child(2) { animation-delay: 0.02s; }
+.user-table tbody tr:nth-child(3) { animation-delay: 0.04s; }
+.user-table tbody tr:nth-child(4) { animation-delay: 0.06s; }
+.user-table tbody tr:nth-child(5) { animation-delay: 0.08s; }
+.user-table tbody tr:nth-child(6) { animation-delay: 0.1s; }
+.user-table tbody tr:nth-child(7) { animation-delay: 0.12s; }
+.user-table tbody tr:nth-child(8) { animation-delay: 0.14s; }
+.user-table tbody tr:nth-child(9) { animation-delay: 0.16s; }
+.user-table tbody tr:nth-child(10) { animation-delay: 0.18s; }
+.user-table tbody tr:nth-child(n + 11) { animation-delay: 0.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .user-table tbody tr {
+    animation: none;
+  }
 }
 
 .user-table tbody tr:hover {

@@ -20,7 +20,7 @@ export default function ContactUs() {
   const content = (
     <>
       <StaticPageShell title="Contact Us">
-        <div className="rounded-card border border-line bg-card/60 p-5 md:p-6">
+        <div className="rounded-card border border-line bg-card/95 p-5 md:p-6">
           <h3 className="m-0 mb-4 font-sans text-lg font-bold text-primary md:text-xl">Contact Information</h3>
           {[
             ["/email.png", "Email", "dagatscan.bataan@gmail.com"],
@@ -36,7 +36,7 @@ export default function ContactUs() {
             </div>
           ))}
         </div>
-        <p className="mt-6 rounded-card border border-line bg-card/60 p-5 text-[15px] leading-relaxed text-muted">
+        <p className="mt-6 rounded-card border border-line bg-card/95 p-5 text-[15px] leading-relaxed text-muted">
           For official coastal assessments and environmental data validation, users
           are advised to refer to the Department of Environment and Natural
           Resources (DENR) – Bataan.

@@ -25,7 +25,7 @@ export function StaticPageShell({ title, children }) {
 
 export function StaticPageSection({ icon, title, children }) {
   return (
-    <section className="mb-6 rounded-card border border-line bg-card/60 p-5 md:p-6">
+    <section className="mb-6 rounded-card border border-line bg-card/95 p-5 md:p-6">
       <div className="mb-3 flex items-center gap-3">
         {icon && <img src={icon} alt="" className="h-8 w-8 shrink-0" />}
         <h3 className="m-0 font-sans text-lg font-bold text-primary md:text-xl">{title}</h3>

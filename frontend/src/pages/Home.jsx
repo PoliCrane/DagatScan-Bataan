@@ -1,6 +1,7 @@
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -23,6 +24,12 @@ const BACKEND_STATUS_CONFIG = {
   checking: { color: "blue", label: "Checking...", info: "Contacting backend" },
   online: { color: "green", label: "Online", info: "Backend operational" },
   offline: { color: "red", label: "Offline", info: "Backend unreachable" },
+};
+
+// Staggered by the parent's staggerChildren — each card just needs its own entrance.
+const STAT_CARD_VARIANTS = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
 export default function Home() {
@@ -193,32 +200,37 @@ export default function Home() {
         </div>
 
         {/* Stats Section */}
-        <div className="dashboard-stats">
-          <div className="stat-card">
+        <motion.div
+          className="dashboard-stats"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+        >
+          <motion.div className="stat-card" variants={STAT_CARD_VARIANTS}>
             <i className="pi pi-compass stat-icon" aria-hidden="true" />
             <div className="stat-label">Active Monitoring Sites</div>
             <div className="stat-value">{loading ? "..." : stats.activeMonitoringSites}</div>
             <div className="stat-info">Real-time data collection ongoing</div>
-          </div>
-          <div className="stat-card">
+          </motion.div>
+          <motion.div className="stat-card" variants={STAT_CARD_VARIANTS}>
             <i className="pi pi-chart-line stat-icon" aria-hidden="true" />
             <div className="stat-label">Latest Erosion Rate</div>
             <div className="stat-value">{loading ? "..." : stats.latestErosionRate} m</div>
             <div className="stat-info">Average annual change</div>
-          </div>
-          <div className="stat-card">
+          </motion.div>
+          <motion.div className="stat-card" variants={STAT_CARD_VARIANTS}>
             <i className="pi pi-database stat-icon" aria-hidden="true" />
             <div className="stat-label">Data Records</div>
             <div className="stat-value">{loading ? "..." : stats.dataRecords.toLocaleString()}</div>
             <div className="stat-info">Historical measurements</div>
-          </div>
-          <div className="stat-card">
+          </motion.div>
+          <motion.div className="stat-card" variants={STAT_CARD_VARIANTS}>
             <i className="pi pi-exclamation-triangle stat-icon stat-icon-warning" aria-hidden="true" />
             <div className="stat-label">Very High Risk Areas</div>
             <div className="stat-value">{loading ? "..." : stats.highRiskAreas}</div>
             <div className="stat-info">Critical erosion warning</div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Main Content Grid */}
         <div className="dashboard-grid">

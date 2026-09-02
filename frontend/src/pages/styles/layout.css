@@ -23,7 +23,7 @@
      regardless of scroll position, since the navbar is position:fixed and
      scrolling .layout-main doesn't move it out from under a fixed element.
      Matches the same fix already applied to .admin-sidebar's padding-top. */
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
   animation: fadeIn 0.4s ease-in-out;
   display: flex;
   flex-direction: column;

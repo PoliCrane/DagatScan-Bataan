@@ -20,7 +20,7 @@ export default function TermsOfService() {
   const content = (
     <>
       <StaticPageShell title="Terms of Service">
-        <div className="mb-6 rounded-card border border-line bg-card/60 p-5 md:p-6">
+        <div className="mb-6 rounded-card border border-line bg-card/95 p-5 md:p-6">
           <h2 className="m-0 mb-2 font-sans text-xl font-bold text-navy">Introduction</h2>
           <p className="m-0 text-[15px] leading-relaxed text-muted">
             DagatScan Bataan is a web-based coastal erosion visualization and awareness system developed

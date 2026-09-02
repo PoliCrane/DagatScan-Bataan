@@ -1,14 +1,15 @@
-import { useEffect, useRef } from "react";
-import { useJoyride } from "react-joyride";
+import { Fragment, useEffect, useRef } from "react";
+import { useJoyride, STATUS } from "react-joyride";
 import { hasSeenTour, markTourSeen } from "../utils/tourStorage";
 import { TOUR_LOCALE, TOUR_OPTIONS, TOUR_STYLES, TOUR_FLOATING_OPTIONS } from "../tours/joyrideTheme";
+import TourSpotlight from "../tours/TourSpotlight";
 
 // Reusable guided-tour state machine: auto-plays a page's tour once per
 // account, and always allows a manual replay via the returned `replay()`.
 // `onBeforeStart`, if given, runs right before the tour starts (auto-play or
 // replay alike) — e.g. to force open a panel some steps target.
 export default function useGuidedTour(pageId, steps, { onBeforeStart } = {}) {
-  const { controls, on, Tour } = useJoyride({
+  const { controls, on, Tour, step, state } = useJoyride({
     continuous: true,
     steps,
     locale: TOUR_LOCALE,
@@ -16,6 +17,18 @@ export default function useGuidedTour(pageId, steps, { onBeforeStart } = {}) {
     styles: TOUR_STYLES,
     floatingOptions: TOUR_FLOATING_OPTIONS,
   });
+
+  // TOUR_OPTIONS sets hideOverlay: true — TourSpotlight is our own
+  // overlay/cutout, driven off the same live `step`/`state` this hook
+  // already gets back from useJoyride, tracking whichever step is current
+  // regardless of react-joyride's own scrolling/waiting bookkeeping.
+  const isRunning = state.status === STATUS.RUNNING;
+  const TourWithSpotlight = (
+    <Fragment>
+      {Tour}
+      <TourSpotlight active={isRunning} step={step} onBackdropClick={controls.skip} />
+    </Fragment>
+  );
 
   // "tour:end" fires for Finish, Skip, and the close button alike — any of
   // those should stop the tour from auto-playing again for this account.
@@ -64,5 +77,5 @@ export default function useGuidedTour(pageId, steps, { onBeforeStart } = {}) {
     controls.reset(true);
   };
 
-  return { Tour, replay };
+  return { Tour: TourWithSpotlight, replay };
 }
