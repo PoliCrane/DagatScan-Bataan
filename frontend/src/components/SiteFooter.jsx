@@ -20,7 +20,10 @@ export default function SiteFooter() {
           <div className="footer-data-source">
             <h4 className="footer-chip-heading">Data Sources</h4>
             <ul>
-              <li>DENR - Bataan</li>
+              <li>Google Earth Engine (Sentinel-2 / Landsat)</li>
+              <li>NOAA IBTrACS</li>
+              <li>NOAA CPC ONI</li>
+              <li>Open-Meteo Marine Archive</li>
             </ul>
           </div>
         </div>

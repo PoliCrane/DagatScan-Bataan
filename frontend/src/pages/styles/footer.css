@@ -93,11 +93,11 @@ footer {
 }
 
 .footer-data-source li {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
   color: #dce9f5;
-  margin-bottom: 10px;
-  line-height: 1.6;
+  margin-bottom: 8px;
+  line-height: 1.5;
   padding-left: 0;
 }
 
