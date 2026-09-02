@@ -6,7 +6,7 @@ import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
 import { ProgressBar } from "primereact/progressbar";
 import "../styles/data-upload.css";
-import { showSuccess, showError } from "../../utils/sweetAlertUtils";
+import { showSuccess, showSuccessHtml, showError, showErrorHtml } from "../../utils/sweetAlertUtils";
 import useGuidedTour from "../../hooks/useGuidedTour";
 import TourInfoButton from "../../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../../tours/pageIds";
@@ -315,7 +315,7 @@ export default function DataUpload() {
   const handleUpload = async () => {
     const validation = validateForm();
     if (!validation.valid) {
-      await showError(
+      await showErrorHtml(
         `Validation Errors:<br/><small>${validation.errors.map(e => `• ${e}`).join("<br/>")}</small>`
       );
       return;
@@ -347,7 +347,7 @@ export default function DataUpload() {
           const west = parseDMSOrDecimal(boundsWest);
 
           if ([north, south, east, west].some((v) => v === null || isNaN(v))) {
-            await showError(
+            await showErrorHtml(
               "Could not parse one or more image bounds.<br/><small>Use decimal degrees (14.542886) or DMS (14°32'34.39\"N), or leave all four blank to skip automated detection.</small>"
             );
             setUploading(false);
@@ -391,10 +391,10 @@ export default function DataUpload() {
           if (datasetInputRef.current) datasetInputRef.current.value = "";
           if (satelliteInputRef.current) satelliteInputRef.current.value = "";
 
-          await showSuccess(`Upload completed successfully!<br/><small>${response.uploads?.length || 1} file(s) processed</small>`);
+          await showSuccessHtml(`Upload completed successfully!<br/><small>${response.uploads?.length || 1} file(s) processed</small>`);
         } else {
           const error = JSON.parse(xhr.responseText);
-          await showError(`Upload failed<br/><small>${error.error || "Unknown error"}</small>`);
+          await showErrorHtml(`Upload failed<br/><small>${error.error || "Unknown error"}</small>`);
         }
         setUploading(false);
         setUploadProgress(0);
@@ -402,7 +402,7 @@ export default function DataUpload() {
       });
 
       xhr.addEventListener("error", async () => {
-        await showError("Upload failed<br/><small>Network connection error</small>");
+        await showErrorHtml("Upload failed<br/><small>Network connection error</small>");
         setUploading(false);
         setUploadProgress(0);
         setUploadPhase("idle");
@@ -414,7 +414,7 @@ export default function DataUpload() {
       xhr.send(formData);
     } catch (error) {
       console.error("Upload error:", error);
-      await showError(`Upload failed<br/><small>${error.message}</small>`);
+      await showErrorHtml(`Upload failed<br/><small>${error.message}</small>`);
       setUploading(false);
       setUploadProgress(0);
       setUploadPhase("idle");

@@ -11,7 +11,7 @@ import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
 import "../index-organized.css";
 import "../styles/data-management.css";
-import { showSuccess, showError, confirmAction, showLoading } from "../../utils/sweetAlertUtils";
+import { showSuccess, showError, confirmActionHtml, showLoading } from "../../utils/sweetAlertUtils";
 import useGuidedTour from "../../hooks/useGuidedTour";
 import TourInfoButton from "../../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../../tours/pageIds";
@@ -191,7 +191,7 @@ export default function DataManagement() {
   const handleReupload = async (dataset) => {
     if (!dataset.bounds) return;
 
-    const confirmed = await confirmAction(
+    const confirmed = await confirmActionHtml(
       `Reupload <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>This regenerates NDWI imagery for this area/year from Earth Engine and replaces the existing analysis. This can take a little while.</small>`
     );
     if (!confirmed) return;
@@ -235,7 +235,7 @@ export default function DataManagement() {
 
   const handleToggleActive = async (dataset) => {
     const turningOff = dataset.active;
-    const confirmed = await confirmAction(
+    const confirmed = await confirmActionHtml(
       turningOff
         ? `Deactivate <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>Its shoreline data will be excluded from all erosion calculations, and the affected area's figures will be recalculated.</small>`
         : `Reactivate <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>Its shoreline data will be included in erosion calculations again.</small>`
@@ -273,7 +273,7 @@ export default function DataManagement() {
   // shoreline data, so deleting one also removes that data and recalculates
   // the area's erosion baseline (same recompute deactivate already triggers).
   const handleDelete = async (dataset) => {
-    const confirmed = await confirmAction(
+    const confirmed = await confirmActionHtml(
       dataset.can_deactivate
         ? `Delete <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>This permanently removes that year's shoreline data — not just a soft deactivate — and the affected area's erosion figures will be recalculated. This can't be undone.</small>`
         : `Delete <strong>${dataset.municipality} ${dataset.year}</strong>?<br/><small>This upload was superseded and has no live data left — only its audit record and file will be removed. This can't be undone.</small>`

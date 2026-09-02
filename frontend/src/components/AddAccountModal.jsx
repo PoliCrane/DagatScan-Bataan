@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "../pages/styles/accountModals.css";
-import { showSuccess, showError } from "../utils/sweetAlertUtils";
+import { showSuccessHtml, showError } from "../utils/sweetAlertUtils";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
@@ -146,7 +146,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
         return;
       }
 
-      await showSuccess(`Account created successfully!<br/><small>Username: ${formData.username}</small>`);
+      await showSuccessHtml(`Account created successfully!<br/><small>Username: ${formData.username}</small>`);
       onSuccess();
       handleCancel();
     } catch (err) {

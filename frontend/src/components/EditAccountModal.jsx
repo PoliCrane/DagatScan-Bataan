@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "../pages/styles/accountModals.css";
-import { showSuccess, showError, confirmAction, showLoading } from "../utils/sweetAlertUtils";
+import { showSuccessHtml, showError, confirmActionHtml, showLoading } from "../utils/sweetAlertUtils";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
@@ -67,7 +67,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
 
     onClose();
 
-    const confirmed = await confirmAction(
+    const confirmed = await confirmActionHtml(
       roleChanged
         ? `Update username to <strong>${formData.username}</strong> and change role to <strong>${formData.roles}</strong>?<br/><small>Current: ${account.username} (${account.roles})</small>`
         : `Update username to <strong>${formData.username}</strong>?<br/><small>Current: ${account.username}</small>`
@@ -124,7 +124,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
         return;
       }
 
-      await showSuccess(`Account updated successfully!<br/><small>Username: ${formData.username}</small>`);
+      await showSuccessHtml(`Account updated successfully!<br/><small>Username: ${formData.username}</small>`);
       onSuccess();
       handleCancel();
     } catch (err) {

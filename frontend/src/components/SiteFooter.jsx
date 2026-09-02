@@ -9,8 +9,15 @@ export default function SiteFooter() {
   return (
     <motion.footer
       className="footer"
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      // Opacity-only: a translateY here would still visually work, but a
+      // transformed box's post-transform paint contributes to the page's
+      // scrollable overflow — since this is the last element on the page,
+      // that inflated document scrollHeight by the y-offset from first
+      // paint until this scrolled into view, flashing a scrollbar that
+      // "corrected itself" the moment the user scrolled (exactly when
+      // whileInView fires and the offset resolves to 0).
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >

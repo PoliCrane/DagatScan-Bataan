@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { requestAccount, getMunicipalities } from "../api/auth";
-import { showError, showSuccess, showLoading } from "../utils/sweetAlertUtils";
+import { showError, showSuccessHtml, showLoading } from "../utils/sweetAlertUtils";
 import { isValidPhilippineMobile, isValidEmail } from "../utils/validation";
 import AuthModals from "../components/AuthModals";
 import SiteFooter from "../components/SiteFooter";
@@ -156,7 +156,7 @@ export default function Register() {
         await showError(res.error);
         setError(res.error);
       } else if (res.message) {
-        await showSuccess(
+        await showSuccessHtml(
           "Request submitted!<br/><small>An administrator will review your request, and you'll receive an email if it's approved. You'll be able to log in at that point.</small>"
         );
         navigate("/request-account");
