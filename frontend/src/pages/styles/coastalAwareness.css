@@ -7,6 +7,7 @@
 }
 
 .awareness-hero {
+  position: relative;
   width: 100%;
   min-height: 260px;
   border-radius: 12px;
@@ -19,30 +20,52 @@
   padding: 40px 50px;
   box-sizing: border-box;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+/* Dark wash so the text stays legible over the photo — same treatment as
+   the landing hero's .ds-hero-wash (deep-survey-landing.css). */
+.awareness-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(70% 55% at 50% 42%, rgba(6, 20, 40, 0.35), transparent 70%),
+    linear-gradient(180deg, rgba(4, 16, 31, 0.82) 0%, rgba(6, 20, 40, 0.5) 45%, rgba(4, 16, 31, 0.94) 100%);
 }
 
 .awareness-eyebrow {
-  color: #0077b6;
+  position: relative;
+  z-index: 1;
+  color: #b6e3fb;
   font-weight: 600;
   font-size: 1rem;
   margin-bottom: 8px;
+  text-shadow: 0 8px 30px rgba(4, 16, 31, 0.8);
 }
 
 .awareness-hero h1 {
-  color: #1a3a52;
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
   font-size: 2.4rem;
   font-weight: 700;
   margin: 0 0 12px 0;
   max-width: 600px;
   line-height: 1.2;
+  text-shadow: 0 14px 44px rgb(4 16 31 / 0.7);
 }
 
 .awareness-hero p {
-  color: #333;
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 1rem;
   max-width: 520px;
   line-height: 1.6;
   margin: 0;
+  text-shadow: 0 8px 30px rgba(4, 16, 31, 0.8);
 }
 
 .awareness-topic-cards {

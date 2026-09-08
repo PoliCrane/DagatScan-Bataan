@@ -81,7 +81,6 @@
 
 .layout-main .reports-header h1,
 .layout-main .validation-header h1,
-.layout-main .awareness-hero h1,
 .user-management-header h1,
 .data-management-header h1,
 .audit-trail-header h1,
@@ -475,10 +474,6 @@
 .layout-main .validation-container {
   max-width: 1000px;
   margin: 0 auto;
-}
-
-.awareness-hero h1 {
-  color: #ffffff;
 }
 
 .validation-stat {

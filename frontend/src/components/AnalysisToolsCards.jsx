@@ -56,6 +56,13 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
   const [compareSelectedYear, setCompareSelectedYear] = useState(BASE_YEAR.toString());
   const [predictYear, setPredictYear] = useState((BASE_YEAR + Math.min(3, dataYearSpan ? Math.max(1, Math.floor(dataYearSpan / 2)) : 3)).toString());
 
+  // Tracks the year-pair/year last actually sent to onCompare/onSimulate, so
+  // the auto-update effects below (which re-run on every dropdown change
+  // while a comparison/prediction is active) don't double-fire the instant
+  // isComparing/isSimulating flips true from the button's own click.
+  const lastComparedRef = useRef(null);
+  const lastPredictedRef = useRef(null);
+
   // Validate Selected Year when Past Year changes
   const handleComparePastYearChange = (e) => {
     const pastYear = parseInt(e.target.value);
@@ -104,6 +111,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
     if (onCompare) {
       onCompare(pastYearNum, selectedYearNum);
     }
+    lastComparedRef.current = `${pastYearNum}-${selectedYearNum}`;
     setIsComparing(true);
   };
 
@@ -113,6 +121,27 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
       onEndComparison();
     }
   };
+
+  // Re-runs the comparison whenever the year dropdowns change while one is
+  // already showing, instead of requiring End Comparison + Analyze again.
+  // Debounced since a closed PrimeReact Dropdown fires onChange per
+  // arrow-key press; deduped against lastComparedRef so this doesn't
+  // double-fire the request handleCompareAnalyze's own click just made.
+  useEffect(() => {
+    if (!isComparing) return undefined;
+    const pastYearNum = parseInt(comparePastYear);
+    const selectedYearNum = parseInt(compareSelectedYear);
+    if (selectedYearNum <= pastYearNum) return undefined;
+
+    const key = `${pastYearNum}-${selectedYearNum}`;
+    if (key === lastComparedRef.current) return undefined;
+
+    const timeoutId = setTimeout(() => {
+      if (onCompare) onCompare(pastYearNum, selectedYearNum);
+      lastComparedRef.current = key;
+    }, 350);
+    return () => clearTimeout(timeoutId);
+  }, [comparePastYear, compareSelectedYear, isComparing]);
 
   const handleSimulate = async () => {
     if (!selectedMunicipality) {
@@ -130,6 +159,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
     if (onSimulate) {
       onSimulate(BASE_YEAR, predYear);
     }
+    lastPredictedRef.current = predYear.toString();
     setIsSimulating(true);
   };
 
@@ -139,6 +169,21 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
       onEndSimulation();
     }
   };
+
+  // Same auto-update treatment as the comparison effect above, for the
+  // Coastline Prediction tool's year dropdown.
+  useEffect(() => {
+    if (!isSimulating) return undefined;
+    const predYearNum = parseInt(predictYear);
+    const key = predYearNum.toString();
+    if (key === lastPredictedRef.current) return undefined;
+
+    const timeoutId = setTimeout(() => {
+      if (onSimulate) onSimulate(BASE_YEAR, predYearNum);
+      lastPredictedRef.current = key;
+    }, 350);
+    return () => clearTimeout(timeoutId);
+  }, [predictYear, isSimulating]);
 
   useEffect(() => {
     const handleScroll = () => {

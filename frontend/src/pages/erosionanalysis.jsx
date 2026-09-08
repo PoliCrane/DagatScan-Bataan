@@ -98,6 +98,12 @@ export default function ErosionAnalysis() {
   const [predictionResult, setPredictionResult] = useState(null);
 
   const mapWorkspaceRef = useRef(null);
+  // Compare/predict now auto-re-run on every year-dropdown change (see
+  // AnalysisToolsCards.jsx), so overlapping in-flight requests are a real
+  // case now — these guard against a slower, stale response overwriting a
+  // newer one's state.
+  const compareRequestIdRef = useRef(0);
+  const predictRequestIdRef = useRef(0);
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.EROSION_ANALYSIS, erosionAnalysisSteps, {
     onBeforeStart: () => mapWorkspaceRef.current?.open(),
   });
@@ -474,6 +480,7 @@ export default function ErosionAnalysis() {
 
   // Compares the selected segment, or all sufficient-data segments; prefers real geometry over EPR-offset estimate
   const handleCompare = async (pastYear, selectedYear) => {
+    const requestId = ++compareRequestIdRef.current;
     const selectedSegment = shorelineSegments.find((s) => s.id === selectedSegmentId);
 
     if (selectedSegment && !selectedSegment.hasSufficientData) {
@@ -497,6 +504,11 @@ export default function ErosionAnalysis() {
       fetchYearEstimates(pastYear, selectedSegment, currentYear),
       fetchYearEstimates(selectedYear, selectedSegment, currentYear),
     ]);
+
+    // A newer call to handleCompare (a later dropdown change) started and
+    // may already have resolved while this one was in flight — don't let
+    // this stale response clobber its state.
+    if (requestId !== compareRequestIdRef.current) return;
 
     const pastShoreline = [];
     const pastEstimated = [];
@@ -539,6 +551,7 @@ export default function ErosionAnalysis() {
 
   // EPR/retreat numbers come from the /shoreline-estimate endpoint; only the line-offset geometry is client-side
   const handlePredictSimulate = async (baseYear, predictionYear) => {
+    const requestId = ++predictRequestIdRef.current;
     setIsSimulating(true);
 
     const selectedSegment = shorelineSegments.find((s) => s.id === selectedSegmentId);
@@ -614,6 +627,11 @@ export default function ErosionAnalysis() {
         retreat,
       };
     });
+
+    // A newer call to handlePredictSimulate (a later dropdown change) may
+    // have started since — don't let this stale response overwrite it or
+    // flip isSimulating back off while the newer request is still running.
+    if (requestId !== predictRequestIdRef.current) return;
 
     setPredictionResult({
       predictedYear: estimate.predictedYear,
