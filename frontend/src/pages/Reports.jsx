@@ -2,7 +2,7 @@ import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { IconField } from "primereact/iconfield";
 import { InputIcon } from "primereact/inputicon";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -28,13 +28,6 @@ export default function Reports() {
 
   // Selected record for PDF preview (null = show Bataan map instead)
   const [selectedRecord, setSelectedRecord] = useState(null);
-
-  // Off-screen iframe used purely to trigger the browser print dialog on a
-  // PDF without navigating away — window.open + printWindow.print() doesn't
-  // reliably fire for a cross-origin PDF response (frontend on :5173, PDF
-  // served from the backend on :5000), it just leaves the PDF sitting open
-  // in its own tab with no print dialog.
-  const printFrameRef = useRef(null);
 
   // Bataan province boundary for the map panel
   const [geoJsonData, setGeoJsonData] = useState(null);
@@ -116,6 +109,7 @@ export default function Reports() {
       erosionRate: seg.erosionRate,
       riskLevel: seg.riskLevel || "UNKNOWN",
       pdfUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf`,
+      printUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf/print`,
     }));
   }, [allSegments]);
 
@@ -161,16 +155,11 @@ export default function Reports() {
 
   const handlePrintPdf = (record, e) => {
     e.stopPropagation();
-    const frame = printFrameRef.current;
-    if (!frame) return;
-
-    const triggerPrint = () => {
-      frame.removeEventListener("load", triggerPrint);
-      frame.contentWindow.focus();
-      frame.contentWindow.print();
-    };
-    frame.addEventListener("load", triggerPrint);
-    frame.src = record.pdfUrl;
+    // printUrl is a same-origin (backend) HTML wrapper that embeds the PDF
+    // and calls window.print() on itself once loaded — see the comment on
+    // GET /:zoneId/pdf/print in backend/routes/reports.js for why this
+    // can't just be done from here with an iframe into the raw PDF.
+    window.open(record.printUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleClosePreview = () => setSelectedRecord(null);
@@ -180,10 +169,6 @@ export default function Reports() {
       {Tour}
       <TourInfoButton onClick={replay} />
       <div className="reports-container">
-        {/* Off-screen — exists purely so handlePrintPdf has a same-page
-            frame to load the PDF into and call print() on. */}
-        <iframe ref={printFrameRef} title="print-frame" className="print-frame" />
-
         <div className="reports-header">
           <h1>Coastal Erosion Assessment Report</h1>
           <p>Browse and preview generated erosion assessment reports across Bataan municipalities</p>

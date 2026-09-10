@@ -8,6 +8,7 @@ const pool = require("../db");
 const { extractCoordinatesFromGeoJSON } = require("../services/eprAutoCalculator");
 const { renderShorelineMap } = require("../services/staticMap");
 const { classifyErosionRisk, RISK_COLORS, RISK_LABELS } = require("../services/riskClassification");
+const { getFrontendOrigins } = require("../config/env");
 
 const router = express.Router();
 
@@ -111,9 +112,11 @@ function buildInterpretation({ specificArea, baselineYear, year, erosionRate, ri
 // middleware (not just on the success path) so it covers every response on this route,
 // including the 400/404/500 branches below — scoped to the actual frontend origin, not a wildcard.
 router.use("/:zoneId/pdf", (req, res, next) => {
-  const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+  // frame-ancestors is a space-separated source list, so multiple allowed
+  // frontends (see getFrontendOrigins()) can all be listed here directly.
+  const frontendOrigins = getFrontendOrigins().join(" ");
   res.removeHeader("X-Frame-Options");
-  res.setHeader("Content-Security-Policy", `frame-ancestors 'self' ${frontendOrigin}`);
+  res.setHeader("Content-Security-Policy", `frame-ancestors 'self' ${frontendOrigins}`);
   next();
 });
 
@@ -434,6 +437,59 @@ router.get("/:zoneId/pdf", async (req, res) => {
     logger.error("Error generating report PDF:", err.message);
     res.status(500).json({ error: "Failed to generate report PDF", details: err.message });
   }
+});
+
+// Same-origin print wrapper: the frontend's own attempt to call
+// iframe.contentWindow.print() on the PDF above fails silently, because
+// that PDF is served cross-origin (backend domain, not the frontend's) —
+// browsers don't expose contentWindow.print() across origins. This route
+// instead serves a tiny HTML page, on this same backend origin, that
+// embeds the PDF in an iframe and calls window.print() on itself once it
+// loads — same-page print is never cross-origin, regardless of who opened
+// this tab. The frontend just needs to window.open() this URL instead of
+// the raw PDF one.
+router.get("/:zoneId/pdf/print", (req, res) => {
+  const { zoneId } = req.params;
+  if (!/^\d+$/.test(zoneId)) {
+    return res.status(400).send("zoneId must be a positive integer");
+  }
+
+  const frontendOrigins = getFrontendOrigins().join(" ");
+  res.setHeader(
+    "Content-Security-Policy",
+    `default-src 'self'; frame-src 'self'; frame-ancestors 'self' ${frontendOrigins}; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';`
+  );
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Print report</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  iframe { width: 100%; height: 100%; border: none; display: block; }
+</style>
+</head>
+<body>
+  <iframe id="pdf-frame" src="/api/reports/${zoneId}/pdf"></iframe>
+  <script>
+    // The iframe's own "load" event doesn't reliably fire for an embedded
+    // PDF response in Chromium's built-in viewer — window's "load" is a
+    // native browser guarantee that all sub-resources (including iframes)
+    // have finished, independent of whether the PDF viewer dispatches its
+    // own DOM event, so it's used here instead.
+    window.addEventListener("load", function () {
+      // A short delay lets the browser's PDF viewer finish its first
+      // render pass — calling print() immediately on load can catch it
+      // still laying out and produce a blank/partial print preview.
+      setTimeout(function () {
+        window.focus();
+        window.print();
+      }, 300);
+    });
+  </script>
+</body>
+</html>`);
 });
 
 module.exports = router;

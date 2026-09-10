@@ -17,4 +17,16 @@ function validateEnv() {
   }
 }
 
-module.exports = { validateEnv };
+// Splits FRONTEND_URL on commas so multiple deployed frontends (e.g. a
+// Vercel preview URL plus a custom domain and its www subdomain) can all be
+// allowed at once — cors()'s `origin` option accepts an array natively, and
+// CSP's frame-ancestors accepts a space-separated source list.
+function getFrontendOrigins() {
+  const raw = process.env.FRONTEND_URL || "http://localhost:5173";
+  return raw
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+module.exports = { validateEnv, getFrontendOrigins };

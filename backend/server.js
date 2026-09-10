@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { validateEnv } = require("./config/env");
+const { validateEnv, getFrontendOrigins } = require("./config/env");
 validateEnv();
 
 // log unhandled rejections instead of dying silently
@@ -36,8 +36,12 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
-// falls back to local Vite port; set FRONTEND_URL in production, no trailing slash
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:5173" }));
+// Falls back to local Vite port; set FRONTEND_URL in production, no trailing
+// slash on any entry. Comma-separate multiple origins (e.g. a Vercel URL
+// plus a custom domain and its www subdomain) — getFrontendOrigins() splits
+// them into an array, which cors()'s `origin` option checks membership
+// against natively.
+app.use(cors({ origin: getFrontendOrigins() }));
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(apiLimiter);
