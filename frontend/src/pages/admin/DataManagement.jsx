@@ -35,9 +35,7 @@ const formatRole = (role) => {
   return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
-// thumbnail_url is either a durable, already-absolute Supabase Storage URL,
-// or (fallback, local dev / not-yet-synced) a root-relative local path that
-// needs the backend's own origin prefixed.
+// thumbnail_url is either an absolute Supabase Storage URL, or (local dev / not-yet-synced) a root-relative path needing the backend origin prefixed.
 const resolveThumbUrl = (thumbnailUrl) => {
   if (!thumbnailUrl) return null;
   return thumbnailUrl.startsWith("http") ? thumbnailUrl : `${API_BASE}${thumbnailUrl}`;
@@ -50,10 +48,9 @@ export default function DataManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState(null);
-  // Thumbnail URLs that 404'd (legacy rows with missing source files),
-  // tracked via <img> onError so the View button can be disabled for them.
+  // Thumbnail URLs that 404'd (legacy rows with missing source files) — disables the View button for them.
   const [brokenThumbs, setBrokenThumbs] = useState(() => new Set());
-  // Separate from busyId since this is a plain read with no confirm dialog.
+  // Separate from busyId: a plain read with no confirm dialog.
   const [loadingImageryId, setLoadingImageryId] = useState(null);
   const [reuploadingId, setReuploadingId] = useState(null);
 
@@ -72,7 +69,7 @@ export default function DataManagement() {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      // Fetched whole (not paginated) so search/filters apply across all data.
+      // Fetched whole, not paginated, so search/filters apply across all data.
       const response = await fetch(`${API_BASE}/api/admin/uploads?limit=1000`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -124,8 +121,7 @@ export default function DataManagement() {
     return list;
   }, [datasets, filters, search]);
 
-  // Stat cards describe the whole library, not the filtered view — otherwise
-  // the totals would shift every time someone typed in the search box.
+  // Stat cards describe the whole library, not the filtered view, so totals don't shift as someone types in search.
   const stats = useMemo(() => {
     const active = datasets.filter((d) => d.active).length;
     const uploaders = new Set(datasets.map((d) => d.uploaded_by).filter(Boolean));
@@ -156,11 +152,8 @@ export default function DataManagement() {
     setPage(1);
   };
 
-  // First fetch per area/year is a live multi-second Earth Engine query;
-  // loading state is scoped to this row's button so the table stays usable.
-  // Backend now times out its own Earth Engine init after 25s — this is
-  // defense-in-depth so the button never hangs forever even if something
-  // else in the chain gets stuck.
+  // Live Earth Engine query, can take seconds — loading state is scoped to this row's button so the table stays usable.
+  // The 45s client timeout is defense-in-depth; the backend already times out its own EE init at 25s.
   const handleViewSatelliteImagery = async (dataset) => {
     setLoadingImageryId(dataset.id);
     const controller = new AbortController();
@@ -184,10 +177,8 @@ export default function DataManagement() {
     }
   };
 
-  // Re-runs NDWI generation for this exact area/year using its stored bounds
-  // (satellite_imagery.bounds, joined in by GET /api/admin/uploads) — no need
-  // to retype coordinates. Safe to repeat: satellite_imagery upserts on
-  // (area_id, year) and shoreline_zones replaces rather than duplicates.
+  // Re-runs NDWI generation using bounds stored on satellite_imagery (joined in by GET /api/admin/uploads), so no retyping coordinates.
+  // Safe to repeat: satellite_imagery upserts on (area_id, year) and shoreline_zones replaces rather than duplicates.
   const handleReupload = async (dataset) => {
     if (!dataset.bounds) return;
 
@@ -268,10 +259,8 @@ export default function DataManagement() {
     }
   };
 
-  // Superseded uploads have no live data left, so deleting them just clears
-  // the orphaned audit row and its file. Live/active uploads carry real
-  // shoreline data, so deleting one also removes that data and recalculates
-  // the area's erosion baseline (same recompute deactivate already triggers).
+  // Superseded uploads have no live data left, so deleting just clears the orphaned audit row and file.
+  // Live/active uploads carry real shoreline data, so deleting also recalculates the area's erosion baseline.
   const handleDelete = async (dataset) => {
     const confirmed = await confirmActionHtml(
       dataset.can_deactivate
@@ -316,7 +305,6 @@ export default function DataManagement() {
 
         {error && <div className="user-management-error">{error}</div>}
 
-        {/* Summary cards */}
         <div className="dm-stats">
           <div className="dm-stat-card">
             <div className="dm-stat-icon-badge blue"><span className="dm-stat-icon" /></div>
@@ -352,7 +340,6 @@ export default function DataManagement() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="dm-filter-bar">
           <IconField iconPosition="left" className="dm-search-box">
             <InputIcon className="pi pi-search" />
@@ -404,7 +391,6 @@ export default function DataManagement() {
           />
         </div>
 
-        {/* Table */}
         {loading ? (
           <p className="user-management-loading">Loading datasets...</p>
         ) : (

@@ -64,7 +64,6 @@ export const showLoading = async (message = "Loading...", duration = 3000) => {
   });
 };
 
-// success message
 export const showSuccess = async (message, options = {}) => {
   await Swal.fire({
     title: "Success!",
@@ -95,7 +94,6 @@ export const showSuccessHtml = async (message, options = {}) => {
   });
 };
 
-// error message
 export const showError = async (message, options = {}) => {
   await Swal.fire({
     title: "Error!",
@@ -122,7 +120,6 @@ export const showErrorHtml = async (message, options = {}) => {
   });
 };
 
-// info/warning message
 export const showInfo = async (message, options = {}) => {
   await Swal.fire({
     title: "Information",

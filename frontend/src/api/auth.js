@@ -1,7 +1,6 @@
 import { api, ApiError } from "./client";
 
-// Auth endpoints intentionally resolve with { error } instead of throwing —
-// the login/register forms branch on res.error rather than using try/catch.
+// Auth endpoints resolve with { error } instead of throwing — forms branch on res.error rather than try/catch.
 async function soft(promise) {
   try {
     return await promise;
@@ -11,8 +10,8 @@ async function soft(promise) {
   }
 }
 
-// creates a pending account request an admin must approve, not a usable account
-// FormData carries the request-letter PDF — no Content-Type header, browser sets the multipart boundary
+// Creates a pending account request an admin must approve, not a usable account.
+// FormData carries the request-letter PDF — no Content-Type header; the browser sets the multipart boundary.
 export const requestAccount = (formData) =>
   soft(api("/request-account", { method: "POST", body: formData }));
 

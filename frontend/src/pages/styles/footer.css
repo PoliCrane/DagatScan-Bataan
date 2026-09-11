@@ -32,7 +32,6 @@ footer {
   flex-direction: column;
 }
 
-/* Left Column - Branding & Data Sources */
 .footer-left {
   gap: 30px;
 }

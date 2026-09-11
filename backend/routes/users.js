@@ -24,7 +24,6 @@ const router = express.Router();
 
 const VALID_ROLES = ["municipal", "admin", "superadmin"];
 
-// GET ALL USERS
 router.get("/users", async (req, res) => {
   try {
     const users = await pool.query(`
@@ -41,7 +40,6 @@ router.get("/users", async (req, res) => {
   }
 });
 
-// UPDATE USER ROLE
 router.put("/users/:userId/role", validate(schemas.roleUpdate), async (req, res) => {
   try {
     const { userId } = req.params;
@@ -93,7 +91,6 @@ router.put("/users/:userId/role", validate(schemas.roleUpdate), async (req, res)
   }
 });
 
-// DEACTIVATE USER
 router.patch("/users/:userId/deactivate", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -137,7 +134,6 @@ router.patch("/users/:userId/deactivate", async (req, res) => {
   }
 });
 
-// REACTIVATE USER
 router.patch("/users/:userId/reactivate", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -177,7 +173,6 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
   }
 });
 
-// CREATE USER
 router.post("/create-user", validate(schemas.createUser), async (req, res) => {
   try {
     const { username, email, password, roles } = req.body;
@@ -252,7 +247,7 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
   }
 });
 
-// EDIT USER - username, and municipality for municipal accounts
+// Editable fields: username, and municipality for municipal accounts.
 router.put("/users/:userId/edit", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -319,7 +314,7 @@ router.put("/users/:userId/edit", async (req, res) => {
   }
 });
 
-// LIST ACCOUNT REQUESTS — pending by default, or ?status=all/approved/rejected
+// Pending by default; ?status=all/approved/rejected overrides.
 router.get("/account-requests", async (req, res) => {
   try {
     const status = req.query.status || "pending";
@@ -342,8 +337,8 @@ router.get("/account-requests", async (req, res) => {
   }
 });
 
-// VIEW REQUEST LETTER — streams the local PDF, or redirects to a short-lived signed URL
-// when the file only exists in the private storage bucket.
+// Streams the local PDF, or redirects to a short-lived signed URL when it only exists
+// in the private storage bucket.
 router.get("/account-requests/:id/letter", async (req, res) => {
   try {
     if (!/^\d+$/.test(req.params.id)) {
@@ -375,8 +370,7 @@ router.get("/account-requests/:id/letter", async (req, res) => {
       return res.redirect(signedUrl);
     }
 
-    // Legacy rows from before request letters moved to the private bucket store a full
-    // public-bucket URL directly — just redirect to it.
+    // Legacy rows from before request letters moved to the private bucket store a full public-bucket URL directly.
     if (storagePath && storagePath.startsWith("http")) {
       return res.redirect(storagePath);
     }
@@ -388,7 +382,7 @@ router.get("/account-requests/:id/letter", async (req, res) => {
   }
 });
 
-// APPROVE ACCOUNT REQUEST — creates the real users row; admin sets the password here.
+// Creates the real users row; admin sets the password here.
 router.post("/account-requests/:id/approve", validate(schemas.approveRequest), async (req, res) => {
   const { password } = req.body;
   if (!password) {
@@ -468,7 +462,6 @@ router.post("/account-requests/:id/approve", validate(schemas.approveRequest), a
   }
 });
 
-// REJECT ACCOUNT REQUEST
 router.post("/account-requests/:id/reject", validate(schemas.rejectRequest), async (req, res) => {
   try {
     const { reason } = req.body;

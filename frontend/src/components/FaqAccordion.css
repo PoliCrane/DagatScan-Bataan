@@ -64,10 +64,7 @@
   transform: rotate(-135deg);
 }
 
-/* Grid-rows 0fr -> 1fr is what actually animates the expand/collapse —
-   height:auto content can't be transitioned directly in CSS, but a grid
-   track can be, and the overflow:hidden on the row + inner div clips
-   everything (including the inner div's own padding) while collapsed. */
+/* grid-template-rows 0fr→1fr animates the expand since height:auto can't transition; overflow:hidden clips content (and padding) while collapsed. */
 .faq-item-body-wrapper {
   display: grid;
   grid-template-rows: 0fr;
@@ -88,9 +85,7 @@
   transition: padding-bottom 0.3s ease;
 }
 
-/* Padding itself isn't clipped by the grid-rows collapse (only content
-   height is), so the bottom padding has to be toggled in step with .open
-   or a closed item still shows a sliver equal to its own padding. */
+/* Padding isn't clipped by the grid-rows collapse, so it must toggle with .open or a closed item shows a sliver of padding. */
 .faq-item.open .faq-item-body {
   padding-bottom: 20px;
 }

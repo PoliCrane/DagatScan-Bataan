@@ -8,9 +8,8 @@ if (!process.env.JWT_SECRET) {
 }
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Verifies the JWT, then re-checks roles/active against the database so that
-// deactivation or a role change takes effect immediately instead of when the
-// token expires. req.user carries the FRESH roles from the database.
+// Verifies the JWT, then re-checks roles/active against the database so a deactivation
+// or role change takes effect immediately instead of when the token expires.
 const verifyToken = async (req, res, next) => {
   const authorization = req.headers.authorization || "";
   const [scheme, token] = authorization.split(" ");

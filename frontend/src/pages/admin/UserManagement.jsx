@@ -373,7 +373,6 @@ export default function UserManagement() {
           </IconField>
         </div>
 
-        {/* Pending Account Requests Section — municipal-account signups awaiting review */}
         <div className="user-section">
           <h2 className="section-title">Pending Account Requests</h2>
           {requestsLoading ? (
@@ -456,7 +455,6 @@ export default function UserManagement() {
           <p className="user-management-loading">Loading users...</p>
         ) : (
           <>
-            {/* Superadmin Accounts Section — visible only to superadmins */}
             {isSuperadmin && (
               <div className="user-section">
                 <h2 className="section-title">Superadmin Accounts</h2>
@@ -468,7 +466,6 @@ export default function UserManagement() {
               </div>
             )}
 
-            {/* Admin Accounts Section */}
             <div className="user-section">
               <h2 className="section-title">Admin Accounts</h2>
               {filteredAdmins.length === 0 ? (
@@ -478,7 +475,6 @@ export default function UserManagement() {
               )}
             </div>
 
-            {/* Municipal Accounts Section */}
             <div className="user-section">
               <h2 className="section-title">Municipal Accounts</h2>
               {filteredMunicipalAccounts.length === 0 ? (

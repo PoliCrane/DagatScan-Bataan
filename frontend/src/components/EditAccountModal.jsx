@@ -21,7 +21,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
 
   // superadmin's own role isn't editable through this modal
   const isSuperadminAccount = account?.roles === "superadmin";
-  // driven by the live selection so the field appears/disappears as the role dropdown changes
+  // tracks the live dropdown selection, not the original account role
   const showMunicipalityField = formData.roles === "municipal";
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
     try {
       const token = localStorage.getItem("token");
 
-      // role changes go through the dedicated /role route — /edit's own municipality_id handling can't clear a value, only set/keep one
+      // role changes go through /role — /edit's municipality_id handling can only set/keep a value, not clear it
       if (roleChanged) {
         const roleResponse = await fetch(`${API_BASE_URL}/admin/users/${account.id}/role`, {
           method: "PUT",

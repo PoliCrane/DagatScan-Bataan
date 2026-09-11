@@ -22,10 +22,8 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
     setError("");
     setLoading(true);
 
-    // Close modal before showing loading dialog
     if (onClose) onClose();
 
-    // Show loading dialog
     await showLoading("Logging in...", 2000);
 
     const res = await loginUser({ email, password });
@@ -33,10 +31,8 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
     if (res.token) {
       auth.login(res);
 
-      // Show success
       await showSuccess(`Welcome back, ${res.username || 'User'}!`);
 
-      // Redirect based on user role (no confirmation needed, just go)
       if (res.roles === "admin") {
         navigate("/admin/data-upload");
       } else if (res.roles === "municipal") {
@@ -45,7 +41,6 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
         navigate("/home");
       }
     } else if (res.error) {
-      // Show error
       await showError(res.error);
       setError(res.error);
     }

@@ -63,9 +63,7 @@ async function insertZoneRecords(client, records, municipalityId, adminId) {
   return { insertedCount, errors, transactionError };
 }
 
-/**
- * Helper: Process GeoJSON file (Simplified - uses shoreline_zones with FK)
- */
+// Processes an uploaded GeoJSON file into shoreline_zones records.
 async function processGeoJSONFile(
   client,
   file,
@@ -79,11 +77,9 @@ async function processGeoJSONFile(
   const municipalityId = await getOrCreateMunicipalityId(client, municipality);
 
   try {
-    // 1. Parse GeoJSON
     const parseResult = await parseGeoJSON(file.path);
 
     if (!parseResult.valid) {
-      // Create failed upload record
       const failedUpload = await client.query(
         `INSERT INTO upload_history
          (admin_id, upload_type, municipality_id, year, file_name, file_path,
@@ -103,7 +99,6 @@ async function processGeoJSONFile(
         ]
       );
 
-      // Delete the file since it's invalid
       fs.unlink(file.path, (err) => {
         if (err) logger.error("Error deleting invalid file:", err);
       });
@@ -116,33 +111,27 @@ async function processGeoJSONFile(
       };
     }
 
-    // 2. Auto-calculate erosion rates for features without them
     console.log(`\n🚀 PROCESSING UPLOAD - AUTO-CALCULATION PHASE`);
     console.log(`   Municipality: ${municipality}, Year: ${year}, Features: ${parseResult.features.length}`);
     await autoCalculateErosionRates(client, parseResult.features, municipality, year);
 
-    // 3. Calculate erosion metrics from GeoJSON features (row-by-row for each zone)
     console.log(`\n📊 CALCULATING METRICS FROM FEATURES`);
     const records = calculateErosionMetrics(
       parseResult.features,
       municipality,
       year
     );
-    
-    // Log what we extracted
+
     console.log(`   Records extracted: ${records.length}`);
     records.forEach((rec, i) => {
       console.log(`   [${i}] ${rec.specific_area}: erosionRate=${rec.erosion_rate}`);
     });
 
-    // 4. Extract geographic bounds
     const bounds = extractCoordinateBounds(parseResult.features);
     console.log(`   Municipality ID: ${municipalityId}`);
 
-    // 6. Begin transaction to insert records
     await client.query("BEGIN");
 
-    // 7. Insert each zone directly into shoreline_zones and extract geometries
     const { insertedCount, errors, transactionError } = await insertZoneRecords(
       client,
       records,
@@ -150,7 +139,6 @@ async function processGeoJSONFile(
       adminId
     );
 
-    // 8. Handle transaction completion
     let uploadStatus = "Complete";
     let errorMessage = null;
     
@@ -169,7 +157,6 @@ async function processGeoJSONFile(
       await client.query("COMMIT");
     }
 
-    // 9. Create upload history record
     const uploadRecord = await client.query(
       `INSERT INTO upload_history
        (admin_id, upload_type, municipality_id, year, file_name, file_path,
@@ -206,7 +193,6 @@ async function processGeoJSONFile(
     await client.query("ROLLBACK");
     logger.error("Error processing GeoJSON:", error);
 
-    // Create failed upload record
     const failedUpload = await client.query(
       `INSERT INTO upload_history
        (admin_id, upload_type, municipality_id, year, file_name, file_path,
@@ -236,9 +222,9 @@ async function processGeoJSONFile(
 }
 
 /**
- * Helper: Look up the most recent shoreline geometry recorded before `year`
- * for this area, to use as the reference coastline for satellite-image
- * change detection. Returns [[lat, lng], ...] or null.
+ * Looks up the most recent shoreline geometry recorded before `year` for this
+ * area, to use as the reference coastline for satellite-image change detection.
+ * Returns [[lat, lng], ...] or null.
  */
 async function findReferenceCoastline(client, areaId, year) {
   console.log(`[findRef] Looking for reference: area_id=${areaId}, year<${year}`);
@@ -634,7 +620,6 @@ async function processSatelliteImageFile(
       analysisOutcome = { ran: false, reason: analysisError.message };
     }
 
-    // Create upload history record
     const uploadRecord = await client.query(
       `INSERT INTO upload_history
        (admin_id, upload_type, municipality_id, area_id, year, file_name, file_path,
@@ -730,10 +715,7 @@ function computeThumbnailUrl(filePath) {
   return `/uploads/${relative}`;
 }
 
-/**
- * GET /api/admin/uploads
- * List all uploaded files with their status
- */
+// Processes an uploaded CSV file into shoreline_zones records.
 async function processCSVFile(
   client,
   file,
@@ -746,7 +728,6 @@ async function processCSVFile(
   const municipalityId = await getOrCreateMunicipalityId(client, defaultMunicipality);
 
   try {
-    // 1. Parse CSV
     const parseResult = await parseCSV(
       file.path,
       defaultMunicipality,
@@ -754,7 +735,6 @@ async function processCSVFile(
     );
 
     if (!parseResult.valid || parseResult.data.length === 0) {
-      // Create failed upload record
       const failedUpload = await client.query(
         `INSERT INTO upload_history
          (admin_id, upload_type, municipality_id, year, file_name, file_path,
@@ -774,7 +754,6 @@ async function processCSVFile(
         ]
       );
 
-      // Delete the file since it's invalid
       fs.unlink(file.path, (err) => {
         if (err) logger.error("Error deleting invalid file:", err);
       });
@@ -787,14 +766,12 @@ async function processCSVFile(
       };
     }
 
-    // 3. Begin transaction to insert records
     await client.query("BEGIN");
 
     let insertedCount = 0;
     let transactionError = null;
     const errors = [];
 
-    // 4. Insert each record directly into shoreline_zones (simplified!)
     for (const record of parseResult.data) {
       try {
         await client.query(`SAVEPOINT sp_${insertedCount}`);
@@ -803,7 +780,6 @@ async function processCSVFile(
         // both the existence check and the insert below.
         const areaId = await resolveAreaId(client, municipalityId, record.specific_area);
 
-        // Check if this record already exists
         const existingResult = await client.query(
           `SELECT id FROM shoreline_zones
            WHERE area_id = $1 AND year = $2`,
@@ -811,7 +787,6 @@ async function processCSVFile(
         );
 
         if (existingResult.rows.length > 0) {
-          // Update existing record
           await client.query(
             `UPDATE shoreline_zones SET
              erosion_rate = $1,
@@ -821,7 +796,6 @@ async function processCSVFile(
             [record.erosion_rate, record.cumulative_erosion, existingResult.rows[0].id]
           );
         } else {
-          // Insert new record
           await client.query(
             `INSERT INTO shoreline_zones
              (area_id, year, erosion_rate, cumulative_erosion,
@@ -852,7 +826,6 @@ async function processCSVFile(
       }
     }
 
-    // 5. Handle transaction completion
     let uploadStatus = "Complete";
     let errorMessage = null;
     
@@ -868,7 +841,6 @@ async function processCSVFile(
       await client.query("COMMIT");
     }
 
-    // 6. Create upload history record
     const uploadRecord = await client.query(
       `INSERT INTO upload_history
        (admin_id, upload_type, municipality_id, year, file_name, file_path,

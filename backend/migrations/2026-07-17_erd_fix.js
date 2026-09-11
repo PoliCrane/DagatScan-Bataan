@@ -24,7 +24,6 @@ async function main() {
   try {
     await client.query("BEGIN");
 
-    // 1. Seed all 12 Bataan municipalities
     await client.query(`
       INSERT INTO municipalities (name) VALUES
         ('Abucay'),('Bagac'),('Balanga'),('Dinalupihan'),('Hermosa'),('Limay'),
@@ -32,7 +31,6 @@ async function main() {
       ON CONFLICT (name) DO NOTHING
     `);
 
-    // 2. coastal_areas + backfill
     await client.query(`
       CREATE TABLE coastal_areas (
         id SERIAL PRIMARY KEY,
@@ -64,7 +62,6 @@ async function main() {
       throw new Error(`${unresolvedZones.rows[0].count} shoreline_zones rows failed area_id backfill`);
     }
 
-    // 3. satellite_imagery.area_id + uniqueness move
     await client.query(`ALTER TABLE satellite_imagery ADD COLUMN area_id INTEGER REFERENCES coastal_areas(id)`);
     // Today each municipality has exactly one area, so municipality->area is unambiguous
     await client.query(`
@@ -81,14 +78,12 @@ async function main() {
     await client.query(`ALTER TABLE satellite_imagery DROP CONSTRAINT satellite_imagery_municipality_year_key`);
     await client.query(`ALTER TABLE satellite_imagery ADD CONSTRAINT satellite_imagery_area_year_key UNIQUE (area_id, year)`);
 
-    // 4. Connect users: the panelists' fix
     await client.query(`
       ALTER TABLE upload_history
       ADD CONSTRAINT upload_history_admin_id_fkey
       FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
     `);
 
-    // 5. Drop dead weight.
     // cache_validity_status is a manual-ops view (no code references) that
     // UNIONs all cache tables — recreate it scoped to the two kept caches
     // so it survives the drops and stays usable for debugging.
@@ -127,7 +122,6 @@ async function main() {
     await client.query("COMMIT");
     console.log("Migration committed successfully.");
 
-    // Post-commit summary
     const areas = await client.query(`SELECT a.id, m.name AS municipality, a.name FROM coastal_areas a JOIN municipalities m ON m.id = a.municipality_id ORDER BY a.id`);
     console.log("coastal_areas:", areas.rows);
     const munis = await client.query(`SELECT COUNT(*) FROM municipalities`);

@@ -8,7 +8,7 @@ import { Message } from "primereact/message";
 import { openRequestLetter } from "../utils/requestLetter";
 
 import { API_BASE_URL } from "../config/api";
-// the admin sets the account's initial password here, at approval time — the request form no longer collects one from the applicant
+// admin sets the initial password at approval time — the request form no longer collects one from the applicant
 export default function ApproveRequestModal({ isOpen, request, onClose, onSuccess }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

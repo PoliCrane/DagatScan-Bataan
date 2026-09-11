@@ -115,7 +115,6 @@ async function computeAndStoreMunicipalityAnalysis(municipalityId) {
       [municipalityId, currentYear]
     );
 
-    // If no current year, get latest
     let processedData = null;
     if (result.rows.length === 0) {
       const latestResult = await pool.query(
@@ -154,7 +153,7 @@ async function computeAndStoreMunicipalityAnalysis(municipalityId) {
     }
 
     const erosionRate = parseFloat(processedData.avg_erosion_rate || 0);
-    let coastlineLength = 2.5; // Default
+    let coastlineLength = 2.5;
 
     if (processedData.geojson_samples && Array.isArray(processedData.geojson_samples)) {
       try {

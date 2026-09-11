@@ -3,8 +3,7 @@ import { motion, useMotionValue, useSpring } from "framer-motion";
 
 const MAX_PULL = 12;
 
-// Shifts toward the cursor within its own bounds and springs back on leave —
-// a self-contained micro-interaction, not tied to any page-level pointer tracking.
+// shifts toward the cursor within its own bounds and springs back on leave — self-contained, not tied to page-level pointer tracking
 export default function MagneticButton({ className, onClick, children, ...rest }) {
   const ref = useRef(null);
   const x = useMotionValue(0);

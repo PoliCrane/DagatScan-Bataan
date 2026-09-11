@@ -31,7 +31,6 @@ const formatRole = (role) => {
   return role.charAt(0).toUpperCase() + role.slice(1);
 };
 
-// "role_changed" -> "Role Changed"
 const formatAction = (action) => {
   if (!action) return "—";
   return action
@@ -40,8 +39,7 @@ const formatAction = (action) => {
     .join(" ");
 };
 
-// Used only when an action doesn't have a dedicated case below (or its
-// expected details fields are missing), so nothing renders blank.
+// Fallback for actions with no dedicated case, or missing expected fields — avoids blank renders.
 const rawFallbackDetail = (details) => {
   if (!details || typeof details !== "object") return "—";
   return Object.entries(details)
@@ -52,9 +50,7 @@ const rawFallbackDetail = (details) => {
 
 const rawFallbackTarget = (log) => (log.target_type ? `${log.target_type} #${log.target_id}` : "—");
 
-// Turns the raw details JSON + target_type/target_id into a plain-language
-// "what was affected" / "what happened" pair, per action — the raw
-// key:value dump this replaced was unreadable to a non-technical viewer.
+// Turns the raw details JSON into a plain-language target/detail pair per action — the raw key:value dump was unreadable to non-technical viewers.
 const describeLog = (log) => {
   const d = log.details || {};
   switch (log.action) {
@@ -275,7 +271,6 @@ export default function AuditTrail() {
 
         {error && <div className="user-management-error">{error}</div>}
 
-        {/* Summary cards */}
         <div className="at-stats">
           <div className="at-stat-card">
             <div className="at-stat-icon-badge blue"><span className="at-stat-icon" /></div>
@@ -311,7 +306,6 @@ export default function AuditTrail() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="at-filter-bar">
           <IconField iconPosition="left" className="at-search-box">
             <InputIcon className="pi pi-search" />
@@ -356,7 +350,6 @@ export default function AuditTrail() {
           </button>
         </div>
 
-        {/* Table */}
         {loading ? (
           <p className="user-management-loading">Loading audit logs...</p>
         ) : (

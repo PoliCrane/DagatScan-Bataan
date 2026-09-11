@@ -1,5 +1,4 @@
-// Fetches real shoreline data from the database. Empty results stay empty —
-// callers must render an explicit no-data state, never simulated values.
+// Fetches real shoreline data from the database. Empty results stay empty — callers must render an explicit no-data state, never simulated values.
 
 import { offsetCoastlineSeaward } from "../utils/geometry";
 
@@ -30,7 +29,7 @@ export const fetchMunicipalityData = async (
       console.warn(
         `⚠️ Database query failed for ${municipality} (HTTP ${response.status}). No data available.`
       );
-      return null; // Return null to trigger fallback
+      return null;
     }
 
     const result = await response.json();
@@ -41,11 +40,11 @@ export const fetchMunicipalityData = async (
       `Error fetching real data for ${municipality}:`,
       error.message
     );
-    return null; // Return null to trigger fallback
+    return null;
   }
 };
 
-// cumulative change is signed seaward meters: negative = retreat, positive = advance
+// Cumulative change is signed seaward meters: negative = retreat, positive = advance.
 const offsetCoastlineByErosion = (coastlinePoints, cumulativeChange) =>
   offsetCoastlineSeaward(coastlinePoints, cumulativeChange || 0);
 
@@ -93,7 +92,6 @@ export const getYearData = async (municipality, year) => {
   }
 };
 
-// For seeding test/demo data
 export const seedDatabaseWithSimulatedData = async (
   municipality,
   options = {}

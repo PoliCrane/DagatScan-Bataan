@@ -8,9 +8,8 @@ import IndexNavBar from "./indexNavBar";
 import { useAuth } from "../contexts/useAuth";
 import "./index-organized.css";
 
-// Same fixed shoreline colors as the live Erosion Analysis map's
-// ErosionLegend.jsx and the generated PDF report (backend/routes/reports.js)
-// use, so these previews match what the app/PDF actually show.
+// Matches the live Erosion Analysis map (ErosionLegend.jsx) and the generated
+// PDF report (backend/routes/reports.js), so these previews match the real output.
 const SHORELINE_COLORS = {
   previous: "#FFEA00",
   current: "#FF3131",
@@ -42,11 +41,9 @@ const FEATURES = [
   },
 ];
 
-// Real Esri satellite map crops with actual shoreline_zones geometry (area
-// 21, "Bagac Testing", years 2015/2026) baked in via the same
-// renderShorelineMap pipeline the PDF report itself uses — generated once
-// (see gen-mockup-maps2.js, not part of the app) rather than re-rendered
-// live, since this is a static marketing preview, not a data view.
+// Real Esri map crops with actual shoreline_zones geometry, rendered once via
+// the same pipeline the PDF report uses (see gen-mockup-maps2.js, not part of
+// the app) rather than live — this is a static marketing preview, not a data view.
 function ShorelineMapMockup({ src, legend }) {
   return (
     <div className="ds-mockup-map">

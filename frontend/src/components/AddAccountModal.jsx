@@ -33,7 +33,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
       .catch((err) => console.error("Could not load municipalities:", err.message));
   }, []);
 
-  // Password validation requirements
   const passwordRequirements = {
     minLength: formData.password.length >= 8,
     hasUppercase: /[A-Z]/.test(formData.password),
@@ -53,7 +52,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
   const handleSave = async () => {
     setError("");
 
-    // Validation
     if (!formData.username.trim()) {
       setError("Username is required");
       return;
@@ -107,14 +105,12 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email");
       return;
     }
 
-    // Close modal before showing loading state
     onClose();
     setLoading(true);
     try {
@@ -139,7 +135,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
 
       if (!response.ok) {
         await showError(data.error || "Failed to create account");
-        // Reopen modal after error dialog is dismissed
+        // reopens the modal once the error dialog closes
         if (onError) {
           setTimeout(() => onError(), 100);
         }
@@ -152,7 +148,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
     } catch (err) {
       await showError("An error occurred. Please try again.");
       console.error(err);
-      // Reopen modal after error dialog is dismissed
       if (onError) {
         setTimeout(() => onError(), 100);
       }

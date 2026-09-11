@@ -43,9 +43,6 @@ export const classifyErosionRisk = (erosionRate) => {
   return RISK_TIERS.find((tier) => tier.test(rate)).key;
 };
 
-/**
- * Get color for a risk tier key
- */
 export const getRiskColor = (riskLevel) => {
   const normalizedLevel = (riskLevel || "").toUpperCase().trim();
   const riskMap = {

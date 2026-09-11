@@ -1,7 +1,6 @@
 import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 
-// polls the DOM until an element renders, then scrolls it into view ourselves before resolving
-// (leaving the scroll to Joyride risks the spotlight landing before the page actually scrolls there)
+// Polls the DOM until an element renders, then scrolls it into view ourselves — leaving that to Joyride risks the spotlight landing before the page actually scrolls there.
 const waitForElement = (selector, timeout = 5000) => () =>
   new Promise((resolve) => {
     const start = Date.now();

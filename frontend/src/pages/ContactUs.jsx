@@ -12,8 +12,8 @@ export default function ContactUs() {
   const location = useLocation();
   const authModalsRef = useRef(null);
 
-  // System chrome for logged-in users, or guests arriving via a sidebar
-  // footer link (state.from === "system") rather than the public index.
+  // Shows app chrome for logged-in users, or guests who arrived via a sidebar
+  // footer link (state.from === "system") instead of the public index.
   const token = localStorage.getItem("token");
   const useSystemChrome = !!token || location.state?.from === "system";
 

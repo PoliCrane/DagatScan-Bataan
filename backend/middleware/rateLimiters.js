@@ -1,7 +1,6 @@
 const rateLimit = require("express-rate-limit");
 
-// Applies to /login. Keyed by IP, not by the submitted email, so it also
-// caps distributed guesses against a single account from one source.
+// Keyed by IP, not the submitted email, so it also caps distributed guesses against one account.
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
@@ -10,9 +9,8 @@ const loginLimiter = rateLimit({
   message: { error: "Too many login attempts. Please try again later." },
 });
 
-// Covers both halves of the reset flow: requesting a code and redeeming
-// one. The 6-digit code is only ~1M possibilities, so this is what actually
-// caps brute-forcing it within its 30-minute validity window.
+// Covers both requesting and redeeming a code — the 6-digit code is only ~1M
+// possibilities, so this is what actually caps brute-forcing it within its validity window.
 const passwordResetLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
@@ -29,8 +27,8 @@ const accountRequestLimiter = rateLimit({
   message: { error: "Too many account requests. Please try again later." },
 });
 
-// Generous global backstop against floods/scrapers — the map UI legitimately polls
-// job status and loads many segments, so this must stay well above normal usage.
+// Generous backstop against floods/scrapers — the map UI legitimately polls job status
+// and loads many segments, so this must stay well above normal usage.
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 2000,

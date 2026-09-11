@@ -1,4 +1,3 @@
-/* Satellite Toggle Button */
 .satellite-toggle-btn {
   position: absolute;
   top: 30px;
@@ -31,7 +30,6 @@
   transform: translateY(0);
 }
 
-/* Map Page Layout */
 .map-page {
   display: flex;
   flex-direction: column;

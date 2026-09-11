@@ -1,6 +1,4 @@
-/* z-index 10000 matches the highest existing convention in this app
-   (SweetAlert2 dialogs, see sweetAlertUtils.js) so this sits above
-   absolutely everything, including any alert that could fire underneath. */
+/* z-index 10000 matches the app's highest existing convention (SweetAlert2, sweetAlertUtils.js) so this sits above any alert that could fire underneath. */
 .mobile-block-overlay {
   position: fixed;
   inset: 0;

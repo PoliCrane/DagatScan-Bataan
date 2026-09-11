@@ -104,7 +104,7 @@ async function pruneOldBackups(supabase) {
 }
 
 async function main() {
-  const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const dateStr = new Date().toISOString().slice(0, 10);
   const tmpFile = path.join(os.tmpdir(), `dagatscan_backup_${dateStr}.sql`);
 
   try {

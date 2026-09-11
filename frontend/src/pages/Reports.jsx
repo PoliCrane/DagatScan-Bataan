@@ -21,7 +21,6 @@ export default function Reports() {
   const [filters, setFilters] = useState({ year: "", municipality: "" });
   const [search, setSearch] = useState("");
 
-  // Raw segment data fetched from API
   const [allSegments, setAllSegments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -29,7 +28,6 @@ export default function Reports() {
   // Selected record for PDF preview (null = show Bataan map instead)
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  // Bataan province boundary for the map panel
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [bataanBounds, setBataanBounds] = useState(null);
 
@@ -63,7 +61,6 @@ export default function Reports() {
     loadGeoJson();
   }, []);
 
-  // Fetch all segment data once on component mount
   useEffect(() => {
     const fetchAllSegments = async () => {
       try {
@@ -155,10 +152,9 @@ export default function Reports() {
 
   const handlePrintPdf = (record, e) => {
     e.stopPropagation();
-    // printUrl is a same-origin (backend) HTML wrapper that embeds the PDF
-    // and calls window.print() on itself once loaded — see the comment on
-    // GET /:zoneId/pdf/print in backend/routes/reports.js for why this
-    // can't just be done from here with an iframe into the raw PDF.
+    // printUrl is a same-origin HTML wrapper that embeds the PDF and calls
+    // window.print() on itself once loaded — see GET /:zoneId/pdf/print in
+    // backend/routes/reports.js for why an iframe into the raw PDF won't work.
     window.open(record.printUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -174,7 +170,6 @@ export default function Reports() {
           <p>Browse and preview generated erosion assessment reports across Bataan municipalities</p>
         </div>
 
-        {/* Filter Section */}
         <div className="reports-filter-bar">
           <div className="filter-group-inline">
             <label htmlFor="municipality-filter">Municipality:</label>
@@ -211,7 +206,6 @@ export default function Reports() {
           </IconField>
         </div>
 
-        {/* Body: Map/Preview + Records table */}
         <div className="reports-body">
           <div className="reports-preview-panel">
             {selectedRecord ? (

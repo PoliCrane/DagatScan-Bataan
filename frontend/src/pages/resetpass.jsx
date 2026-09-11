@@ -20,7 +20,6 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Password validation requirements
   const passwordRequirements = {
     minLength: newPassword.length >= 8,
     hasUppercase: /[A-Z]/.test(newPassword),
@@ -29,7 +28,6 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
     hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)
   };
 
-  // Try to get email from props, location state, or localStorage
   useEffect(() => {
     const initialEmail = propEmail || location.state?.email || localStorage.getItem("resetEmail") || "";
     setEmail(initialEmail);
@@ -42,8 +40,7 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
       const newCode = [...resetCode];
       newCode[index] = value[0];
       setResetCode(newCode);
-      
-      // Auto focus to next input
+
       if (index < 5 && value) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -87,7 +84,6 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
 
     const fullResetCode = resetCode.join("");
 
-    // Validation
     if (!email.trim()) {
       await showError("Email is required");
       setError("Email is required");
@@ -151,26 +147,21 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
       return;
     }
 
-    // Close modal before showing loading dialog
     if (onClose) onClose();
 
-    // Show loading
     await showLoading("Resetting password...", 2000);
 
     try {
       const res = await resetPass(email, fullResetCode, newPassword);
 
       if (res.error) {
-        // Show error dialog (modal will be closed)
         await showError(res.error);
         setError(res.error);
       } else {
-        // Show success dialog
         await showSuccess("Password reset successfully!");
         setSuccess("Password reset successfully! Redirecting to login...");
         localStorage.removeItem("resetEmail");
-        
-        // Redirect to login (no confirmation needed, just go)
+
         if (onSwitchToLogin) {
           onSwitchToLogin();
         } else {
@@ -179,7 +170,6 @@ export default function ResetPassword({ email: propEmail, onClose, onSwitchToLog
       }
     } catch (err) {
       console.error("Reset password error:", err);
-      // Show error dialog (modal will be closed)
       await showError("An error occurred. Please try again.");
       setError("An error occurred. Please try again.");
     }

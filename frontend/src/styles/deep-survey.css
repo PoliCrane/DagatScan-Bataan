@@ -21,7 +21,7 @@ body {
   color: var(--color-ink, #0b1a2b);
 }
 
-/* ── Top bar: same abyssal chrome as the rail ───────────────────────── */
+/* Top bar shares the rail's abyssal chrome. */
 .main-navbar.main-navbar {
   background:
     radial-gradient(90% 220% at 12% 0%, rgba(56, 189, 248, 0.18), transparent 62%),
@@ -85,7 +85,6 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* icon-font chrome in the navbar */
 .main-navbar .profile-btn .profile-icon {
   font-size: 17px;
   color: var(--color-cyan, #38bdf8);
@@ -129,13 +128,11 @@ body {
   background: #6acdfb;
 }
 
-/* ── Page surface ───────────────────────────────────────────────────── */
 .layout-content.layout-content,
 .layout-main.layout-main {
   background: var(--color-surface, #f4f8fb);
 }
 
-/* ── Display type: page titles ───────────────────────────────────────── */
 .user-management-header h1,
 .data-management-header h1,
 .audit-trail-header h1,
@@ -156,7 +153,7 @@ body {
   color: var(--color-muted, #4a5b6c);
 }
 
-/* ── Stat cards: numbers as readouts ────────────────────────────────── */
+/* Stat cards: numbers as readouts. */
 .dm-stat-card .dm-stat-value,
 .at-stat-card .at-stat-value {
   font-family: var(--font-display, "Instrument Serif", Georgia, serif);
@@ -182,7 +179,7 @@ body {
   box-shadow: var(--shadow-raised);
 }
 
-/* ── Data tables read as survey readouts ────────────────────────────── */
+/* Data tables read as survey readouts. */
 .p-datatable .p-datatable-thead > tr > th {
   background: #eff5fa;
   color: #33506b;
@@ -213,7 +210,6 @@ body {
   height: 0.85rem;
 }
 
-/* ── Buttons ────────────────────────────────────────────────────────── */
 .p-button {
   font-family: var(--font-sans, "Archivo", sans-serif);
   font-weight: 600;
@@ -225,13 +221,10 @@ body {
   box-shadow: 0 6px 18px -8px rgba(0, 119, 182, 0.7);
 }
 
-/* ── Dialogs float above the survey surface ─────────────────────────── */
-/* Every PrimeReact dialog gets the same dark gradient card the rest of the
-   theme uses, instead of a plain white box. Redefining --bg-card/--text-*
-   here (rather than editing every form/label rule individually) means
-   anything nested inside — forms.css's .form-container, labels, subtitles —
-   automatically picks up readable colors for a dark card, the same way the
-   rest of the app already drives color off these variables. */
+/* Redefines --bg-card/--text-* instead of editing every nested form/label rule —
+   anything inside (forms.css's .form-container, labels, subtitles) picks up
+   dark-card colors automatically, the same way the rest of the app drives
+   color off these variables. */
 .p-dialog {
   --bg-card: transparent;
   --text-primary: #ffffff;
@@ -315,9 +308,9 @@ body {
   }
 }
 
-/* Icon-font rules set width/height to auto so the glyph sizes itself. A raster
-   icon that lands on the same class would then render at its natural pixel
-   size, so every <img> keeps an explicit icon box. */
+/* Icon-font rules set width/height to auto so the glyph sizes itself; a raster
+   <img> on the same class needs an explicit box or it renders at its natural
+   pixel size. */
 img.card-icon,
 img.legend-icon,
 img.stat-icon,

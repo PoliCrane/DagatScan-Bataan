@@ -11,7 +11,7 @@ function ErosionAnalysisCards({
   predictedYear = null,
   shorelineSegments = [],
   selectedSegmentId = null,
-  autoRefreshInterval = 30000 // Auto-refresh every 30 seconds if data updates
+  autoRefreshInterval = 30000 // 30s, in ms
 }) {
   const cardsRef = useRef(null);
   const [isVisible, setIsVisible] = useState(true);

@@ -1,18 +1,10 @@
-/**
- * Test Script for EPR Calculation & Auto-Calculation Feature
- * 
- * This script demonstrates how to test the EPR system
- */
+// Manual demo/reference script for the EPR calculation and auto-calculation upload flow.
 
 const calculateEPR = require("../services/eprCalculator");
 
-/**
- * TEST 1: Direct Function Call
- * Calculate EPR between Bagac 2020 and 2025 shorelines
- */
 console.log("========== TEST 1: Direct EPR Calculation ==========\n");
 
-// Bagac 2020 - Northern Coastal Zone
+// Northern Coastal Zone
 const bagac2020 = [
   [120.450000, 14.750000],
   [120.450050, 14.750050],
@@ -21,7 +13,7 @@ const bagac2020 = [
   [120.450200, 14.750200],
 ];
 
-// Bagac 2025 - Northern Coastal Zone (slightly retreated)
+// Northern Coastal Zone, retreated slightly
 const bagac2025 = [
   [120.449955, 14.749955],
   [120.450005, 14.750005],
@@ -40,10 +32,6 @@ try {
   console.error("❌ Error:", error.message);
 }
 
-/**
- * TEST 2: HTTP Request to API Endpoint
- * You can test this with curl or Postman
- */
 console.log("========== TEST 2: HTTP API Endpoint ==========\n");
 console.log("POST http://localhost:5000/api/calculate-epr");
 console.log("Content-Type: application/json\n");
@@ -62,9 +50,6 @@ console.log(
 );
 console.log("\n");
 
-/**
- * TEST 3: cURL Command to Test API
- */
 console.log("========== TEST 3: cURL Command ==========\n");
 console.log(`curl -X POST http://localhost:5000/api/calculate-epr \\
   -H "Content-Type: application/json" \\
@@ -75,9 +60,6 @@ console.log(`curl -X POST http://localhost:5000/api/calculate-epr \\
     "year2": 2025
   }'\n`);
 
-/**
- * TEST 4: Upload Workflow (Manual Testing)
- */
 console.log("========== TEST 4: GeoJSON Upload Workflow ==========\n");
 console.log("Files available for upload in sample-test-data/:\n");
 console.log("1. bagac-2020.geojson   (Municipality: Bagac, Year: 2020)");
@@ -104,26 +86,20 @@ console.log("- Central Beach Area: ~-0.30 m/year (retreating ~1.5m in 5 years)")
 console.log("- Southern Cove: ~-1.20 m/year (retreating ~6.0m in 5 years)");
 console.log("- All zones are auto-calculated (no pre-existing erosionRate to skip)\n");
 
-/**
- * TEST 5: Error Cases
- */
 console.log("========== TEST 5: Error Handling ==========\n");
 
-// Empty arrays
 try {
   calculateEPR([], bagac2025, 2020, 2025);
 } catch (error) {
   console.log("✅ Empty array error caught:", error.message);
 }
 
-// Same year
 try {
   calculateEPR(bagac2020, bagac2025, 2020, 2020);
 } catch (error) {
   console.log("✅ Same year error caught:", error.message);
 }
 
-// Invalid coordinates
 try {
   calculateEPR([[200, 50]], bagac2025, 2020, 2025);
 } catch (error) {

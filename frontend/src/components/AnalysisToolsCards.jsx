@@ -26,12 +26,10 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
 
   const BASE_YEAR = new Date().getFullYear();
 
-  // Which of these years actually have real uploaded shoreline data — when known,
-  // years without data are shown but disabled rather than silently comparable
-  // against nothing. Null/omitted means "unknown," so nothing gets disabled.
+  // years without data are shown but disabled rather than silently comparable against nothing; null/omitted means unknown, so none are disabled
   const availableYearSet = availableYears ? new Set(availableYears.map((y) => y.toString())) : null;
 
-  // 2015 (Sentinel-2/Earth Engine's earliest available year) through current year
+  // 2015 is Sentinel-2/Earth Engine's earliest available year
   const historicalYears = Array.from({ length: BASE_YEAR - 2015 + 1 }, (_, i) => {
     const year = 2015 + i;
     const value = year.toString();
@@ -42,8 +40,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
     };
   });
 
-  // horizons are capped at ~half the observed data span — extrapolating further than the
-  // record supports is not defensible; defaults to 5 years when the span is unknown
+  // capped at ~half the observed data span since extrapolating further isn't defensible; defaults to 5 years when span is unknown
   const maxHorizon = dataYearSpan ? Math.max(1, Math.floor(dataYearSpan / 2)) : 5;
   const futureYears = [1, 2, 3, 5, 10, 15]
     .filter((offset) => offset <= maxHorizon)
@@ -56,10 +53,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
   const [compareSelectedYear, setCompareSelectedYear] = useState(BASE_YEAR.toString());
   const [predictYear, setPredictYear] = useState((BASE_YEAR + Math.min(3, dataYearSpan ? Math.max(1, Math.floor(dataYearSpan / 2)) : 3)).toString());
 
-  // Tracks the year-pair/year last actually sent to onCompare/onSimulate, so
-  // the auto-update effects below (which re-run on every dropdown change
-  // while a comparison/prediction is active) don't double-fire the instant
-  // isComparing/isSimulating flips true from the button's own click.
+  // last year-pair/year actually sent to onCompare/onSimulate, so the auto-update effects below don't double-fire the instant isComparing/isSimulating flips true from the button's own click
   const lastComparedRef = useRef(null);
   const lastPredictedRef = useRef(null);
 
@@ -67,11 +61,9 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
   const handleComparePastYearChange = (e) => {
     const pastYear = parseInt(e.target.value);
     setComparePastYear(e.target.value);
-    
-    // If Selected Year is lower or equal to Past Year, update it
+
     const selectedYearNum = parseInt(compareSelectedYear);
     if (selectedYearNum <= pastYear) {
-      // Find next available year after past year
       const availableYears = historicalYears
         .map(y => parseInt(y.value))
         .filter(y => y > pastYear)
@@ -83,7 +75,6 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
     }
   };
 
-  // Filter Available Selected Years based on Past Year
   const getAvailableSelectedYears = () => {
     const pastYearNum = parseInt(comparePastYear);
     return historicalYears.filter(year => parseInt(year.value) > pastYearNum);
@@ -122,11 +113,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
     }
   };
 
-  // Re-runs the comparison whenever the year dropdowns change while one is
-  // already showing, instead of requiring End Comparison + Analyze again.
-  // Debounced since a closed PrimeReact Dropdown fires onChange per
-  // arrow-key press; deduped against lastComparedRef so this doesn't
-  // double-fire the request handleCompareAnalyze's own click just made.
+  // re-runs the comparison as the year dropdowns change instead of requiring End Comparison + Analyze again; debounced since a closed PrimeReact Dropdown fires onChange per arrow-key press, deduped against lastComparedRef to avoid double-firing handleCompareAnalyze's own click
   useEffect(() => {
     if (!isComparing) return undefined;
     const pastYearNum = parseInt(comparePastYear);
@@ -170,8 +157,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
     }
   };
 
-  // Same auto-update treatment as the comparison effect above, for the
-  // Coastline Prediction tool's year dropdown.
+  // same auto-update treatment as the comparison effect above, for the prediction year dropdown
   useEffect(() => {
     if (!isSimulating) return undefined;
     const predYearNum = parseInt(predictYear);
@@ -190,10 +176,8 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
       const currentScrollY = window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down
         setIsVisible(false);
       } else {
-        // Scrolling up
         setIsVisible(true);
       }
 
@@ -241,7 +225,6 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
             {isPlayingTimeline ? "Pause Timeline" : isTimelinePaused ? "Resume Timeline" : "Play Shoreline Timeline"}
           </button>
         )}
-        {/* Compare Shoreline Card */}
         <div className="tools-card compare-card">
           <div className="card-header">
             <i className="pi pi-sync card-icon" aria-hidden="true" />
@@ -291,7 +274,6 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
           </div>
         </div>
 
-        {/* Prediction Card */}
         <div className="tools-card prediction-tools-card">
           <div className="card-header">
             <i className="pi pi-bolt card-icon" aria-hidden="true" />
@@ -333,7 +315,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
         </div>
       </div>
 
-      {/* Prediction Result Card - Positioned on Left */}
+      {/* positioned left via CSS */}
       <PredictionResultCard
         isActive={!!predictionResult}
         predictionData={predictionResult}

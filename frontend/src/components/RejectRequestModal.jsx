@@ -8,7 +8,7 @@ import { Message } from "primereact/message";
 import { openRequestLetter } from "../utils/requestLetter";
 
 import { API_BASE_URL } from "../config/api";
-// rejection modal with an optional reason field; backend already accepted this field, frontend just never sent it before
+// optional reason field — backend already accepted it, frontend just never sent it before
 export default function RejectRequestModal({ isOpen, request, onClose, onSuccess }) {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);

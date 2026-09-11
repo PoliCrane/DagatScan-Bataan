@@ -18,8 +18,7 @@ async function extractErrorMessage(res) {
 }
 
 // Central fetch wrapper: base URL, JSON handling, auth header, and consistent errors.
-// auth: true attaches the stored token; a 401 on an authed call clears the session so
-// the AuthContext storage listener logs the user out everywhere.
+// auth: true attaches the stored token; a 401 on an authed call clears the session so the AuthContext storage listener logs the user out everywhere.
 export async function api(path, { auth = false, body, headers = {}, ...opts } = {}) {
   const finalHeaders = { ...headers };
   const isFormData = body instanceof FormData;

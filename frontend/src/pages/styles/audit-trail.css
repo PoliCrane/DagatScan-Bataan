@@ -1,7 +1,5 @@
-/* Audit Trail Page Styles
-   Prefixed .at-* to stay isolated from other admin pages' stylesheets —
-   see the scoping note at the top of data-management.css, whose stat
-   card / filter bar / table / pagination structure this mirrors. */
+/* Prefixed .at-* to stay isolated from other admin pages' stylesheets — see
+   the scoping note in data-management.css, whose structure this mirrors. */
 
 .audit-trail-container {
   padding: 40px 60px;
@@ -23,8 +21,6 @@
   color: #666;
   margin: 0;
 }
-
-/* Summary cards */
 
 .at-stats {
   display: grid;
@@ -119,8 +115,6 @@
   font-size: 11px;
 }
 
-/* Filter bar */
-
 .at-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -214,8 +208,6 @@
   vertical-align: -2px;
 }
 
-/* Table */
-
 .at-table-container {
   background: #fff;
   border: 1px solid #e8e8e8;
@@ -300,8 +292,6 @@
   font-style: italic;
 }
 
-/* Pagination */
-
 .at-pagination {
   display: flex;
   justify-content: space-between;
@@ -354,8 +344,6 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
-
-/* Responsive */
 
 @media (max-width: 1024px) {
   .audit-trail-container {

@@ -7,9 +7,7 @@ const MapWorkspace = forwardRef(function MapWorkspace(
 ) {
   const [open, setOpen] = useState(true);
 
-  // Lets a page force the panel open before a guided-tour step that targets
-  // something inside it — closing it only translates it off-screen, so a
-  // tour step can otherwise end up pointing at an invisible target.
+  // lets a page force the panel open before a tour step targets something inside it — collapsed, the panel is only translated off-screen, so a hidden target would break the tour
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
   }));

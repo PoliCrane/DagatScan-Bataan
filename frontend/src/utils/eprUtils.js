@@ -48,8 +48,7 @@ const defaultOffsetCoastline = (coastlinePoints, offset) => {
     normal[0] /= length;
     normal[1] /= length;
 
-    // Convert offset from meters to degrees
-    // 1 degree latitude ≈ 111 km
+    // Convert offset from meters to degrees (1° latitude ≈ 111 km)
     const offsetDegrees = offset / 111000;
 
     return [

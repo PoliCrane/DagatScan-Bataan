@@ -1,5 +1,3 @@
-/* User Management Page Styles */
-
 .user-management-container {
   padding: 60px;
 }
@@ -21,7 +19,6 @@
   margin: 0;
 }
 
-/* Add Admin Button */
 .add-admin-btn {
   display: flex;
   align-items: center;
@@ -55,7 +52,6 @@
   filter: brightness(0) invert(1);
 }
 
-/* Section Styles */
 .user-section {
   margin-bottom: 50px;
 }
@@ -69,7 +65,6 @@
   padding-bottom: 10px;
 }
 
-/* Search Bar */
 .search-bar-wrapper {
   position: relative;
   margin-bottom: 30px;
@@ -108,7 +103,6 @@
   color: #999;
 }
 
-/* Error Message */
 .user-management-error {
   padding: 12px;
   background-color: #ffebee;
@@ -117,7 +111,6 @@
   margin-top: 20px;
 }
 
-/* Loading & Empty States */
 .user-management-loading,
 .user-management-empty {
   margin-top: 20px;
@@ -134,7 +127,6 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* Table */
 .user-table {
   width: 100%;
   border-collapse: collapse;
@@ -146,13 +138,10 @@
   background-color: #eaf4f8;
 }
 
-/* Column widths for consistent alignment — these nth-child rules assume
-   the base 7-column shape (avatar/Username/Email/Status/Joined Date/Last
-   Active/Actions). Tables with extra columns (Municipal Accounts' added
-   Municipality column, the Pending Requests table's very different shape)
-   need their own rules below, or the leftover columns get squeezed toward
-   0 width under table-layout:fixed since the base rules already sum to
-   100%. */
+/* Assumes the base 7-column shape (avatar/Username/Email/Status/Joined
+   Date/Last Active/Actions); tables with extra columns need their own rules
+   below, or leftover columns get squeezed toward 0 under table-layout:fixed
+   since these already sum to 100%. */
 .user-table th:nth-child(1),
 .user-table td:nth-child(1) {
   width: 6%;
@@ -273,8 +262,7 @@
 }
 
 /* "View Letter" link in the Request Letter column — styled to match
-   Reports' .btn-view-pdf-link (reports.css) instead of the default
-   underlined browser link look. */
+   Reports' .btn-view-pdf-link (reports.css), not the default underlined link. */
 .btn-view-letter-link {
   background: none;
   border: none;
@@ -361,7 +349,6 @@
   font-weight: 600;
 }
 
-/* Verification Status Badge */
 .status-badge {
   display: inline-block;
   padding: 4px 10px;
@@ -436,7 +423,6 @@
   cursor: not-allowed;
 }
 
-/* Deactivated User Row */
 .user-row.deactivated {
   opacity: 0.6;
   background-color: #fafafa;

@@ -1,7 +1,3 @@
-/* "Deep Survey" navigation rail.
-   An abyssal navy column against the light survey surface — the depth contour
-   texture is drawn from the same bathymetric language the analysis pages use. */
-
 .app-sidebar {
   --rail-width: 76px;
   --expanded-width: 264px;
@@ -22,11 +18,11 @@
     radial-gradient(120% 60% at 0% 0%, rgba(56, 189, 248, 0.16), transparent 60%),
     linear-gradient(180deg, #0a1e38 0%, #061428 58%, #04101f 100%);
   box-shadow: var(--shadow-abyss, 0 20px 60px -20px rgb(6 20 40 / 0.6));
-  /* Slight overshoot-then-settle for a genuine spring feel, not just a linear ease. */
+  /* Overshoot-then-settle easing for a spring feel, not a linear transition. */
   transition: width 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Bathymetric contour lines — depth curves receding down the rail */
+/* Depth-contour lines receding down the rail. */
 .app-sidebar::before {
   content: "";
   position: absolute;
@@ -42,7 +38,7 @@
   mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
 }
 
-/* Hairline edge that catches the light like an instrument bezel */
+/* Hairline edge that catches the light like an instrument bezel. */
 .app-sidebar::after {
   content: "";
   position: absolute;
@@ -156,7 +152,7 @@
   );
 }
 
-/* Active marker: a lit indicator bar, not colour alone */
+/* Active state is marked by this lit bar, not by color alone. */
 .app-sidebar-rail {
   position: absolute;
   left: 0;

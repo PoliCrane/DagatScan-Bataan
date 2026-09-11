@@ -9,9 +9,9 @@ if (!process.env.DB_PASSWORD) {
 
 const isProduction = process.env.NODE_ENV === "production";
 
-// TLS on by default in production (or when DB_SSL=true). Certificate verification is
-// enabled only when DB_CA_CERT is provided — Railway/Supabase use certs that fail strict
-// verification without their CA, and unverified TLS still encrypts traffic in transit.
+// TLS on by default in production (or DB_SSL=true). Certificate verification is enabled only
+// when DB_CA_CERT is provided — Railway/Supabase certs fail strict verification without it,
+// and unverified TLS still encrypts traffic in transit.
 let ssl = false;
 if (isProduction || process.env.DB_SSL === "true") {
   ssl = process.env.DB_CA_CERT

@@ -25,11 +25,9 @@ function MapController({ geoJsonData, bataanBounds, selectedMunicipality, munici
   useEffect(() => {
     if (!map) return;
 
-    // If municipality selected, zoom to it
     if (selectedMunicipality && municipalityBounds) {
       map.fitBounds(municipalityBounds, { padding: [50, 50] });
-    } 
-    // Otherwise show all Bataan
+    }
     else if (geoJsonData && bataanBounds) {
       map.fitBounds(bataanBounds, { padding: [20, 20] });
     }
@@ -67,7 +65,6 @@ export default function CoastalMonitoring() {
         const data = await response.json();
         setGeoJsonData(data);
 
-        // Calculate bounds from GeoJSON to fit ONLY Bataan
         const geoJsonLayer = L.geoJSON(data);
         const bounds = geoJsonLayer.getBounds();
         setBataanBounds(bounds);
@@ -89,7 +86,6 @@ export default function CoastalMonitoring() {
     }
 
     try {
-      // Find all features for this municipality
       const municipalityFeatures = geoJsonData.features.filter(
         (feature) => feature.properties?.MUNICIPALI?.toUpperCase() === selectedMunicipality.toUpperCase()
       );
@@ -99,7 +95,6 @@ export default function CoastalMonitoring() {
         return;
       }
 
-      // Filter to only Polygon features and find the largest one
       const polygonFeatures = municipalityFeatures.filter(f => f.geometry?.type === "Polygon");
       let mainFeature = polygonFeatures[0];
 
@@ -113,13 +108,11 @@ export default function CoastalMonitoring() {
         });
       }
 
-      // Calculate bounds for this municipality
       const muniGeoJsonLayer = L.geoJSON(mainFeature);
       const muniBounds = muniGeoJsonLayer.getBounds();
       setMunicipalityBounds(muniBounds);
 
-      // Extract coastline using topological edge detection
-      // Pass all municipalities for boundary comparison
+      // Topological edge detection, comparing against all municipalities for boundary matching
       const rawCoastline = extractCoastline(geoJsonData, selectedMunicipality);
       
       if (rawCoastline.length === 0) {
@@ -132,7 +125,7 @@ export default function CoastalMonitoring() {
 
       const smoothedCoastline = smoothCoastline(rawCoastline, 1);
 
-      // Fetch real data from database — no simulated fallback exists
+      // No simulated fallback — data comes from the database only
       (async () => {
         const yearly = await getShorelineData(selectedMunicipality, smoothedCoastline, {
           startYear: 2015,
@@ -140,8 +133,7 @@ export default function CoastalMonitoring() {
         });
         
         setYearlyShorelineData(yearly);
-        
-        // Alert if no data was loaded (fallback is disabled)
+
         if (!yearly || yearly.length === 0) {
           console.error(`❌ No shoreline data loaded for ${selectedMunicipality} - database may not have records yet`);
           setYearlyShorelineData([]);
@@ -149,15 +141,14 @@ export default function CoastalMonitoring() {
           setShowSegmentsPanel(false);
           return;
         }
-        
-        // Log loaded data
+
         if (yearly && yearly.length > 0) {
           const latestYear = yearly[yearly.length - 1].year;
           console.log(`✅ Loaded ${yearly.length} years of data for ${selectedMunicipality} (${yearly[0].year}-${latestYear})`);
         }
 
-        // Same satellite-detected coastline pipeline as Erosion Analysis;
-        // falls back to the polygon coastline as one area if no satellite data yet.
+        // Same satellite-detected coastline pipeline as Erosion Analysis; falls
+        // back to the polygon coastline as one area if no satellite data yet.
         const { segments: segmentsToDisplay_Final } = await fetchAreaSegments(
           selectedMunicipality,
           smoothedCoastline,
@@ -167,17 +158,17 @@ export default function CoastalMonitoring() {
         console.log(`✅ Segment visualization ready: ${segmentsToDisplay_Final.length} segments (satellite-detected coastline)`);
         
         setSegments(segmentsToDisplay_Final);
-        
-        // Store original segments for year filter calculations
+
+        // Snapshot for later year-filter recalculations
         originalSegmentsRef.current = segmentsToDisplay_Final.map(seg => ({
           ...seg,
-          shoreline: [...seg.shoreline] // Deep copy of original coordinates
+          shoreline: [...seg.shoreline]
         }));
         console.log(`Stored ${originalSegmentsRef.current.length} segments in originalSegmentsRef for year filter calculations`);
         setShowSegmentsPanel(true);
 
-        // If we don't have municipality bounds from GeoJSON (for municipalities outside main boundary file),
-        // calculate bounds from segment coordinates
+        // Municipalities outside the main boundary file have no GeoJSON bounds —
+        // fall back to bounds from segment coordinates
         if (!municipalityBounds && segmentsToDisplay_Final && segmentsToDisplay_Final.length > 0) {
           const allCoords = [];
           segmentsToDisplay_Final.forEach(segment => {
@@ -203,14 +194,12 @@ export default function CoastalMonitoring() {
     }
   }, [selectedMunicipality, geoJsonData]);
 
-  // Handle municipality click
   const handleMunicipalityClick = (feature) => {
     const municipalityName = feature.properties?.MUNICIPALI;
     setSelectedMunicipality(municipalityName);
   };
 
-  // Default to Bataan center if bounds not yet calculated
-  const centerPoint = bataanBounds 
+  const centerPoint = bataanBounds
     ? bataanBounds.getCenter() 
     : [14.657, 120.500];
 
@@ -322,7 +311,6 @@ export default function CoastalMonitoring() {
             />
           )}
 
-          {/* Display Segment Polylines when municipality is selected */}
           {selectedMunicipality && segments.length > 0 && segments.map((segment) => {
             const riskColor = getRiskColor(segment.risk);
             return (
@@ -336,10 +324,8 @@ export default function CoastalMonitoring() {
             );
           })}
 
-          {/* Display Segment Markers positioned at midpoint of each segment */}
           {selectedMunicipality && segments.length > 0 && segments.map((segment) => {
             const riskColor = getRiskColor(segment.risk);
-            // Calculate midpoint of the shoreline for marker placement
             const markerPosition = segment.shoreline[Math.floor(segment.shoreline.length / 2)];
             
             return markerPosition ? (

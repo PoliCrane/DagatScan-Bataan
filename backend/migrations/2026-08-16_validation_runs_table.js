@@ -5,10 +5,8 @@ async function main() {
   try {
     await client.query("BEGIN");
 
-    // municipality_id is nullable — NULL means a province-wide ("all") run —
-    // and references municipalities(id) so this table stays a real part of the
-    // schema instead of holding a free-text copy of a municipality name with
-    // no relational tie to anything else.
+    // municipality_id is nullable (NULL = province-wide run) and FKs to municipalities
+    // so this stays relational instead of holding a free-text municipality name.
     await client.query(`
       CREATE TABLE IF NOT EXISTS validation_runs (
         id SERIAL PRIMARY KEY,

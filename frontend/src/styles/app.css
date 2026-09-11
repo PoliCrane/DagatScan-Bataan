@@ -1,8 +1,6 @@
-/* Cascade order for the whole app.
-   Later layers win, so Tailwind utilities can override PrimeReact component
-   styles (needed for layout tweaks like w-full on a Password wrapper).
-   The app's own legacy stylesheets stay unlayered and therefore still win —
-   they are being migrated away batch by batch. */
+/* Cascade order: later layers win, so Tailwind utilities can override PrimeReact
+   styles (e.g. w-full on a Password wrapper). Legacy stylesheets stay unlayered
+   so they still win over both — they're being migrated away batch by batch. */
 @layer primereact, theme, utilities;
 
 @import "./dagatscan-theme.css" layer(primereact);
@@ -12,12 +10,10 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 
 @theme {
-  /* Brand — DagatScan ocean blue stays the accent */
   --color-primary: #0077b6;
   --color-primary-dark: #005fa3;
   --color-secondary: #00b894;
 
-  /* "Deep Survey" shell — abyssal navy chrome against a soft survey-paper surface */
   --color-abyss: #061428;
   --color-abyss-soft: #0d2340;
   --color-abyss-line: #14375c;
@@ -50,12 +46,9 @@
   --shadow-abyss: 0 20px 60px -20px rgb(6 20 40 / 0.6);
 }
 
-/* PrimeReact's Dialog (Modal.jsx wraps it) ships a plain ease-out scale+fade
-   for its enter/exit — swap in the same spring curve used for the sidebar
-   (layout.css) so modals feel consistent with the rest of this pass. This
-   file is unlayered, so it wins over the `@layer primereact` rule it's
-   overriding without needing !important (see the note at the top of this
-   file on cascade-layer ordering). */
+/* Replaces PrimeReact Dialog's default ease-out scale+fade with the same spring
+   curve used for the sidebar (layout.css). Unlayered, so it wins over the
+   `@layer primereact` rule without !important — see the cascade note above. */
 .p-dialog-enter-active {
   transition: all 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }

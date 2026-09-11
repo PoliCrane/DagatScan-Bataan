@@ -17,10 +17,8 @@ const PREVIOUS_SHORELINE_COLOR = "#FFEA00";
 const CURRENT_SHORELINE_COLOR = "#FF3131";
 const EROSION_AREA_COLOR = "#fc4c00";
 
-// Report palette/typography — same design tokens the live app uses in light contexts
-// (frontend/src/styles/app.css), not the dark "Deep Survey" theme: a printed report
-// needs a light background, so this borrows the accent color and type system rather
-// than the dark chrome itself.
+// Same design tokens the live app uses in light contexts (frontend/src/styles/app.css), not
+// the dark "Deep Survey" theme — a printed report needs a light background.
 const INK = "#0b1a2b"; // --color-ink
 const MUTED = "#4a5b6c"; // --color-muted
 const PRIMARY = "#0077b6"; // --color-primary
@@ -29,8 +27,7 @@ const BAND_BG = "#eaf6fb"; // pale cyan tint for section header bands / map plac
 const MAP_BORDER = "#c2e4fd";
 
 // Real static TTFs, not @fontsource's woff2 files — fontkit's WOFF2 subset/embedding path
-// hits an internal encoder bug in this environment (crashes/renders blank text), confirmed
-// by testing plain TTF embedding side by side, which works correctly.
+// hits an internal encoder bug here (crashes/renders blank text); plain TTF embedding works.
 const FONTS = {
   body: path.join(__dirname, "../assets/fonts/Mulish-Regular.ttf"),
   bodyBold: path.join(__dirname, "../assets/fonts/Mulish-Bold.ttf"),
@@ -40,8 +37,8 @@ const LOGO_PATH = path.join(__dirname, "../assets/DSLogo.png");
 
 const EVENT_CONTEXT_MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// Same cache-on-first-read pattern as GET /api/shoreline/context/:year (shorelineData.js) —
-// same underlying file, so the PDF's "What Happened in {year}" section matches the live card.
+// Same cache-on-first-read pattern and underlying file as GET /api/shoreline/context/:year
+// (shorelineData.js), so this section matches the live card.
 let eventContextCache = null;
 function getEventContextForYear(year) {
   if (!eventContextCache) {
@@ -108,19 +105,17 @@ function buildInterpretation({ specificArea, baselineYear, year, erosionRate, ri
 }
 
 // Helmet's defaults (X-Frame-Options: SAMEORIGIN, CSP frame-ancestors 'self') block the
-// frontend's inline <iframe> preview since it's a different origin from this API. Applied as
-// middleware (not just on the success path) so it covers every response on this route,
-// including the 400/404/500 branches below — scoped to the actual frontend origin, not a wildcard.
+// frontend's inline <iframe> preview, since it's a different origin from this API. Applied as
+// middleware so it covers every response on this route, including the error branches below —
+// scoped to the actual frontend origin, not a wildcard.
 router.use("/:zoneId/pdf", (req, res, next) => {
-  // frame-ancestors is a space-separated source list, so multiple allowed
-  // frontends (see getFrontendOrigins()) can all be listed here directly.
+  // frame-ancestors is a space-separated source list, so all allowed frontends can be listed directly.
   const frontendOrigins = getFrontendOrigins().join(" ");
   res.removeHeader("X-Frame-Options");
   res.setHeader("Content-Security-Policy", `frame-ancestors 'self' ${frontendOrigins}`);
   next();
 });
 
-// Streams a generated PDF assessment report for a single shoreline zone record.
 router.get("/:zoneId/pdf", async (req, res) => {
   try {
     const { zoneId } = req.params;
@@ -176,8 +171,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
     const currentCoords = extractCoordinatesFromGeoJSON(row.geojson_data);
     const baselineCoords = baselineRow ? extractCoordinatesFromGeoJSON(baselineRow.geojson_data) : null;
 
-    // prefer the actual satellite image's bounds so the basemap lines up with what was
-    // analyzed; fall back to a padded box around the shoreline coordinates
+    // Prefer the actual satellite image's bounds so the basemap lines up with what was analyzed.
     let mapBounds = null;
     if (imageryResult.rows[0]?.bounds) {
       mapBounds = imageryResult.rows[0].bounds;
@@ -270,9 +264,8 @@ router.get("/:zoneId/pdf", async (req, res) => {
       const pillText = riskLabel.toUpperCase();
       doc.font("Body-Bold").fontSize(9);
       const charSpacing = 0.5;
-      // widthOfString() doesn't account for characterSpacing, so pad enough extra
-      // room for it (plus slack) — a too-tight width box can force an unwanted
-      // wrap even with lineBreak:false, which broke multi-word labels like "VERY HIGH".
+      // widthOfString() ignores characterSpacing, so pad extra room for it (plus slack) —
+      // a too-tight width can force an unwanted wrap even with lineBreak:false.
       const textW = doc.widthOfString(pillText) + pillText.length * charSpacing;
       const padX = 10, pillH = 16;
       doc
@@ -287,13 +280,11 @@ router.get("/:zoneId/pdf", async (req, res) => {
       doc.moveDown(0.8);
     };
 
-    // Municipality Information
     addSectionHeader("Municipality Information");
     addRow("Municipality Name:", row.municipality);
     addRow("Specific Area:", specificArea);
     addRow("Year Analyzed:", String(row.year));
 
-    // Map
     addSectionHeader("Map");
     const mapBox = { x: 50, y: doc.y, w: 495, h: 240 };
 
@@ -386,7 +377,6 @@ router.get("/:zoneId/pdf", async (req, res) => {
     doc.y = legendY + 20;
     doc.moveDown(0.5);
 
-    // Coastal Erosion Summary
     addSectionHeader("Coastal Erosion Summary");
     addRiskRow("Risk Level:", RISK_LABELS[riskLevel] || riskLevel, RISK_COLORS[riskLevel] || INK);
     addRow(
@@ -394,7 +384,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
       erosionRate !== null ? `${erosionRate.toFixed(2)} m/year` : "No data (baseline year)"
     );
 
-    // What Happened in {year} — ENSO/wave/typhoon context, when available for this year
+    // Only shown when ENSO/wave/typhoon context exists for this year.
     const eventContext = getEventContextForYear(String(row.year));
     if (eventContext && (eventContext.enso || eventContext.waves || (eventContext.typhoons || []).length > 0)) {
       addSectionHeader(`What Happened in ${row.year}`);
@@ -412,7 +402,6 @@ router.get("/:zoneId/pdf", async (req, res) => {
       }
     }
 
-    // Interpretation
     addSectionHeader("Interpretation");
     const interpretation = buildInterpretation({
       specificArea,
@@ -439,15 +428,11 @@ router.get("/:zoneId/pdf", async (req, res) => {
   }
 });
 
-// Same-origin print wrapper: the frontend's own attempt to call
-// iframe.contentWindow.print() on the PDF above fails silently, because
-// that PDF is served cross-origin (backend domain, not the frontend's) —
-// browsers don't expose contentWindow.print() across origins. This route
-// instead serves a tiny HTML page, on this same backend origin, that
-// embeds the PDF in an iframe and calls window.print() on itself once it
-// loads — same-page print is never cross-origin, regardless of who opened
-// this tab. The frontend just needs to window.open() this URL instead of
-// the raw PDF one.
+// Same-origin print wrapper: the frontend can't call iframe.contentWindow.print() on the PDF
+// above, because that PDF is served cross-origin and browsers block contentWindow access
+// across origins. This route instead serves a tiny HTML page on this same backend origin
+// that embeds the PDF in an iframe and calls window.print() on itself once loaded — same-page
+// print is never cross-origin. The frontend should window.open() this URL instead of the raw PDF.
 router.get("/:zoneId/pdf/print", (req, res) => {
   const { zoneId } = req.params;
   if (!/^\d+$/.test(zoneId)) {
@@ -473,15 +458,11 @@ router.get("/:zoneId/pdf/print", (req, res) => {
 <body>
   <iframe id="pdf-frame" src="/api/reports/${zoneId}/pdf"></iframe>
   <script>
-    // The iframe's own "load" event doesn't reliably fire for an embedded
-    // PDF response in Chromium's built-in viewer — window's "load" is a
-    // native browser guarantee that all sub-resources (including iframes)
-    // have finished, independent of whether the PDF viewer dispatches its
-    // own DOM event, so it's used here instead.
+    // The iframe's own "load" event doesn't reliably fire for an embedded PDF in Chromium's
+    // built-in viewer; window's "load" reliably fires once all sub-resources finish instead.
     window.addEventListener("load", function () {
-      // A short delay lets the browser's PDF viewer finish its first
-      // render pass — calling print() immediately on load can catch it
-      // still laying out and produce a blank/partial print preview.
+      // A short delay lets the PDF viewer finish its first render pass — printing immediately
+      // can catch it still laying out and produce a blank/partial preview.
       setTimeout(function () {
         window.focus();
         window.print();

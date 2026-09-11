@@ -3,25 +3,21 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 
-// Define upload directories
 const uploadDir = path.join(__dirname, "../uploads");
 const geojsonDir = path.join(uploadDir, "geojson");
 const imagesDir = path.join(uploadDir, "satellite-images");
 const requestLettersDir = path.join(uploadDir, "request-letters");
 
-// Ensure directories exist
 [uploadDir, geojsonDir, imagesDir, requestLettersDir].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 });
 
-// Storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     let folder = uploadDir;
 
-    // Determine destination based on file type
     if (file.fieldname === "geojson") {
       folder = geojsonDir;
     } else if (file.fieldname === "satellite") {
@@ -33,8 +29,8 @@ const storage = multer.diskStorage({
     cb(null, folder);
   },
   filename: function (req, file, cb) {
-    // random name so stored files are unguessable and free of user-controlled characters;
-    // a sanitized slug of the original name is kept for admin readability
+    // Random name so stored files are unguessable and free of user-controlled characters;
+    // a sanitized slug of the original name is kept for admin readability.
     const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, "").slice(0, 10);
     const slug = path
       .basename(file.originalname, path.extname(file.originalname))
@@ -46,7 +42,6 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = {
     geojson: ["application/json", "application/geo+json", "application/octet-stream"],
@@ -95,7 +90,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Multer configuration
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -104,9 +98,8 @@ const upload = multer({
   },
 });
 
-// Multer's limits.fileSize is per-instance, not per-fieldname — a signed
-// request letter is a scanned document, not a satellite raster, so it gets
-// its own instance with a much smaller cap (sharing the same storage/filter).
+// limits.fileSize is per-instance, not per-fieldname — a signed request letter is a
+// scanned document, not a satellite raster, so it gets its own instance with a smaller cap.
 const uploadRequestLetter = multer({
   storage: storage,
   fileFilter: fileFilter,

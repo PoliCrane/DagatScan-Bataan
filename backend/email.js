@@ -1,9 +1,8 @@
 require("dotenv").config();
 const { escapeHtml } = require("./utils/validators");
 
-// Render's free tier blocks all outbound SMTP traffic (ports 25/465/587),
-// so email can't go through Gmail's SMTP server from there. Brevo's
-// transactional email API sends over HTTPS instead, which isn't blocked.
+// Render's free tier blocks all outbound SMTP traffic (ports 25/465/587), so email can't
+// go through Gmail's SMTP server from there. Brevo's API sends over HTTPS instead, which isn't blocked.
 if (!process.env.BREVO_API_KEY || !process.env.EMAIL_USER) {
   console.warn("Warning: BREVO_API_KEY or EMAIL_USER not set in environment variables");
 } else {
@@ -32,8 +31,7 @@ const sendViaBrevo = async ({ to, subject, html }) => {
   }
 };
 
-// Shared wrapper so every message gets the same styling and all dynamic values
-// pass through escapeHtml at the call sites below.
+// Shared wrapper for consistent styling; dynamic values pass through escapeHtml at each call site.
 const emailTemplate = (heading, bodyHtml) => `
   <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto;">
     <h2 style="color: #0077B6;">${heading}</h2>

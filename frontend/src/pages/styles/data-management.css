@@ -1,9 +1,6 @@
-/* Data Management Page Styles
-   Prefixed .dm-* rather than reusing the generic .stat-card/.user-table
-   names, because several stylesheets in this project already collide on
-   shared class names (see the scoping notes in accountModals.css and
-   changePasswordModal.css). A distinct prefix keeps this page's look
-   independent of load order. */
+/* Prefixed .dm-* rather than reusing generic .stat-card/.user-table names,
+   since several stylesheets already collide on shared class names (see the
+   scoping notes in accountModals.css and changePasswordModal.css). */
 
 .data-management-container {
   padding: 40px 60px;
@@ -25,8 +22,6 @@
   color: #666;
   margin: 0;
 }
-
-/* Summary cards */
 
 .dm-stats {
   display: grid;
@@ -52,11 +47,9 @@
   box-shadow: 0 4px 10px rgba(0, 119, 182, 0.12);
 }
 
-/* Icon badges — the source PNGs are plain solid-black glyphs, so the
-   pastel-circle + tinted-icon look comes entirely from CSS: mask-image
-   punches the glyph's shape out of a solid background-color, giving an
-   exact target tint rather than the approximate result you'd get from
-   filter: hue-rotate() (the technique dashboard.css's .stat-icon uses). */
+/* Source PNGs are solid-black glyphs; mask-image punches the glyph's shape
+   out of a solid background-color for an exact tint, more precise than the
+   filter: hue-rotate() approach dashboard.css's .stat-icon uses. */
 .dm-stat-icon-badge {
   width: 44px;
   height: 44px;
@@ -126,8 +119,6 @@
   font-size: 11px;
 }
 
-/* Filter bar */
-
 .dm-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -173,9 +164,8 @@
   box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.1);
 }
 
-/* Wraps a Year/Status <select> with an icon, matching the search box's
-   icon-inside-the-field treatment (a <select>'s own contents can't hold an
-   <img>, so the icon sits as an absolutely-positioned sibling instead). */
+/* A <select>'s contents can't hold an <img>, so the icon sits as an
+   absolutely-positioned sibling instead, matching the search box's look. */
 .dm-select-wrapper {
   position: relative;
   display: flex;
@@ -239,8 +229,6 @@
   color: #0077b6;
 }
 
-/* Table */
-
 .dm-table-container {
   background: #fff;
   border: 1px solid #e8e8e8;
@@ -283,15 +271,14 @@
   background: #fbfdfe;
 }
 
-/* Deactivated datasets stay readable but visibly de-emphasized — they're
-   excluded from every erosion calculation, so they shouldn't read as
-   equally current. */
+/* De-emphasized, not hidden — deactivated datasets are excluded from every
+   erosion calculation, so they shouldn't read as equally current. */
 .dm-row.inactive td {
   opacity: 0.55;
 }
 
-/* Staggered row entrance on load/filter change — nth-child delay rather than
-   JS since PrimeReact's DataTable doesn't expose a per-row index prop here. */
+/* Staggered entrance via nth-child delay, not JS — PrimeReact's DataTable
+   doesn't expose a per-row index prop here. */
 .dm-row {
   animation: dm-row-in 0.28s ease both;
 }
@@ -381,9 +368,8 @@
   color: #b54708;
 }
 
-/* Area-level LRR confidence — flagged red below 50% so a low-confidence
-   area's rows are easy to spot at a glance (the fix is reuploading a year
-   for that area, .dm-reupload-btn in the same row). */
+/* Flagged red below 50% confidence so low-confidence areas are easy to spot;
+   the fix is reuploading a year for that area (.dm-reupload-btn, same row). */
 .dm-confidence-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -439,9 +425,8 @@
   filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1729%) hue-rotate(175deg) brightness(96%) contrast(101%);
 }
 
-/* Paired with .dm-view-btn — same pill shape/sizing so the two read as one
-   set of view actions, differentiated only by an inverted fill (solid vs
-   outline) since this one is the slower, live-Earth-Engine-query action. */
+/* Same pill shape/sizing as .dm-view-btn so the two read as one set of view
+   actions; inverted fill marks this one as the slower, live-EE-query action. */
 .dm-satellite-btn {
   display: inline-flex;
   align-items: center;
@@ -470,7 +455,7 @@
 }
 
 /* Third pill in the same set as .dm-view-btn/.dm-satellite-btn — green to
-   read as a distinct "regenerate" action rather than a view action. */
+   read as "regenerate" rather than "view". */
 .dm-reupload-btn {
   display: inline-flex;
   align-items: center;
@@ -514,10 +499,9 @@
   cursor: help;
 }
 
-/* Replaces .dm-toggle-disabled specifically for superseded uploads (satellite
-   type, no area_id — a later re-upload already overwrote their data). Same
-   compact single-glyph footprint as the placeholder it replaces, not the
-   wider labeled .dm-view-btn/.dm-satellite-btn pills. */
+/* Replaces .dm-toggle-disabled for superseded uploads (satellite type, no
+   area_id — a later re-upload already overwrote their data). Keeps the same
+   compact single-glyph footprint, not the wider labeled pills. */
 .dm-delete-btn {
   display: inline-flex;
   align-items: center;
@@ -540,8 +524,7 @@
   cursor: not-allowed;
 }
 
-/* mask-image tints the solid-black bin.png glyph exactly, same technique as
-   .dm-stat-icon-badge above — more precise than a filter hue-rotate guess. */
+/* Same mask-image tint technique as .dm-stat-icon-badge above. */
 .dm-delete-icon {
   width: 16px;
   height: 16px;
@@ -555,8 +538,6 @@
   -webkit-mask-position: center;
   mask-position: center;
 }
-
-/* Pagination */
 
 .dm-pagination {
   display: flex;
@@ -610,8 +591,6 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
-
-/* Responsive */
 
 @media (max-width: 1024px) {
   .data-management-container {

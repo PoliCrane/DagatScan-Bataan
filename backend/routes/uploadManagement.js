@@ -17,8 +17,8 @@ const { generateThumbnail, thumbnailPathFor } = require("../services/thumbnailGe
 const { extractGeoreference } = require("../services/imageGeoreference");
 const { logAction } = require("../services/auditLog");
 const { scheduleSync } = require("../services/storageSync");
-// Router is mounted behind verifyToken + verifyAdmin in server.js; the two
-// mutating routes below additionally require superadmin, applied per-route.
+// Mounted behind verifyToken + verifyAdmin in server.js; two mutating routes below
+// additionally require superadmin, applied per-route.
 const { verifySuperadmin } = require("../middleware/auth");
 const {
   processGeoJSONFile,
@@ -28,11 +28,9 @@ const {
   processCSVFile,
 } = require("../services/uploadPipeline");
 
-// Triggers a debounced Supabase Storage sync after any successful mutating
-// request on this router, instead of relying solely on a timed poll — see
-// storageSync.js. Coarse-grained on purpose: cheaper to occasionally
-// schedule a sync that finds nothing pending than to track every individual
-// insert site (this file alone has 9 of them).
+// Triggers a debounced Supabase Storage sync after any successful mutating request,
+// instead of relying solely on a timed poll (see storageSync.js). Coarse-grained on
+// purpose: cheaper to occasionally sync nothing than to track every insert site individually.
 router.use((req, res, next) => {
   if (req.method !== "GET") {
     res.on("finish", () => {
@@ -56,7 +54,6 @@ router.post("/validate", async (req, res) => {
   try {
     const { fileType, fileSize, municipality, year, description } = req.body;
 
-    // Validation rules
     const rules = {
       GeoJSON: {
         maxSize: 50 * 1024 * 1024, // 50MB
@@ -102,7 +99,6 @@ router.post("/validate", async (req, res) => {
       });
     }
 
-    // Validate location data
     const locationValidation = validateLocationData({
       municipality,
       year,
@@ -116,7 +112,6 @@ router.post("/validate", async (req, res) => {
       });
     }
 
-    // Check for existing data
     const existing = await pool.query(
       `SELECT COUNT(*) as count FROM shoreline_zones sz
        JOIN coastal_areas ca ON sz.area_id = ca.id
@@ -164,7 +159,6 @@ router.post(
       // Set by verifyToken middleware; traces upload_history.admin_id -> users.id.
       const adminId = req.user.id;
 
-      // Optional georeference bounds for satellite image analysis
       const bounds =
         north && south && east && west
           ? {
@@ -175,7 +169,6 @@ router.post(
             }
           : null;
 
-      // Validate location data
       const locationValidation = validateLocationData({
         municipality,
         year,
@@ -192,7 +185,6 @@ router.post(
       client = await pool.connect();
       const results = [];
 
-      // Process GeoJSON file if uploaded
       if (req.files.geojson && req.files.geojson.length > 0) {
         const geojsonFile = req.files.geojson[0];
         const geojsonResult = await processGeoJSONFile(
@@ -207,7 +199,6 @@ router.post(
         if (geojsonResult.uploadId) uploadIds.push(geojsonResult.uploadId);
       }
 
-      // Process CSV file if uploaded
       if (req.files.csv && req.files.csv.length > 0) {
         const csvFile = req.files.csv[0];
         const csvResult = await processCSVFile(
@@ -221,7 +212,6 @@ router.post(
         if (csvResult.uploadId) uploadIds.push(csvResult.uploadId);
       }
 
-      // Process Satellite Image file if uploaded
       if (req.files.satellite && req.files.satellite.length > 0) {
         const satelliteFile = req.files.satellite[0];
         const satelliteResult = await processSatelliteImageFile(
@@ -243,7 +233,6 @@ router.post(
         });
       }
 
-      // STEP: Invalidate cache for this municipality since new data was uploaded
       await invalidateMunicipalityCache(municipality);
 
       res.json({
@@ -274,22 +263,17 @@ router.post(
   }
 );
 
-/**
- * Insert a batch of zone records into shoreline_zones, using SAVEPOINTs per record
- * so one bad record doesn't poison the transaction. Caller handles BEGIN/COMMIT/ROLLBACK.
- */
 router.get("/", async (req, res) => {
   try {
     const { municipality, status, limit = 50, offset = 0 } = req.query;
 
     // uploaded_by: LEFT JOIN since some legacy rows predate admin_id being populated.
-    // can_deactivate: only true for satellite uploads with an area_id — rows without
-    // one are superseded re-uploads whose data no longer exists anywhere.
+    // can_deactivate: only true for satellite uploads with an area_id — rows without one
+    // are superseded re-uploads whose data no longer exists anywhere.
     // has_bounds: whether a true-color Earth Engine fetch is possible for this area/year.
-    // confidence: coastal_areas.lrr_confidence — a per-AREA value (how well
-    // the area's overall regression fits), not per-year, so every row for
-    // the same area shows the same number. Surfaced so an admin can spot a
-    // low-confidence area and reupload a year to improve its fit.
+    // confidence: coastal_areas.lrr_confidence, a per-area value (how well the area's overall
+    // regression fits), not per-year — every row for the same area shows the same number, so
+    // an admin can spot a low-confidence area and reupload a year to improve its fit.
     let query = `SELECT uh.*,
                         m.name AS municipality,
                         ca.name AS coastal_area,
@@ -352,9 +336,8 @@ router.get("/", async (req, res) => {
     res.json({
       uploads: result.rows.map((row) => ({
         ...row,
-        // Prefers the durable Supabase URL (survives a Render redeploy) —
-        // falls back to the local path for dev, or the ~5-minute window
-        // before storageSync.js catches up on a freshly-generated thumbnail.
+        // Prefers the durable Supabase URL (survives a Render redeploy) — falls back to the
+        // local path for dev, or the ~5-minute window before storageSync.js catches up.
         thumbnail_url: row.thumbnail_storage_url || computeThumbnailUrl(row.file_path),
       })),
       pagination: {
@@ -370,9 +353,9 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * Fetch (or serve cached) true-color satellite imagery for this upload's area/year via
- * Earth Engine. Declared above the greedy GET /:uploadId for route-ordering. Cached to
- * disk keyed on (area_id, year), not upload id, so re-uploads share one cached fetch.
+ * Fetch (or serve cached) true-color satellite imagery for this upload's area/year.
+ * Declared above the greedy GET /:uploadId for route-ordering. Cached on disk keyed on
+ * (area_id, year), not upload id, so re-uploads share one cached fetch.
  */
 router.get("/:uploadId/satellite-imagery", async (req, res) => {
   try {
@@ -419,10 +402,6 @@ router.get("/:uploadId/satellite-imagery", async (req, res) => {
   }
 });
 
-/**
- * GET /api/admin/uploads/:uploadId
- * Get specific upload details
- */
 router.get("/:uploadId", async (req, res) => {
   try {
     const { uploadId } = req.params;
@@ -446,10 +425,6 @@ router.get("/:uploadId", async (req, res) => {
   }
 });
 
-/**
- * GET /api/admin/uploads/:uploadId/status
- * Check processing status of upload
- */
 router.get("/:uploadId/status", async (req, res) => {
   try {
     const { uploadId } = req.params;
@@ -499,10 +474,8 @@ router.get("/:uploadId/status", async (req, res) => {
 });
 
 /**
- * Helper: load an upload row plus the municipality name needed to refresh
- * its derived caches afterwards, and the specific coastal area name (when
- * the upload is tied to one) so audit-log entries can identify it by more
- * than a bare id — see the "upload #13" traceability fix.
+ * Loads an upload row plus its municipality name (to refresh derived caches afterwards)
+ * and coastal area name, so audit-log entries can identify it by more than a bare id.
  */
 async function loadUploadForMutation(uploadId) {
   const result = await pool.query(
@@ -517,9 +490,9 @@ async function loadUploadForMutation(uploadId) {
 }
 
 /**
- * Superadmin-only: activate/deactivate a dataset. Writes the flag to both upload_history
- * and the shoreline_zones row it produced (erosion figures are derived from the latter),
- * then re-derives the area's time series and refreshes caches.
+ * Superadmin-only: activate/deactivate a dataset. Writes the flag to both upload_history and
+ * the shoreline_zones row it produced (erosion figures derive from the latter), then
+ * re-derives the area's time series and refreshes caches.
  */
 router.patch("/:uploadId/active", verifySuperadmin, async (req, res) => {
   const { uploadId } = req.params;
@@ -536,8 +509,8 @@ router.patch("/:uploadId/active", verifySuperadmin, async (req, res) => {
       return res.status(404).json({ error: "Upload not found" });
     }
 
-    // Without an area_id (superseded re-upload) we can't resolve the shoreline_zones
-    // row it produced, so flipping the flag would change the listing but not the numbers.
+    // Without an area_id (superseded re-upload) the shoreline_zones row can't be resolved,
+    // so flipping the flag would change the listing but not the numbers.
     if (!upload.area_id || upload.upload_type !== "Satellite_Image") {
       return res.status(400).json({
         error:
@@ -568,9 +541,8 @@ router.patch("/:uploadId/active", verifySuperadmin, async (req, res) => {
       [active, upload.area_id, upload.year]
     );
 
-    // Re-derive the whole area: the earliest ACTIVE year is the EPR baseline,
-    // so toggling the earliest dataset shifts the baseline and changes every
-    // other year's erosion figures for this area.
+    // Re-derives the whole area: the earliest active year is the EPR baseline, so toggling
+    // the earliest dataset shifts the baseline and changes every other year's figures.
     await recomputeAreaTimeSeries(client, upload.area_id);
 
     await client.query("COMMIT");
@@ -628,8 +600,8 @@ router.delete("/:uploadId", verifySuperadmin, async (req, res) => {
     client = await pool.connect();
     await client.query("BEGIN");
 
-    // Only cascade when derived data is identifiable; superseded rows (no area_id)
-    // have no live data of their own, so only their file/audit row is removed.
+    // Only cascade when derived data is identifiable; superseded rows (no area_id) have no
+    // live data of their own, so only their file/audit row is removed.
     if (upload.area_id && upload.upload_type === "Satellite_Image") {
       await client.query(
         `DELETE FROM shoreline_zones
@@ -648,8 +620,7 @@ router.delete("/:uploadId", verifySuperadmin, async (req, res) => {
 
     await client.query("COMMIT");
 
-    // Remove the stored file and its generated preview (best-effort — a
-    // missing file must not fail an otherwise-committed delete).
+    // Best-effort: a missing file must not fail an otherwise-committed delete.
     for (const p of [upload.file_path, upload.file_path && thumbnailPathFor(upload.file_path)]) {
       if (p && fs.existsSync(p)) {
         fs.unlink(p, (err) => {
@@ -702,16 +673,10 @@ router.delete("/:uploadId", verifySuperadmin, async (req, res) => {
   }
 });
 
-/**
- * Helper: Process CSV file
- */
 module.exports = router;
-// Exposed for one-off maintenance/backfill scripts (e.g. recomputing all
-// existing satellite zones after a fix to the erosion-distance algorithm).
+// Exposed for one-off maintenance/backfill scripts (e.g. recomputing zones after a fix to the erosion-distance algorithm).
 module.exports.recomputeAreaTimeSeries = recomputeAreaTimeSeries;
-// Exposed so NDWI generation (single-year and batch) can feed a freshly
-// generated GeoTIFF straight into the same processing pipeline a manual
-// upload uses — this function only ever reads file.path/.filename/.size,
-// never req/res, so a synthetic file object pointing at an on-disk NDWI
-// export works identically to a real multer upload.
+// Exposed so NDWI generation can feed a freshly generated GeoTIFF into the same pipeline a
+// manual upload uses — this function only ever reads file.path/.filename/.size, never
+// req/res, so a synthetic file object works identically to a real multer upload.
 module.exports.processSatelliteImageFile = processSatelliteImageFile;

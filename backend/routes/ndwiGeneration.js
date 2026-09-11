@@ -16,8 +16,8 @@ const { verifyToken, verifyAdmin } = require("../middleware/auth");
 const MIN_YEAR = 1990;
 const SENTINEL_MIN_YEAR = 2015;
 
-// Covers the single-year route directly; the batch POST responds before any year is processed,
-// so it doesn't cover the batch's real work - ndwiBatchWorker.js calls scheduleSync() itself per year.
+// Covers the single-year route; the batch POST responds before any year is processed, so
+// ndwiBatchWorker.js calls scheduleSync() itself per year instead.
 router.use((req, res, next) => {
   if (req.method !== "GET") {
     res.on("finish", () => {
@@ -45,7 +45,7 @@ function parseBounds(body) {
 }
 
 // Admin-only: queries Earth Engine (quota-bearing). Generates one year's NDWI GeoTIFF and
-// processes it through the same pipeline a manual upload uses - no download/re-upload step.
+// feeds it through the same pipeline a manual upload uses — no download/re-upload step.
 router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { year, coastlineName, municipality, specificArea, isReupload, index, season } = req.body;
@@ -97,8 +97,7 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
         logger.error("Cache invalidation failed after NDWI generation:", err.message);
       }
 
-      // isReupload distinguishes a Reupload from a fresh "Generate This Year" so
-      // Audit Trail can show them as distinct actions.
+      // isReupload distinguishes a reupload from a fresh generation for the Audit Trail.
       logAction(null, {
         actor: req.user,
         action: isReupload ? "ndwi_reupload" : "ndwi_generated",
@@ -123,8 +122,8 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-// Kicks off a multi-year batch (2015-current) fire-and-forget - responds immediately with a
-// job id instead of blocking for the whole batch (potentially over an hour). Job state is in-memory.
+// Kicks off a multi-year batch fire-and-forget — responds immediately with a job id instead
+// of blocking for the whole batch (potentially over an hour). Job state is in-memory.
 router.post("/generate-ndwi-batch", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality, specificArea } = req.body;

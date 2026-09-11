@@ -12,7 +12,7 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
   return areas.map((area, index) => {
     const shoreline = area.coastlinePoints;
     const hasSufficientData = area.hasSufficientData ?? false;
-    // prefer the area's own LRR, fall back to municipality-wide rate
+    // Prefer the area's own LRR, fall back to municipality-wide rate.
     const erosionRate = area.lrrRate ?? fallbackErosionRate ?? 0;
     const yearsAvailable = area.yearsAvailable || [];
 
@@ -29,7 +29,7 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
       year: area.year,
       yearsAvailable,
       hasSufficientData,
-      // reserved for the insufficient-data warning message
+      // Reserved for the insufficient-data warning message.
       description: hasSufficientData
         ? null
         : `Only ${yearsAvailable.length} year${yearsAvailable.length === 1 ? "" : "s"} on record — upload another year to enable trend analysis`,
@@ -37,7 +37,7 @@ export function buildAreaSegments(areas, fallbackErosionRate) {
   });
 }
 
-// fetches satellite-detected areas, or falls back to a single "Main Coastline" area from the polygon + municipality-wide LRR
+// Fetches satellite-detected areas, or falls back to a single "Main Coastline" area from the polygon + municipality-wide LRR.
 export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyShorelineData) {
   try {
     const satRes = await fetch(
@@ -53,7 +53,7 @@ export async function fetchAreaSegments(municipality, fallbackShoreline, yearlyS
     console.warn(`Could not fetch satellite coastline for ${municipality}:`, err.message);
   }
 
-  // no satellite area yet — fall back to the polygon-derived coastline
+  // No satellite area yet — fall back to the polygon-derived coastline.
   if (!fallbackShoreline || fallbackShoreline.length < 2) {
     return { segments: [], satelliteAreas: [] };
   }

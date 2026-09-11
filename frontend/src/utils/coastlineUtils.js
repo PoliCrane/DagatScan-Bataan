@@ -8,7 +8,6 @@ import turfBbox from "@turf/bbox";
  * Extracts a municipality's coastline via edge hashing: edges shared with a neighbor are internal, unshared edges are coastline.
  */
 export const extractCoastline = (geoJsonData, selectedMunicipality) => {
-  // Validate inputs
   if (!selectedMunicipality || typeof selectedMunicipality !== "string") {
     console.warn(`Invalid municipality name: ${selectedMunicipality}`);
     return [];
@@ -51,7 +50,6 @@ export const extractCoastline = (geoJsonData, selectedMunicipality) => {
 
     console.log(`🔍 Topological edge detection: building edge map from ${allPolygons.length} municipalities...`);
 
-    // Map of every edge (hash) across all municipalities to its occurrence count
     const edgeMap = buildEdgeMap(allPolygons);
 
     console.log(`  Total unique edges: ${edgeMap.size}`);
@@ -147,7 +145,7 @@ const extractUnsharedEdgesFromMap = (municipalityFeature, selectedMunicipality, 
   const geometry = municipalityFeature.geometry;
   if (geometry.type !== "Polygon") return [];
 
-  const outerRing = geometry.coordinates[0]; // Outer ring only
+  const outerRing = geometry.coordinates[0];
   if (!Array.isArray(outerRing) || outerRing.length < 2) return [];
 
   const unsharedEdges = [];
@@ -192,7 +190,7 @@ const mergeEdgesToPolyline = (edges) => {
 
   console.log(`  Building polyline from ${edges.length} edges using ${adjMap.size} nodes`);
 
-  // Degree-1 nodes are start points; closed loops have none (all degree 2)
+  // Closed loops have no degree-1 nodes (all degree 2).
   const startNodes = findStartNodes(adjMap);
 
   console.log(`  Found ${startNodes.length} start/end nodes (open polylines) or 0 (closed loops)`);
@@ -350,7 +348,6 @@ const traversePolylineFromNode = (
     }
 
     if (!foundNext) {
-      // Dead end - backtrack
       stack.pop();
       stackInfo.pop();
     }
@@ -386,7 +383,7 @@ export const segmentCoastline = (coastlinePoints, segmentLength = 10) => {
   if (coastlinePoints.length < 2) return [];
 
   const segments = [];
-  const segmentDistances = []; // cumulative distance at each point
+  const segmentDistances = [];
   let cumulativeDistance = 0;
 
   segmentDistances.push(0);
@@ -506,7 +503,6 @@ const simplifyCoastline = (points, tolerance = 0.00005) => {
     let maxDistance = 0;
     let maxIndex = 0;
 
-    // Find the point farthest from the line
     for (let i = 1; i < points.length - 1; i++) {
       const distance = perpendicularDistance(points[i], points[0], points[points.length - 1]);
       if (distance > maxDistance) {
@@ -527,9 +523,6 @@ const simplifyCoastline = (points, tolerance = 0.00005) => {
   return douglasPeucker(points, tolerance);
 };
 
-/**
- * Get bounding box from coastline
- */
 export const getCoastlineBounds = (coastlinePoints) => {
   if (coastlinePoints.length === 0) return null;
 
@@ -553,9 +546,7 @@ export const getCoastlineBounds = (coastlinePoints) => {
   };
 };
 
-/**
- * Calculate distance between two lat/lng coordinates in meters
- */
+// Haversine distance between two lat/lng coordinates, in meters.
 export const calculateDistance = (point1, point2) => {
   const R = 6371000; // Earth's radius in meters
   const lat1 = (point1[0] * Math.PI) / 180;
@@ -572,9 +563,7 @@ export const calculateDistance = (point1, point2) => {
   return R * c;
 };
 
-/**
- * Get total coastline length in kilometers
- */
+// Total coastline length in kilometers.
 export const getCoastlineLength = (coastlinePoints) => {
   let totalDistance = 0;
 
@@ -582,7 +571,7 @@ export const getCoastlineLength = (coastlinePoints) => {
     totalDistance += calculateDistance(coastlinePoints[i], coastlinePoints[i + 1]);
   }
 
-  return totalDistance / 1000; // Convert to km
+  return totalDistance / 1000;
 };
 
 // Coastal edges appear exactly once across all municipalities; shared edges appear twice
@@ -605,7 +594,6 @@ export const extractCoastalEdges = (geoJsonData, municipalityFeature) => {
       return [];
     }
 
-    // Handle both Polygon and MultiPolygon geometry
     const geometry = municipalityFeature.geometry;
     let polygonRings = [];
 
@@ -666,6 +654,7 @@ export const extractCoastalEdges = (geoJsonData, municipalityFeature) => {
     return [];
   }
 };
+
 
 // Checks distance from the segment's midpoint only, not the full segment, against each coastal edge
 const isSegmentOnCoastalEdge = (segmentCoordinates, coastalEdges, tolerance = 500) => {
@@ -752,6 +741,6 @@ export const filterSegmentsToCoastalOnly = (geoJsonData, municipalityFeature, se
     return coastalSegments;
   } catch (error) {
     console.error("Error filtering segments to coastal only:", error);
-    return segments; // Return unfiltered on error
+    return segments;
   }
 };

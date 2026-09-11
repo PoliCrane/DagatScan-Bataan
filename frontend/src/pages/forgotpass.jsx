@@ -26,23 +26,16 @@ export default function ForgotPassword({ onClose, onSwitchToLogin, onSwitchToRes
       return;
     }
 
-    // Close modal before showing loading dialog
     if (onClose) onClose();
 
-    // Show loading dialog
     await showLoading("Sending reset code...", 2000);
 
     const res = await forgotPass(email);
 
     if (res.error) {
-      // Show error dialog (modal will be closed, error dialog brings it attention)
       await showError(res.error);
       setError(res.error);
-      
-      // Reopen modal on error
-      // Modal should automatically reopen since onClose was called
     } else {
-      // Show success dialog
       await showSuccess("Password reset code sent to your email!");
       setSuccess("Password reset code sent to your email!");
       localStorage.setItem("resetEmail", email);

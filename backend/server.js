@@ -36,11 +36,8 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
-// Falls back to local Vite port; set FRONTEND_URL in production, no trailing
-// slash on any entry. Comma-separate multiple origins (e.g. a Vercel URL
-// plus a custom domain and its www subdomain) — getFrontendOrigins() splits
-// them into an array, which cors()'s `origin` option checks membership
-// against natively.
+// Falls back to the local Vite port; set FRONTEND_URL in production (no trailing slash),
+// comma-separating multiple origins — getFrontendOrigins() splits them for cors().
 app.use(cors({ origin: getFrontendOrigins() }));
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
@@ -95,8 +92,8 @@ const httpServer = app.listen(PORT, () => {
 
 });
 
-// long ceiling instead of disabled timeouts: satellite uploads + CNN training legitimately run
-// for minutes, but headersTimeout still closes slowloris-style connections that stall on headers
+// Long ceiling instead of disabled timeouts: satellite uploads and CNN training legitimately
+// run for minutes, but headersTimeout still closes slowloris-style connections that stall on headers.
 httpServer.requestTimeout = 30 * 60 * 1000;
 httpServer.headersTimeout = 65 * 1000;
 httpServer.timeout = 30 * 60 * 1000;

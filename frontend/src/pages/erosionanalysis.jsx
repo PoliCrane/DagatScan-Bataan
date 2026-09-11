@@ -37,9 +37,8 @@ function MapController({ geoJsonData, bataanBounds, selectedMunicipality, munici
   useEffect(() => {
     if (!map) return;
 
-    // If municipality selected, zoom to it
-    // the docked analysis panel covers the right edge, so the visible centre
-    // of the map is not the centre of the container
+    // The docked analysis panel covers the right edge, so the visible center
+    // isn't the container's center — offset fitBounds padding to compensate
     const panel = document.querySelector(".map-workspace.is-open");
     const rightInset = panel ? Math.round(panel.getBoundingClientRect().width) : 0;
 
@@ -49,7 +48,6 @@ function MapController({ geoJsonData, bataanBounds, selectedMunicipality, munici
         paddingBottomRight: [50 + rightInset, 50],
       });
     }
-    // Otherwise show all Bataan
     else if (geoJsonData && bataanBounds) {
       map.fitBounds(bataanBounds, {
         paddingTopLeft: [30, 30],
@@ -98,10 +96,8 @@ export default function ErosionAnalysis() {
   const [predictionResult, setPredictionResult] = useState(null);
 
   const mapWorkspaceRef = useRef(null);
-  // Compare/predict now auto-re-run on every year-dropdown change (see
-  // AnalysisToolsCards.jsx), so overlapping in-flight requests are a real
-  // case now — these guard against a slower, stale response overwriting a
-  // newer one's state.
+  // Compare/Predict auto-rerun on every dropdown change (see AnalysisToolsCards.jsx);
+  // these ids guard against a stale in-flight response overwriting a newer one's state.
   const compareRequestIdRef = useRef(0);
   const predictRequestIdRef = useRef(0);
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.EROSION_ANALYSIS, erosionAnalysisSteps, {
@@ -174,7 +170,6 @@ export default function ErosionAnalysis() {
         return;
       }
 
-      // Find the largest Polygon feature (main landmass)
       const polygonFeatures = municipalityFeatures.filter(f => f.geometry?.type === "Polygon");
       let mainFeature = polygonFeatures[0];
 
@@ -323,7 +318,7 @@ export default function ErosionAnalysis() {
 
       if (!cancelled) {
         setShorelineSegments(segments);
-        setSelectedSegmentId(null); // reset selection whenever the underlying areas change
+        setSelectedSegmentId(null);
       }
     })();
 
@@ -505,9 +500,8 @@ export default function ErosionAnalysis() {
       fetchYearEstimates(selectedYear, selectedSegment, currentYear),
     ]);
 
-    // A newer call to handleCompare (a later dropdown change) started and
-    // may already have resolved while this one was in flight — don't let
-    // this stale response clobber its state.
+    // A newer handleCompare call may have already resolved while this one was
+    // in flight — ignore this stale response.
     if (requestId !== compareRequestIdRef.current) return;
 
     const pastShoreline = [];
@@ -628,9 +622,8 @@ export default function ErosionAnalysis() {
       };
     });
 
-    // A newer call to handlePredictSimulate (a later dropdown change) may
-    // have started since — don't let this stale response overwrite it or
-    // flip isSimulating back off while the newer request is still running.
+    // A newer handlePredictSimulate call may already be running — ignore this
+    // stale response instead of overwriting its state.
     if (requestId !== predictRequestIdRef.current) return;
 
     setPredictionResult({

@@ -28,14 +28,12 @@ async function main() {
   try {
     await client.query("BEGIN");
 
-    // 1. created_by columns (additive, nullable — historical rows and
-    // unauthenticated write routes leave this NULL, which is expected)
+    // Nullable — historical rows and unauthenticated write routes leave this NULL, which is expected.
     await client.query(`ALTER TABLE shoreline_zones ADD COLUMN created_by INTEGER REFERENCES users(id) ON DELETE SET NULL`);
     await client.query(`ALTER TABLE satellite_imagery ADD COLUMN created_by INTEGER REFERENCES users(id) ON DELETE SET NULL`);
 
-    // 2. Sanity checks — re-verify at run time (not trusting any prior
-    // read-only check) that area_id is safe to promote to the sole location
-    // reference before dropping anything that currently backs it up.
+    // Re-verify at run time (not trusting any prior read-only check) that area_id
+    // is safe to promote to the sole location reference before dropping its backups.
     const nullAreaId = await client.query(
       `SELECT COUNT(*) FROM shoreline_zones WHERE area_id IS NULL`
     );
@@ -71,10 +69,8 @@ async function main() {
       throw new Error(`${satelliteMismatch.rows[0].count} satellite_imagery rows disagree with their area's municipality`);
     }
 
-    // 3. Promote area_id to the sole location reference on shoreline_zones
     await client.query(`ALTER TABLE shoreline_zones ALTER COLUMN area_id SET NOT NULL`);
 
-    // 4. Drop redundant columns + dead table
     await client.query(`ALTER TABLE shoreline_zones DROP COLUMN specific_area, DROP COLUMN municipality_id`);
     await client.query(`ALTER TABLE satellite_imagery DROP COLUMN municipality`);
     await client.query(`DROP TABLE shoreline_geometries`);
@@ -82,7 +78,6 @@ async function main() {
     await client.query("COMMIT");
     console.log("Migration committed successfully.");
 
-    // Post-commit summary
     const zoneCount = await client.query(`SELECT COUNT(*) FROM shoreline_zones`);
     const imageryCount = await client.query(`SELECT COUNT(*) FROM satellite_imagery`);
     console.log("shoreline_zones count:", zoneCount.rows[0].count);

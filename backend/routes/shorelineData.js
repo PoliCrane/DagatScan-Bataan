@@ -22,8 +22,7 @@ const { computeTransectStatistics } = require("../services/transectAnalysis");
 
 const router = express.Router();
 
-// browser-side caching for the public reads: data only changes on new uploads,
-// so a short max-age cuts repeat map loads without risking stale demos
+// Data only changes on new uploads, so a short max-age cuts repeat map loads without risking stale demos.
 router.use((req, res, next) => {
   if (req.method === "GET") res.set("Cache-Control", "public, max-age=300");
   next();
@@ -260,10 +259,6 @@ router.get("/municipalities", async (req, res) => {
   }
 });
 
-/**
- * GET /api/shoreline/municipality/:municipality
- * Returns all yearly shoreline zone data for a municipality (uploaded data)
- */
 router.get("/municipality/:municipality", async (req, res) => {
   try {
     const { municipality } = req.params;
@@ -341,10 +336,6 @@ router.get("/municipality/:municipality", async (req, res) => {
   }
 });
 
-/**
- * GET /api/shoreline/municipality/:municipality/year/:year
- * Returns specific year zone data for a municipality (uploaded data)
- */
 router.get("/municipality/:municipality/year/:year", async (req, res) => {
   try {
     const { municipality, year } = req.params;
@@ -574,7 +565,7 @@ router.get("/municipality/:municipality/shoreline-estimate", async (req, res) =>
 });
 
 
-/** POST /api/shoreline/seed — admin: seeds simulated erosion data for testing (skips if data already exists). */
+/** Admin: seeds simulated erosion data for testing (skips if data already exists). */
 router.post("/seed", verifyToken, verifyAdmin, async (req, res) => {
   if (process.env.NODE_ENV === "production") {
     return res.status(403).json({ error: "Seeding simulated data is disabled in production" });
@@ -799,8 +790,7 @@ router.post("/admin/insert-yearly", verifyToken, verifyAdmin, async (req, res) =
   }
 });
 
-/** Redirects callers to POST /api/admin/uploads/upload — CSV handled there via multer. */
-/** GET .../municipality/:municipality/latest — most recent year of data for a municipality; feeds dashboard cards. */
+/** Most recent year of data for a municipality; feeds dashboard cards. */
 router.get("/municipality/:municipality/latest", async (req, res) => {
   try {
     const { municipality } = req.params;
@@ -1063,7 +1053,6 @@ router.get("/municipality/:municipality/analysis", async (req, res) => {
       return res.status(404).json({ message: `Municipality not found: ${municipality}` });
     }
 
-    // reads the cache row; not recomputed here
     const cachedAnalysis = await getMunicipalityAnalysis(municipalityId);
 
     if (!cachedAnalysis) {
@@ -1097,7 +1086,7 @@ router.get("/municipality/:municipality/analysis", async (req, res) => {
   }
 });
 
-/** DELETE .../municipality/:municipality — admin: deletes all shoreline_zones data for a municipality. */
+/** Admin: deletes all shoreline_zones data for a municipality. */
 router.delete("/municipality/:municipality", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality } = req.params;
@@ -1134,7 +1123,7 @@ router.delete("/municipality/:municipality", verifyToken, verifyAdmin, async (re
   }
 });
 
-/** POST .../cache/invalidate — admin: force cache invalidation for a municipality. */
+/** Admin: force cache invalidation for a municipality. */
 router.post("/cache/invalidate", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { municipality } = req.body;
@@ -1156,7 +1145,7 @@ router.post("/cache/invalidate", verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-/** POST .../cache/invalidate-all — admin: force cache refresh for all municipalities. */
+/** Admin: force cache refresh for all municipalities. */
 router.post("/cache/invalidate-all", verifyToken, verifyAdmin, async (req, res) => {
   try {
     // refreshes every municipality's derived values, doesn't just mark stale

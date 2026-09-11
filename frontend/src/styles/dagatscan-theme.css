@@ -1,7 +1,6 @@
-/* DagatScan Bataan theme for PrimeReact.
-   Generated from primereact lara-light-blue by remapping the Tailwind blue
-   palette to the DagatScan brand palette (primary #0077B6).
-   Regenerate with scripts/buildPrimeTheme.js after a PrimeReact upgrade. */
+/* Generated from primereact's lara-light-blue theme by remapping its blue palette
+   to the DagatScan brand palette (primary #0077b6). Regenerate with
+   scripts/buildPrimeTheme.js after a PrimeReact upgrade. */
 :root {
   font-family: var(--font-sans, "Archivo", sans-serif);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -4045,7 +4044,6 @@
   .p-treetable-toggler + .p-checkbox + span {
     vertical-align: middle;
   }
-  /* Resizable */
   .p-treetable-resizable > .p-treetable-wrapper {
     overflow-x: auto;
   }
@@ -4079,7 +4077,6 @@
     z-index: 10;
     display: none;
   }
-  /* Scrollable */
   .p-treetable-scrollable-wrapper {
     position: relative;
   }
@@ -4095,7 +4092,6 @@
   .p-treetable-virtual-table {
     position: absolute;
   }
-  /* Frozen Columns */
   .p-treetable-frozen-view .p-treetable-scrollable-body {
     overflow: hidden;
   }
@@ -4104,13 +4100,11 @@
     top: 0px;
     left: 0px;
   }
-  /* Reorder */
   .p-treetable-reorder-indicator-up,
   .p-treetable-reorder-indicator-down {
     position: absolute;
     display: none;
   }
-  /* Loader */
   .p-treetable .p-treetable-loading-overlay {
     position: absolute;
     display: flex;
@@ -4118,7 +4112,6 @@
     justify-content: center;
     z-index: 2;
   }
-  /* Alignment */
   .p-treetable .p-treetable-thead > tr > th.p-align-left > .p-column-header-content,
   .p-treetable .p-treetable-tbody > tr > td.p-align-left,
   .p-treetable .p-treetable-tfoot > tr > td.p-align-left {

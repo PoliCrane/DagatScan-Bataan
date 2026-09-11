@@ -258,8 +258,7 @@ body:has(.ds-landing) {
   color: #ffffff;
 }
 
-/* Core Features showcase: a selector list on one side, a crossfading
-   preview panel on the other — see index.jsx's activeFeatureIndex state. */
+/* Selector list on one side, crossfading preview panel on the other — see index.jsx's activeFeatureIndex state. */
 .ds-feature-showcase {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -359,21 +358,15 @@ body:has(.ds-landing) {
   overflow: hidden;
 }
 
-/* View Coastline / Predict Erosion: a bordered "map box" matching the
-   generated PDF's map section (backend/routes/reports.js — MAP_BORDER),
-   showing a real satellite crop with the shoreline lines already baked in
-   (mockup-coastline-map.png / mockup-predict-map.png — same
-   renderShorelineMap pipeline the PDF itself uses) plus a legend row below,
-   mirroring the PDF's own rect-swatch + label legend. */
+/* Mirrors the generated PDF's map section (backend/routes/reports.js — MAP_BORDER):
+   same satellite crop + baked-in shoreline lines from the renderShorelineMap
+   pipeline, with a matching swatch legend below. */
 .ds-mockup-map {
   width: 100%;
   max-width: 300px;
 }
 
-/* Fixed, compact preview window — object-fit:cover crops into whichever
-   source image is passed rather than displaying it at full size, so this
-   stays a small preview regardless of the generated PNG's own dimensions
-   (no need to show the whole crop, just a representative slice of it). */
+/* object-fit:cover crops into whichever source image is passed, keeping this a small fixed preview regardless of the source PNG's own dimensions. */
 .ds-mockup-map-box {
   aspect-ratio: 4 / 3;
   border: 1px solid #c2e4fd;
@@ -412,9 +405,7 @@ body:has(.ds-landing) {
   border-radius: 1px;
 }
 
-/* Generate Reports: the round-2 dark PDF-preview card, restored as its own
-   self-contained dark card (the panel around it is light-neutral now,
-   unlike round 2 where the whole panel carried this gradient). */
+/* Self-contained dark PDF-preview card — the surrounding panel is light-neutral now, not part of this gradient. */
 .ds-mockup-pdf-card {
   width: 100%;
   max-width: 260px;

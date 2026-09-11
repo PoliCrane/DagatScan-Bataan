@@ -12,7 +12,6 @@
   min-height: 0;
 }
 
-/* Page title band */
 .dashboard-welcome.dashboard-welcome {
   position: relative;
   margin-bottom: 26px;
@@ -113,7 +112,6 @@
   color: var(--color-muted, #4a5b6c);
 }
 
-/* Section headings below the page title */
 .layout-main h2:not(.map-workspace-subject) {
   font-family: var(--font-sans, "Archivo", sans-serif);
   font-size: 1.05rem;
@@ -196,7 +194,6 @@
   color: var(--color-muted, #4a5b6c);
 }
 
-/* Info boxes on the dashboard */
 .info-box {
   padding: 18px 20px;
   border: 1px solid var(--color-line, #dde5ec);

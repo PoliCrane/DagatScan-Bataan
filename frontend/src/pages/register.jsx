@@ -23,10 +23,9 @@ const POSITION_OPTIONS = [
   "Others",
 ];
 
-// Account Registration — public-facing "Request Access" form. No password is
-// collected here; an admin sets the account's initial password when
-// approving the request (see UserManagement.jsx's ApproveRequestModal).
-// Submits a signed request letter (PDF) alongside the applicant's details —
+// Public "Request Access" form — no password collected here; an admin sets
+// the initial password on approval (see UserManagement.jsx's ApproveRequestModal).
+// Submits a signed request letter (PDF) alongside the applicant's details,
 // see server.js's POST /request-account.
 export default function Register() {
   const authModalsRef = useRef(null);

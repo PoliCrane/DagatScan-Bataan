@@ -15,11 +15,10 @@ import { dashboardSteps } from "../tours/steps/dashboardSteps";
 
 import { API_BASE_URL } from "../config/api";
 
-// Standardized status palette used across the system: green = online/operational,
-// yellow = warning/degraded, red = critical/outage, blue = ongoing process,
-// gray = inactive. "System Status" reflects real backend reachability, not just
-// which environment this build is running in — checking naturally covers a
-// Render free-tier cold start, since it just stays blue for as long as that takes.
+// Status colors are standardized across the system (green=online, yellow=warning,
+// red=critical, blue=in-progress, gray=inactive). Reflects real backend
+// reachability, not the environment — "checking" naturally covers a Render
+// free-tier cold start.
 const BACKEND_STATUS_CONFIG = {
   checking: { color: "blue", label: "Checking...", info: "Contacting backend" },
   online: { color: "green", label: "Online", info: "Backend operational" },
@@ -67,9 +66,7 @@ export default function Home() {
     loadGeoJson();
   }, []);
 
-  // Drives the sidebar's "System Status" card — a real connectivity check,
-  // not just an environment label. Stays "checking" for as long as a Render
-  // free-tier cold start takes, since that's exactly what a pending fetch is.
+  // Populates the sidebar's "System Status" card.
   useEffect(() => {
     let cancelled = false;
     fetch(`${API_BASE_URL}/api/health`)
@@ -106,13 +103,11 @@ export default function Home() {
       return;
     }
 
-    // Get username from localStorage
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setUsername(storedUsername);
     }
 
-    // Set current date
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     setCurrentDate(today.toLocaleDateString('en-US', options));
@@ -145,10 +140,9 @@ export default function Home() {
           (z) => z.erosionRate !== null && z.erosionRate !== undefined
         );
 
-        // "Active" means currently monitored, i.e. this year's uploads — not every
-        // site ever monitored across all history. Falls back to the latest year
-        // that actually has data if the current year has nothing uploaded yet,
-        // so this doesn't show a misleading 0 right after the calendar rolls over.
+        // "Active" means this year's uploads, not every site ever monitored. Falls
+        // back to the latest year with data so this doesn't show a misleading 0
+        // right after the calendar rolls over.
         const currentYear = new Date().getFullYear();
         const yearsWithData = [...new Set(zonesWithData.map((z) => z.year))];
         const activeYear = yearsWithData.includes(currentYear)
@@ -156,10 +150,9 @@ export default function Home() {
           : (yearsWithData.length ? Math.max(...yearsWithData) : currentYear);
         const activeYearZones = zonesWithData.filter((z) => z.year === activeYear);
 
-        // Count distinct physical monitoring locations (municipality + specific area)
+        // Distinct physical monitoring locations (municipality + specific area)
         const totalSites = new Set(activeYearZones.map(z => `${z.municipality}::${z.specificArea}`)).size;
 
-        // Count total historical measurement records
         const totalRecords = zonesWithData.length;
 
         setStats({
@@ -192,14 +185,12 @@ export default function Home() {
       {Tour}
       <TourInfoButton onClick={replay} />
       <div className="dashboard-container">
-        {/* Welcome Section */}
         <div className="dashboard-welcome">
           <h1>Welcome back, {username}! </h1>
           <p>Coastal Erosion Monitoring System for {scopeLabel}</p>
           <p className="welcome-timestamp">{currentDate}</p>
         </div>
 
-        {/* Stats Section */}
         <motion.div
           className="dashboard-stats"
           initial="hidden"
@@ -232,11 +223,8 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Main Content Grid */}
         <div className="dashboard-grid">
-          {/* Main Section */}
           <div className="dashboard-main">
-            {/* Coastal Erosion Map Section */}
             <div className="dashboard-map-section">
               <div className="dashboard-section-header">
                 <h2 className="dashboard-section-title">Coastal Erosion Map</h2>
@@ -278,9 +266,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="dashboard-sidebar">
-            {/* System Status */}
             <div className={`info-box system-status status-${BACKEND_STATUS_CONFIG[backendStatus].color}`}>
               <div className="info-header">
                 <div className={`status-indicator status-${BACKEND_STATUS_CONFIG[backendStatus].color}`}></div>
@@ -294,7 +280,6 @@ export default function Home() {
 
             <RiskLevelLegendCard />
 
-            {/* Current Focus Area */}
             <div className="info-box focus-area">
               <div className="info-header-with-icon">
                 <i className="pi pi-crosshairs info-icon" aria-hidden="true" />
@@ -303,7 +288,6 @@ export default function Home() {
               <p>{scopeLabel} Coastal Zone - {loading ? "..." : stats.activeMonitoringSites} active monitoring sites.</p>
             </div>
 
-            {/* High Risk Areas Container */}
             <div className="high-risk-container">
               <div className="high-risk-header">
                 <i className="pi pi-bell info-icon" aria-hidden="true" />

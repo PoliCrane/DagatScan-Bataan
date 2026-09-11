@@ -2,11 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const validateGeometry = require("geojson-validation").valid;
 
-/**
- * Parse and validate GeoJSON file
- * @param {string} filePath - Path to GeoJSON file
- * @returns {object} - Parsed GeoJSON data with validation status
- */
+// Parse and validate a GeoJSON file.
 async function parseGeoJSON(filePath) {
   try {
     const fileContent = fs.readFileSync(filePath, "utf8");
@@ -92,7 +88,6 @@ function calculateErosionMetrics(features, municipality, year) {
   return records;
 }
 
-// Process and store satellite image metadata.
 async function processSatelliteImage(filePath, metadata = {}) {
   try {
     const fileStats = fs.statSync(filePath);
@@ -108,8 +103,8 @@ async function processSatelliteImage(filePath, metadata = {}) {
       capture_date: metadata.capture_date || null,
       municipality: metadata.municipality || null,
       year: metadata.year || new Date().getFullYear(),
-      bounds: metadata.bounds || null, // Bounding box coordinates
-      crs: metadata.crs || "EPSG:4326", // Coordinate reference system
+      bounds: metadata.bounds || null,
+      crs: metadata.crs || "EPSG:4326", // coordinate reference system
     };
 
     return {
@@ -124,7 +119,6 @@ async function processSatelliteImage(filePath, metadata = {}) {
   }
 }
 
-// Extract coordinate bounds and center from GeoJSON features.
 function extractCoordinateBounds(features) {
   let minLat = 90,
     maxLat = -90,
@@ -174,10 +168,7 @@ function validateLocationData(locationData) {
     errors.push("Municipality is required");
   }
 
-  // specific_area is optional now; extracted from GeoJSON features if present
-  // if (!locationData.specific_area || locationData.specific_area.trim() === "") {
-  //   errors.push("Specific Area is required");
-  // }
+  // specific_area is optional; extracted from GeoJSON features if present
 
   if (!locationData.year || isNaN(parseInt(locationData.year))) {
     errors.push("Valid year is required");
@@ -340,10 +331,10 @@ async function processSatelliteImageWithAnalysis(imagePath, metadata = {}) {
       );
     }
 
-    // Step 4: extract zone metrics. No reference means no analysis.detectedCoastline yet,
-    // so convert the raw pixel detection to geo coords ourselves.
-    // CNN output is in [0, COASTLINE_GRID_SIZE) pixel space, not the original image's -
-    // normalize against bounds, not the original pixelWidth/pixelHeight.
+    // Step 4: extract zone metrics. Without a reference, analysis.detectedCoastline doesn't
+    // exist yet, so convert the raw pixel detection to geo coords ourselves. CNN output is in
+    // [0, COASTLINE_GRID_SIZE) pixel space, not the original image's, so normalize against
+    // bounds rather than the original pixelWidth/pixelHeight.
     const georef = georeference.georeference;
     const gridSize = detection.gridSize || COASTLINE_GRID_SIZE || 256;
     const cnnPixelToGeo = (px, py) => {

@@ -8,12 +8,9 @@ const POLL_INTERVAL_MS = 3000;
 const NdwiGenerationContext = createContext(null);
 
 /**
- * Tracks in-flight NDWI generation app-wide (mounted in App.jsx above the
- * router) so progress survives page navigation. Batch job state lives
- * in-memory on the backend; the active job id is mirrored to localStorage
- * so polling resumes after a hard refresh. Single-year generation is a
- * direct request/response with no server-side job, tracked separately
- * (singleYear) and doesn't survive a refresh.
+ * Tracks in-flight NDWI generation app-wide (mounted in App.jsx above the router) so progress survives navigation.
+ * Batch state lives in-memory on the backend; the job id is mirrored to localStorage so polling resumes after a refresh.
+ * Single-year generation is a plain request/response with no server-side job, tracked separately and lost on refresh.
  */
 export function NdwiGenerationProvider({ children }) {
   const [jobId, setJobId] = useState(() => {
@@ -98,7 +95,7 @@ export function NdwiGenerationProvider({ children }) {
     return data;
   }, [beginPolling]);
 
-  // fetch lives here (not in DataUpload.jsx) so it keeps running and updating shared state regardless of active page
+  // Lives here, not in DataUpload.jsx, so it keeps running and updating shared state regardless of the active page.
   const startSingleYear = useCallback(async (payload) => {
     setSingleYear({ generating: true, year: payload.year, result: null, error: null });
     try {
@@ -128,8 +125,7 @@ export function NdwiGenerationProvider({ children }) {
     }
   }, []);
 
-  // best-effort; doesn't flip local state, the next poll tick reflects the real server state.
-  // can only pre-empt the next year, not one already mid-processing
+  // Best-effort: doesn't flip local state (the next poll tick reflects real server state), and can only pre-empt the next year, not one already mid-processing.
   const cancelBatch = useCallback(async () => {
     if (!jobId) return;
     const token = localStorage.getItem("token");

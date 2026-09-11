@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 
-// Matches the app's existing 768px "mobile/tablet" breakpoint (already
-// standard across 23 stylesheets), combined with a touch-primary check so a
-// merely-narrow desktop browser window (mouse/trackpad, pointer: fine) is
-// never mistaken for a phone or tablet.
+// Matches the app's existing 768px mobile/tablet breakpoint, combined with a touch-primary check so a narrow desktop window isn't mistaken for a phone or tablet.
 const MOBILE_QUERY = "(max-width: 768px) and (pointer: coarse)";
 
 export default function useIsMobile() {

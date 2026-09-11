@@ -2,7 +2,7 @@ import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 import { scrollTargetIntoView } from "../scrollTargetIntoView";
 import { scrollTargetIntoViewNearest } from "../scrollTargetIntoViewNearest";
 
-// polls the DOM until an element renders (e.g. after the audit-logs fetch resolves), then scrolls it into view
+// Polls the DOM until an element renders (e.g. after the audit-logs fetch resolves), then scrolls it into view.
 const waitForElement = (selector, timeout = 5000) => () =>
   new Promise((resolve) => {
     const start = Date.now();
@@ -43,7 +43,7 @@ export const auditTrailSteps = [
       "Use the Search box to find an entry by actor, action, or target. The Category and Severity filters narrow the log further, and Reset Filters clears everything back to the full list.",
   },
   {
-    // targets the table header, not the container — the container can grow to 25 rows and push the tooltip off-screen
+    // Targets the table header, not the container — the container can grow to 25 rows and push the tooltip off-screen.
     target: ".at-table thead",
     placement: "bottom",
     title: "Activity Log",

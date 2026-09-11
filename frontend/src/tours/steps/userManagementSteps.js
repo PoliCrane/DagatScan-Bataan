@@ -1,7 +1,7 @@
 import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 import { scrollTargetIntoViewNearest } from "../scrollTargetIntoViewNearest";
 
-// polls the DOM until an element renders (e.g. after the accounts fetch resolves), then scrolls it into view
+// Polls the DOM until an element renders (e.g. after the accounts fetch resolves), then scrolls it into view.
 const waitForElement = (selector, timeout = 5000) => () =>
   new Promise((resolve) => {
     const start = Date.now();

@@ -4,7 +4,7 @@ import Login from "../pages/login";
 import ForgotPassword from "../pages/forgotpass";
 import ResetPassword from "../pages/resetpass";
 
-// Hosts the Login/ForgotPassword/ResetPassword modals as one unit since they switch between each other; shared by index.jsx and navbar.jsx
+// hosts Login/ForgotPassword/ResetPassword as one unit since they switch between each other; shared by index.jsx and navbar.jsx
 const AuthModals = forwardRef(function AuthModals(_props, ref) {
   const [showLogin, setShowLogin] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);

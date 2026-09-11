@@ -1,4 +1,3 @@
-/* Sidebar Styles */
 .map-sidebar {
   position: fixed;
   left: 0;
@@ -120,7 +119,6 @@
   transform: translateX(2px);
 }
 
-/* Sidebar Footer */
 .sidebar-footer {
   flex-shrink: 0;
   margin-top: auto;
@@ -177,7 +175,6 @@
   text-decoration: underline;
 }
 
-/* Button styling for footer links */
 .sidebar-footer-links button {
   background: none;
   border: none;
@@ -245,7 +242,6 @@
   opacity: 1;
 }
 
-/* Responsive Design */
 @media (max-height: 768px) {
   .map-sidebar {
     padding-bottom: 5px;

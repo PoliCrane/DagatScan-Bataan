@@ -41,15 +41,13 @@ const pageFallback = (
   </div>
 );
 
-// Route content fades on navigation instead of swapping instantly. Keyed on
-// pathname (not wrapping every individual <Route>) so this stays a small, low-risk
-// addition around the existing route table rather than a restructure of it.
-// Opacity-only, no y-offset: a transformed box's post-transform paint
-// contributes to its ancestor's scrollable overflow, which on the (fully
-// document-scrolling) landing/request-account pages flashed a scrollbar for
-// the transition's duration on every navigation — see SiteFooter.jsx for the
-// same mechanism's more visible instance. Routes wrapped in Layout aren't
-// affected either way (deep-survey.css locks html/body's own scrolling).
+// Route content fades on navigation, keyed on pathname rather than wrapping
+// every <Route> so this stays a small addition instead of a restructure.
+// Opacity-only, no y-offset: a transformed element's paint affects its
+// ancestor's scrollable overflow, which flashed a scrollbar during
+// transitions on the document-scrolling landing/request-account pages (same
+// issue as SiteFooter.jsx). Layout-wrapped routes are unaffected — deep-survey.css
+// locks their scrolling.
 function AnimatedRoutes() {
   const location = useLocation();
   return (

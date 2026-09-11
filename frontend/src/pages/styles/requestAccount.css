@@ -6,37 +6,28 @@
   min-height: 60vh;
 }
 
-/* .ds-landing's own background (var(--color-surface), a light page tone) would
-   otherwise paint over this page's fixed gradient backdrop below, since the
-   backdrop sits behind everything at z-index: -1. Only these two pages need it
-   disabled — index.jsx's actual landing content still wants .ds-landing's
-   default background where nothing else covers it. */
+/* .ds-landing's own background would otherwise paint over the fixed z-index:
+   -1 gradient backdrop below; disabled only for these two pages, since the
+   actual landing content still wants that default background. */
 .ds-landing:has(.request-account-section),
 .ds-landing:has(.register-apply-container),
 .ds-landing:has(.static-page-shell) {
   background: transparent;
 }
 
-/* Logged-in rendering (Layout-wrapped, not .ds-landing): .layout-content/.layout-main
-   each paint their own opaque background (layout.css, deep-survey.css) which — same
-   issue as .ds-landing above — sits in front of the fixed z-index: -1 backdrop below
-   in normal stacking order, hiding it. */
+/* Logged-in rendering (Layout-wrapped, not .ds-landing): .layout-content/
+   .layout-main paint their own opaque background, hiding the fixed z-index:
+   -1 backdrop below the same way .ds-landing's background does above. */
 .layout-content:has(.static-page-shell),
 .layout-main:has(.static-page-shell) {
   background: transparent;
 }
 
-/* Full-bleed backdrop for the Request Access pages — fixed positioning
-   anchors it to the viewport instead of this element's own (max-width-
-   constrained) box, so it reaches the page edges regardless of the
-   content column's width. z-index: -1 drops it behind this element's
-   static-positioned children within the same stacking context. Same style
-   of gradient wash as the index page (deep-survey-landing.css), but lighter
-   still — this photo is a bright aerial coastline shot, not the darker,
-   moodier hero photo the index page's own wash was tuned for, so even that
-   wash washed it out. The heading below carries its own text-shadow instead
-   of leaning on a heavy overlay for contrast. Stays safe for whatever image
-   eventually replaces this "temporary" one. */
+/* Full-bleed backdrop: fixed positioning anchors it to the viewport instead
+   of this element's max-width-constrained box, and z-index: -1 drops it
+   behind this element's own children. Lighter wash than the index page's
+   hero (deep-survey-landing.css) since this is a bright aerial photo, not a
+   dark moody one — the heading below carries its own text-shadow instead. */
 .request-account-section::before,
 .register-apply-container::before {
   content: "";
@@ -50,8 +41,7 @@
 }
 
 /* Same photo as Request Access, not tempoaboutBG.jpg — that file is a flat
-   gradient blob, not an actual photo, so reusing it here read as "just a
-   color" rather than an image. */
+   gradient blob, not an actual photo. */
 .static-page-shell::before {
   content: "";
   position: fixed;
@@ -79,7 +69,6 @@
   margin: 30px auto 0;
 }
 
-/* Account Registration form (register.jsx) */
 .register-apply-container {
   position: relative;
   max-width: 700px;
@@ -94,7 +83,7 @@
   padding: 40px;
 }
 
-/* Heading sits on the white card here, not directly on the dark page background */
+/* Heading sits on the white card here, not the dark page background. */
 .register-card .request-account-heading {
   color: var(--color-primary, #0077b6);
   text-shadow: none;

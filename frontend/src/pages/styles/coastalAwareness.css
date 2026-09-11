@@ -1,5 +1,3 @@
-/* Coastal Awareness Page Styles */
-
 .awareness-container {
   padding: 30px;
   background-color: #f5f5f5;
@@ -23,8 +21,8 @@
   overflow: hidden;
 }
 
-/* Dark wash so the text stays legible over the photo — same treatment as
-   the landing hero's .ds-hero-wash (deep-survey-landing.css). */
+/* Dark wash keeps text legible over the photo, same as the landing hero's
+   .ds-hero-wash (deep-survey-landing.css). */
 .awareness-hero::before {
   content: "";
   position: absolute;
@@ -170,7 +168,6 @@
   margin-bottom: 0;
 }
 
-/* Causes topic — Natural Processes / Human Interventions columns */
 .causes-columns {
   display: flex;
   gap: 20px;
@@ -231,10 +228,8 @@
   flex-shrink: 0;
 }
 
-/* Icons are black PNGs recolored via filter (same technique used for the
-   sidebar/dashboard icons elsewhere in this app) rather than swapping image
-   assets — these filter values were solved to reproduce the exact target
-   hex from a pure-black source. */
+/* Black PNGs recolored via filter, same technique as the sidebar/dashboard
+   icons — values solved to reproduce the exact target hex from black. */
 .causes-column-natural .causes-item-icon {
   filter: brightness(0) saturate(100%) invert(11%) sepia(79%) saturate(961%) hue-rotate(182deg) brightness(139%) contrast(110%);
 }
@@ -267,7 +262,6 @@
   color: #17354b;
 }
 
-/* Protection topic — Hard Engineering / Soft Engineering columns */
 .protection-columns {
   display: flex;
   gap: 20px;
@@ -362,7 +356,6 @@
   margin: 0;
 }
 
-/* Protection topic — Ecosystem-Based / Hybrid Solutions (full-width, below the two columns) */
 .protection-ecosystem {
   margin-top: 20px;
   background: #d4efef;
@@ -397,7 +390,6 @@
   flex: 1;
 }
 
-/* Protection topic — DENR/MGB source note */
 .protection-info-box {
   margin-top: 20px;
   background: #eaf4f8;
@@ -443,7 +435,6 @@
   text-decoration: underline;
 }
 
-/* Effects topic — 4 cards */
 .effects-cards {
   display: flex;
   gap: 20px;
@@ -487,9 +478,7 @@
   margin: 0;
 }
 
-/* Per-card font + icon color — icons are black PNGs recolored via filter,
-   same technique as the Causes icons above (values solved to reproduce the
-   exact target hex from a pure-black source). */
+/* Same recolor-via-filter technique as the Causes icons above. */
 .effects-card:nth-child(1) h4,
 .effects-card:nth-child(1) p {
   color: #2b0a4c;

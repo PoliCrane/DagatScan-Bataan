@@ -128,7 +128,6 @@ router.post(
   }
 );
 
-// LOGIN
 router.post("/login", loginLimiter, validate(schemas.login), async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -218,7 +217,6 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
   }
 });
 
-// FORGOT PASSWORD
 router.post("/forgot-password", passwordResetLimiter, validate(schemas.forgotPassword), async (req, res) => {
   try {
     const { email } = req.body;
@@ -261,7 +259,6 @@ router.post("/forgot-password", passwordResetLimiter, validate(schemas.forgotPas
   }
 });
 
-// RESET PASSWORD
 router.post("/reset-password", passwordResetLimiter, validate(schemas.resetPassword), async (req, res) => {
   try {
     const { email, resetCode, newPassword } = req.body;
@@ -338,7 +335,6 @@ router.post("/reset-password", passwordResetLimiter, validate(schemas.resetPassw
   }
 });
 
-// CHANGE PASSWORD
 router.post("/change-password", verifyToken, validate(schemas.changePassword), async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;

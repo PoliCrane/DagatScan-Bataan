@@ -128,7 +128,6 @@ img.legend-icon {
   color: var(--color-cyan, #38bdf8);
 }
 
-/* Bodies */
 .map-legend.map-legend .legend-content,
 .erosion-legend.erosion-legend .legend-content,
 .analysis-cards-container .analysis-card .card-content,
@@ -152,7 +151,6 @@ img.legend-icon {
   color: rgba(56, 189, 248, 0.8);
 }
 
-/* Legend entries */
 .map-legend.map-legend .risk-label,
 .erosion-legend.erosion-legend .legend-label {
   font-size: 12px;
@@ -177,7 +175,6 @@ img.legend-icon {
   color: #ffffff;
 }
 
-/* Readout rows */
 .analysis-cards-container .analysis-card .card-item,
 .coastal-summary-container .summary-card .card-item {
   display: flex;
@@ -246,8 +243,7 @@ img.legend-icon {
   color: #86efac;
 }
 
-/* Location's value is a place name/description, not a short numeric readout —
-   give it its own smaller, regular-weight treatment instead of the numeric stat style. */
+/* Location's value is a place name, not a numeric readout — smaller, regular weight instead of the stat-value style. */
 .analysis-cards-container .analysis-card .card-item--location .card-value {
   font-family: var(--font-sans, "Archivo", sans-serif);
   font-size: 0.85rem;
@@ -256,7 +252,6 @@ img.legend-icon {
   text-align: right;
 }
 
-/* Empty / placeholder copy */
 .analysis-cards-container .analysis-card .card-content > div:not(.card-item),
 .analysis-cards-container .no-data-message,
 .analysis-cards-container .select-message {
@@ -265,7 +260,7 @@ img.legend-icon {
   line-height: 1.6;
 }
 
-/* Form controls sized for real use, not 8px labels */
+/* Controls stay a legible size; only the labels use the small uppercase caps style. */
 .analysis-tools-container .form-label {
   font-size: 10px;
   font-weight: 700;
@@ -559,12 +554,10 @@ img.legend-icon {
   }
 }
 
-/* Satellite toggle clears the panel's own collapse handle (26px wide) plus a real gap,
-   and clears the panel itself instead of sitting under it when the panel is open.
-   Position/top/z-index/transition live here only — satelliteToggle.css used to
-   declare its own competing position/right/top, and being a component-level
-   import reached later in the module graph, it silently won the cascade tie and
-   reverted this offset. This is now the single source of truth for placement. */
+/* Position/top/z-index/transition for this toggle live here only — satelliteToggle.css
+   used to declare its own competing rules and, importing later in the module graph,
+   silently won the cascade and reverted this offset. This is now the single source
+   of truth for placement. */
 .satellite-toggle {
   position: fixed;
   top: 65px;
@@ -667,7 +660,6 @@ img.legend-icon {
   font-family: var(--font-sans, "Archivo", sans-serif);
 }
 
-/* PrimeReact controls inside the dark instrument panels */
 .analysis-tools-container .p-dropdown.form-select {
   width: 100%;
   min-height: 40px;
@@ -761,9 +753,7 @@ img.legend-icon {
 .erosion-legend.erosion-legend {
   top: auto;
   bottom: 22px;
-  /* Legacy mapLegend.css/erosionLegend.css still apply their own padding —
-     the header below owns all its own spacing now, so neutralize it here
-     rather than relying on that legacy file's negative-margin trick. */
+  /* Legacy mapLegend.css/erosionLegend.css still apply their own padding; neutralize it here since the header below now owns all its own spacing. */
   padding: 0;
 }
 

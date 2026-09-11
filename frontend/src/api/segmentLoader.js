@@ -1,5 +1,4 @@
-// Fetches real erosion data from the database and builds segment definitions.
-// Falls back to hardcoded segments if database data is unavailable.
+// Fetches real erosion data from the database and builds segment definitions; returns null so callers can fall back to hardcoded segments.
 
 import { classifyErosionRisk, getRiskColor } from "../utils/segmentData";
 
@@ -12,8 +11,7 @@ export { getRiskColor };
 export const fetchMunicipalitySegments = async (municipality, year = null) => {
   try {
     let url = `${API_BASE_URL}/api/shoreline/municipality/${encodeURIComponent(municipality)}/zones`;
-    
-    // If year specified, fetch only that year; otherwise fetch all and filter to latest
+
     if (year) {
       url += `?year=${year}`;
     }
@@ -28,7 +26,7 @@ export const fetchMunicipalitySegments = async (municipality, year = null) => {
     const data = await response.json();
     let zones = data.zones || [];
     
-    // If no specific year requested, filter to latest year only
+    // No year requested: show only the latest year's zones.
     if (!year && zones.length > 0) {
       const latestYear = Math.max(...zones.map(z => z.year));
       zones = zones.filter(z => z.year === latestYear);
@@ -37,29 +35,26 @@ export const fetchMunicipalitySegments = async (municipality, year = null) => {
       console.log(`✅ Loaded ${zones.length} zones for ${municipality} from database${year ? ` (year ${year})` : ''}`);
     }
 
-    // Convert database zones to segment format using actual stored geometries
     const segments = zones
-      .filter(zone => zone.geojsonData && zone.geojsonData.geometry) // Only include zones with geometry
+      .filter(zone => zone.geojsonData && zone.geojsonData.geometry)
       .map((zone) => {
-        // recompute risk from erosionRate (don't trust stored riskLevel); raw value passed through so null/undefined classifies as NO_DATA
+        // Recompute risk from erosionRate rather than trusting stored riskLevel; null/undefined passes through as NO_DATA.
         const calculatedRisk = classifyErosionRisk(zone.erosionRate);
 
-        // Extract coordinates from stored GeoJSON geometry
         const geometry = zone.geojsonData.geometry;
         let segmentCoords = [];
         
         if (geometry.type === "LineString") {
           segmentCoords = geometry.coordinates;
         } else if (geometry.type === "Polygon") {
-          segmentCoords = geometry.coordinates[0]; // Use outer ring
+          segmentCoords = geometry.coordinates[0]; // outer ring
         } else if (geometry.type === "MultiLineString") {
           segmentCoords = geometry.coordinates.flat();
         } else if (geometry.type === "MultiPolygon") {
           segmentCoords = geometry.coordinates.flat(2);
         }
 
-        // Convert from GeoJSON [lon, lat] to Leaflet [lat, lon] format
-        // GeoJSON: [120.65, 14.495] → Leaflet: [14.495, 120.65]
+        // GeoJSON is [lon, lat]; Leaflet needs [lat, lon] — swap here.
         const leafletCoords = segmentCoords.map(coord => [coord[1], coord[0]]);
 
         console.log(`📍 Segment ${zone.id}: erosionRate=${zone.erosionRate} → risk=${calculatedRisk}, coords converted: ${leafletCoords.length} points`);

@@ -1,21 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-// Shared footer used by both the landing page (index.jsx) and the Request
-// an Account page (requestAccount.jsx) so it isn't duplicated across the two.
+// shared by index.jsx and requestAccount.jsx to avoid duplicating the footer
 export default function SiteFooter() {
   const navigate = useNavigate();
 
   return (
     <motion.footer
       className="footer"
-      // Opacity-only: a translateY here would still visually work, but a
-      // transformed box's post-transform paint contributes to the page's
-      // scrollable overflow — since this is the last element on the page,
-      // that inflated document scrollHeight by the y-offset from first
-      // paint until this scrolled into view, flashing a scrollbar that
-      // "corrected itself" the moment the user scrolled (exactly when
-      // whileInView fires and the offset resolves to 0).
+      // opacity-only: a transform here would inflate the page's scrollHeight while off-screen
+      // (this is the last element), flashing a scrollbar that "fixes itself" once whileInView fires
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, amount: 0.2 }}

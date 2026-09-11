@@ -1,6 +1,4 @@
-/* Segment marker popup on Erosion Analysis's map — restyled to match the
-   reference card design (title + risk pill header, icon+text summary row,
-   divider, footer status row). See erosionanalysis.jsx's segment Popup. */
+/* Styles the segment marker popup rendered by erosionanalysis.jsx's Popup. */
 .ea-segment-popup .leaflet-popup-content-wrapper {
   border-radius: 12px;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);

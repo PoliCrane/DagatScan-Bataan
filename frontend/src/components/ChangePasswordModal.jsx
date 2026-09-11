@@ -15,7 +15,6 @@ export default function ChangePasswordModal({ isOpen, onClose, username }) {
   const [loading, setLoading] = useState(false);
   const [expandPassword, setExpandPassword] = useState(false);
 
-  // Password validation requirements
   const passwordRequirements = {
     minLength: newPassword.length >= 8,
     hasUppercase: /[A-Z]/.test(newPassword),
@@ -27,7 +26,6 @@ export default function ChangePasswordModal({ isOpen, onClose, username }) {
   const handleSave = async () => {
     setError("");
 
-    // Validation
     if (!currentPassword.trim()) {
       setError("Current password is required");
       return;
@@ -50,8 +48,6 @@ export default function ChangePasswordModal({ isOpen, onClose, username }) {
     }
 
     setLoading(true);
-
-    // Show loading dialog
     await showLoading("Changing password...", 2000);
 
     try {

@@ -1,6 +1,4 @@
-/* Fixed bottom-right position, independent of any page-specific floating
-   widgets (SatelliteToggle/legends/summary cards all live near the top) so
-   one placement works uniformly across every page that has this button. */
+/* Fixed bottom-right, clear of page-specific floating widgets (SatelliteToggle/legends/summary cards live near the top) so placement is uniform across every page. */
 .tour-info-btn {
   position: fixed;
   right: 24px;
@@ -21,8 +19,7 @@
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Scale on hover/press is driven by Framer Motion (TourInfoButton.jsx) now,
-   not CSS — this only owns the color changes so the two don't fight over transform. */
+/* Scale on hover/press is handled by Framer Motion (TourInfoButton.jsx); this only owns color so the two don't fight over transform. */
 .tour-info-btn:hover {
   border-color: rgba(56, 189, 248, 0.65);
   background: linear-gradient(180deg, rgba(18, 58, 99, 0.92), rgba(8, 25, 46, 0.94));

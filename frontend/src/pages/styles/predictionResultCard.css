@@ -1,4 +1,3 @@
-/* Prediction Result Card - Left Side Popup */
 .prediction-result-card {
   position: fixed;
   left: calc(76px + 15px);
@@ -13,10 +12,9 @@
   transition: top 0.2s ease, left 0.3s ease;
 }
 
-/* Shift right when the sidebar hover-expands (65px -> 224px, see
-   sidebar.css/admin-sidebar.css) so this card never overlaps it. Sits
-   inside .layout-main, so the sibling combinator reaches it via a
-   descendant selector rather than a direct sibling one. */
+/* Shifts right when the sidebar hover-expands (65px -> 224px) via a
+   descendant selector, since this card sits inside .layout-main rather than
+   as a direct sibling. */
 .map-sidebar:hover ~ .layout-main .prediction-result-card,
 .admin-sidebar:hover ~ .layout-main .prediction-result-card {
   left: calc(264px + 15px);
@@ -33,7 +31,6 @@
   }
 }
 
-/* Card Header */
 .prediction-result-card .card-header {
   display: flex;
   align-items: center;
@@ -56,7 +53,6 @@
   font-weight: 600;
 }
 
-/* Card Content */
 .prediction-result-card .card-content {
   display: flex;
   flex-direction: column;
@@ -66,7 +62,6 @@
   border-radius: 0 0 8px 8px;
 }
 
-/* Card Item */
 .prediction-result-card .card-item {
   display: flex;
   flex-direction: column;
@@ -94,7 +89,6 @@
   margin-left: 3px;
 }
 
-/* Clear Button */
 .prediction-result-card .clear-btn {
   margin-top: 15px;
   padding: 8px 16px;
@@ -119,7 +113,6 @@
   transform: scale(0.98);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .prediction-result-card {
     left: calc(76px + 10px);

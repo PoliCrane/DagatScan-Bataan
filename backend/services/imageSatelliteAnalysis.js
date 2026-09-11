@@ -4,7 +4,6 @@ const fs = require('fs');
 const { signedSeawardChanges, haversineMeters } = require('./geoUtils');
 const { PLAUSIBLE_MAX_RATE_M_PER_YEAR } = require('../config/constants');
 
-// Compares detected coastline against reference; computes erosion rate and accuracy metrics.
 async function compareWithReferenceCoastline(
   detectedCoastline,
   referenceCoastline,
@@ -197,7 +196,6 @@ function assessQuality(distances, erosionMetrics) {
   const issues = [];
   let overallQuality = 'High';
 
-  // Check detection consistency
   if (erosionMetrics.confidenceLevel < 0.6) {
     issues.push('Low confidence in distance measurements (high variation)');
     overallQuality = 'Low';
@@ -206,13 +204,11 @@ function assessQuality(distances, erosionMetrics) {
     overallQuality = 'Medium';
   }
 
-  // Check data point distribution
   if (distances.length < 50) {
     issues.push('Few measurement points (< 50)');
     if (overallQuality === 'High') overallQuality = 'Medium';
   }
 
-  // Check for mixed signals (both retreat and advance)
   if (
     erosionMetrics.retreatPercentage > 40 &&
     erosionMetrics.retreatPercentage < 60
@@ -220,7 +216,6 @@ function assessQuality(distances, erosionMetrics) {
     issues.push('Mixed signals (both retreat and advance detected)');
   }
 
-  // Check for outliers
   const outlierCount = distances.filter(
     (d) => Math.abs(d.distanceMeters) > erosionMetrics.standardDeviation * 3
   ).length;

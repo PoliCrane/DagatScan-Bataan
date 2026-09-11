@@ -1,6 +1,6 @@
 import { TUTORIAL_COMPLETE_STANDARD } from "../sharedCopy";
 
-// sets uploadType to "ndwi" then waits two animation frames for React to commit before scrolling to the target
+// Sets uploadType to "ndwi", then waits two animation frames for React to commit before scrolling to the target.
 const scrollNdwiTargetIntoView = (setUploadType, selector) => () =>
   new Promise((resolve) => {
     setUploadType("ndwi");

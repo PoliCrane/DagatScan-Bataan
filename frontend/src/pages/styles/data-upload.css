@@ -1,5 +1,3 @@
-/* Data Upload Page Styles */
-
 .data-upload-container {
   width: 100%;
   padding: 30px 20px;
@@ -7,7 +5,6 @@
   min-height: 0;
 }
 
-/* Header Section */
 .upload-header {
   margin-bottom: 40px;
   text-align: center;
@@ -28,7 +25,6 @@
   font-weight: 500;
 }
 
-/* Main Upload Section */
 .upload-main-section {
   background: white;
   border-radius: 12px;
@@ -37,10 +33,8 @@
   margin-bottom: 30px;
 }
 
-/* Toggle bar — only one of NDWI Generator / Satellite Image Upload is
-   mounted at a time, switched here. Full-width two-segment bar (rather than
-   small left-aligned pills) so it spans the same width as the wide card
-   below it. */
+/* Full-width two-segment bar, not small left-aligned pills, so it spans the
+   same width as the wide card below it. */
 .upload-type-toggle {
   display: flex;
   gap: 10px;
@@ -80,8 +74,8 @@
 .toggle-btn-icon {
   width: 18px;
   height: 18px;
-  /* Neutral gray by default; the same brand-blue tint used on
-     .dm-view-icon (Data Management) when this segment is active. */
+  /* Neutral gray by default; switches to the same tint as .dm-view-icon
+     (Data Management) when this segment is active. */
   filter: brightness(0) saturate(100%) invert(60%) sepia(4%) saturate(300%) hue-rotate(180deg) brightness(90%);
 }
 
@@ -89,17 +83,14 @@
   filter: brightness(0) saturate(100%) invert(31%) sepia(84%) saturate(1729%) hue-rotate(175deg) brightness(96%) contrast(101%);
 }
 
-/* File Upload area — only the active card (per uploadType) renders inside
-   this wrapper, so it's a centered single column, not a grid. Widened past
-   the old two-card layout's cap since the single visible card now gets the
-   full width to itself. */
+/* Only the active card (per uploadType) renders inside this wrapper, so
+   it's a centered single column, not a grid. */
 .upload-files-grid {
   display: block;
   margin: 0 auto 40px;
   max-width: 1200px;
 }
 
-/* Upload Card */
 .upload-card {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
@@ -137,9 +128,8 @@
   font-weight: 400;
 }
 
-/* Small uppercase eyebrow labels that mark off a card's internal sections
-   (dropzone, bounds, location details) now that the Satellite card holds
-   several of these in one place instead of one big heading partway down. */
+/* Marks off a card's internal sections (dropzone, bounds, location details)
+   now that the Satellite card holds several in one place. */
 .upload-section-label {
   margin: 0 0 10px;
   font-size: 0.78rem;
@@ -160,10 +150,9 @@
   letter-spacing: 0.5px;
 }
 
-/* Card header icon badges — source PNGs are plain solid-black glyphs (same
-   as the Data Management icon set); mask-image punches the glyph's shape
-   out of a solid white fill so it can sit inside a solid-colored circle,
-   matching the reference design's white-icon-on-filled-circle look. */
+/* Source PNGs are solid-black glyphs (same as Data Management); mask-image
+   punches the shape out of a solid white fill for the white-icon-on-filled-
+   circle look. */
 .upload-card-icon-badge {
   width: 36px;
   height: 36px;
@@ -177,9 +166,7 @@
 .upload-card-icon-badge img {
   width: 18px;
   height: 18px;
-  /* Render the glyph as solid white regardless of the source PNG's own
-     black fill — brightness(0) forces pure black, invert(1) flips it to
-     pure white. */
+  /* brightness(0) forces pure black, invert(1) flips it to pure white. */
   filter: brightness(0) invert(1);
 }
 
@@ -191,7 +178,6 @@
   background: linear-gradient(135deg, #2f9e44 0%, #37b24d 100%);
 }
 
-/* Inline icons on the Generate/Upload/Clear buttons. */
 .btn-icon {
   width: 16px;
   height: 16px;
@@ -200,13 +186,12 @@
   filter: brightness(0) invert(1);
 }
 
-/* .btn-reset has a light background + dark text, so its icon stays dark
-   instead of the white used on .btn-upload's blue background. */
+/* .btn-reset has a light background, so its icon stays dark instead of the
+   white used on .btn-upload's blue background. */
 .btn-icon-dark {
   filter: brightness(0) saturate(100%) invert(20%) sepia(9%) saturate(1017%) hue-rotate(179deg) brightness(94%) contrast(87%);
 }
 
-/* Drop Zone */
 .upload-drop-zone {
   border: 2px dashed #cbd5e0;
   border-radius: 8px;
@@ -237,8 +222,7 @@
 
 .placeholder-icon {
   /* Sized to match the 60x60 <img> actually rendered inside it (DataUpload.jsx) —
-     this was previously 20px, so the image overflowed the wrapper's box by
-     40px with nothing to clip it, visually overlapping the text below. */
+     was 20px, so the image overflowed the box and overlapped the text below. */
   width: 60px;
   height: 60px;
   display: flex;
@@ -261,7 +245,6 @@
   align-items: center;
 }
 
-/* File Selected Display */
 .file-selected-display {
   display: flex;
   flex-direction: column;
@@ -289,7 +272,6 @@
   color: #718096;
 }
 
-/* Satellite Upload — two-column layout: dropzone left, bounds compass right */
 .satellite-upload-body {
   display: grid;
   grid-template-columns: 1fr 1.1fr;
@@ -328,9 +310,8 @@
   letter-spacing: normal;
 }
 
-/* Compass layout: North on top, South on bottom, West/East either side of a
-   center marker — mirrors how the bounds map onto the image geographically,
-   instead of a plain reading-order grid. */
+/* North/South/West/East placed to mirror how the bounds map onto the image
+   geographically, instead of a plain reading-order grid. */
 .bounds-compass {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -371,7 +352,6 @@
   }
 }
 
-/* Location & Metadata Section */
 .location-metadata-section {
   margin-top: 24px;
   margin-bottom: 20px;
@@ -435,7 +415,6 @@
   min-height: 100px;
 }
 
-/* Upload Progress Section */
 .upload-progress-section {
   background: #e0f2fe;
   border: 1px solid #0096c7;
@@ -478,8 +457,8 @@
   transition: width 0.3s ease;
 }
 
-/* Processing phase has no byte-level signal to measure, so the fill sweeps
-   back and forth rather than sitting at a false 100% while the server works. */
+/* No byte-level signal to measure during processing, so the fill sweeps
+   back and forth rather than sitting at a false 100%. */
 .progress-bar-fill.progress-bar-indeterminate {
   width: 40% !important;
   animation: progressSweep 1.2s ease-in-out infinite;
@@ -497,7 +476,6 @@
   color: #4a5568;
 }
 
-/* Upload Results */
 .upload-results-section {
   background: #f9fafb;
   border-radius: 8px;
@@ -577,7 +555,6 @@
   font-weight: 500;
 }
 
-/* Upload Actions */
 .upload-actions {
   display: flex;
   gap: 12px;
@@ -630,7 +607,6 @@
   cursor: not-allowed;
 }
 
-/* Information Panel */
 .info-panel {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -674,7 +650,6 @@
   font-size: 0.9rem;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .data-upload-container {
     padding: 20px 15px;
@@ -724,7 +699,6 @@
   }
 }
 
-/* Animations */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -742,8 +716,8 @@
   animation: slideIn 0.3s ease-out;
 }
 
-/* Single-year generation's progress card — icon badge + headline/subtext,
-   same visual language the old multi-year batch panel used. */
+/* Same icon badge + headline/subtext visual language as the old multi-year
+   batch panel. */
 .ndwi-single-progress {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -810,9 +784,9 @@
   flex-shrink: 0;
 }
 
-/* Inline "Generate All Years" progress panel — see NdwiBatchPanel in
-   DataUpload.jsx. The floating NdwiGenerationWidget (ndwi-generation-widget.css)
-   mirrors the same job in a compact form on every other page. */
+/* Inline "Generate All Years" progress panel (NdwiBatchPanel in
+   DataUpload.jsx). The floating NdwiGenerationWidget
+   (ndwi-generation-widget.css) mirrors the same job on every other page. */
 .ndwi-batch-panel {
   background: #f8fafc;
   border: 1px solid #e2e8f0;

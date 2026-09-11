@@ -16,7 +16,7 @@ import { useNdwiGeneration } from "../../contexts/NdwiGenerationContext";
 import { API_BASE_URL } from "../../config/api";
 export default function DataUpload() {
 
-  // Satellite upload is hidden (not deleted) — flip to true to bring it back
+  // Satellite upload hidden but not removed; flip to true to restore.
   const SHOW_SATELLITE_UPLOAD = false;
 
   const [uploadType, setUploadType] = useState("ndwi");
@@ -27,7 +27,7 @@ export default function DataUpload() {
   const [uploadResults, setUploadResults] = useState([]);
   const dataUploadSteps = useMemo(() => buildDataUploadSteps(setUploadType), [setUploadType]);
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DATA_UPLOAD, dataUploadSteps);
-  // "uploading" caps at 90% byte progress; "processing" is indeterminate (server has no byte signal)
+  // "uploading" caps at 90% byte progress; "processing" is indeterminate since the server has no byte signal.
   const [uploadPhase, setUploadPhase] = useState("idle");
 
   // NDWI Generator fields
@@ -37,10 +37,10 @@ export default function DataUpload() {
   const [ndwiLatMax, setNdwiLatMax] = useState("");
   const [ndwiYear, setNdwiYear] = useState(new Date().getFullYear().toString());
   const [ndwiCoastlineName, setNdwiCoastlineName] = useState("");
-  // Only pre-request validation errors; generation state lives in NdwiGenerationContext below
+  // Only pre-request validation errors; generation state lives in NdwiGenerationContext below.
   const [ndwiError, setNdwiError] = useState(null);
 
-  // Tracked app-wide so progress survives navigating away and a second click can't start a duplicate request
+  // Tracked app-wide so progress survives navigating away, and a second click can't start a duplicate request.
   const ndwiGeneration = useNdwiGeneration();
 
   // Location & Metadata Fields
@@ -78,7 +78,7 @@ export default function DataUpload() {
     (_, i) => (2026 - i).toString()
   ).sort();
 
-  // NDWI card has no location concept of its own, so this feeds the Coastline Name dropdown
+  // NDWI card has no location concept of its own, so this feeds the Coastline Name dropdown.
   const [ndwiMunicipality, setNdwiMunicipality] = useState("");
 
   const extractGeoJSONProperties = (file) => {
@@ -89,7 +89,7 @@ export default function DataUpload() {
         const features = geojson.features || (geojson.type === "Feature" ? [geojson] : []);
         if (features.length === 0) return;
 
-        // Collect all properties from all features, first non-null wins per field
+        // Collect properties across all features; first non-null value wins per field.
         const props = {};
         for (const feature of features) {
           const p = feature.properties || {};
@@ -100,7 +100,6 @@ export default function DataUpload() {
           }
         }
 
-        // Municipality: match against known list (case-insensitive)
         const muniKeys = ["municipality", "muni", "city", "town", "lgu"];
         for (const key of muniKeys) {
           const val = props[key];
@@ -115,7 +114,6 @@ export default function DataUpload() {
           }
         }
 
-        // Specific area / location
         const areaKeys = ["specific_area", "location", "area", "name", "zone", "barangay", "sitio", "place"];
         for (const key of areaKeys) {
           if (props[key]) {
@@ -124,7 +122,6 @@ export default function DataUpload() {
           }
         }
 
-        // Year
         const yearKeys = ["year", "data_year", "datayear", "survey_year", "date_year"];
         for (const key of yearKeys) {
           const val = props[key];
@@ -138,18 +135,18 @@ export default function DataUpload() {
         }
 
       } catch {
-        // Silently ignore parse errors — invalid GeoJSON will be caught on upload
+        // Ignore parse errors here — invalid GeoJSON is caught on upload instead.
       }
     };
     reader.readAsText(file);
   };
 
-  // Accepts decimal degrees, symbol-based DMS, or raw concatenated DMS with no separators
+  // Accepts decimal degrees, symbol-based DMS, or raw concatenated DMS with no separators.
   const parseDMSOrDecimal = (value) => {
     if (!value) return null;
     const str = value.trim();
 
-    // Symbol-based DMS, e.g. 14°32'34.39"N
+    // Symbol-based DMS, e.g. 14°32'34.39"N.
     const dmsRegex = /(\d+(?:\.\d+)?)[°\s]+(\d+(?:\.\d+)?)['’′\s]+(\d+(?:\.\d+)?)["”″]?\s*([NSEW])?/i;
     const dmsMatch = str.match(dmsRegex);
     if (dmsMatch) {
@@ -159,7 +156,7 @@ export default function DataUpload() {
       return decimal;
     }
 
-    // Raw concatenated DMS with no separators, e.g. 143234.87 -> deg=14 min=32 sec=34.87
+    // Raw concatenated DMS with no separators, e.g. 143234.87 -> deg=14 min=32 sec=34.87.
     const rawMatch = str.match(/^(\d{5,7})(\.\d+)?\s*([NSEW])?$/i);
     if (rawMatch) {
       const [, intPart, frac = "", dir] = rawMatch;
@@ -173,7 +170,7 @@ export default function DataUpload() {
       }
     }
 
-    // Plain decimal degrees, e.g. 14.542886
+    // Plain decimal degrees, e.g. 14.542886.
     if (/^-?\d+(\.\d+)?$/.test(str)) {
       return parseFloat(str);
     }
@@ -231,7 +228,7 @@ export default function DataUpload() {
     return { valid: errors.length === 0, errors };
   };
 
-  // Shared validation/parsing for both single-year and "all years" NDWI generation
+  // Shared validation/parsing for both single-year and "all years" NDWI generation.
   const validateAndParseNdwiInputs = () => {
     if (!ndwiLonMin || !ndwiLatMin || !ndwiLonMax || !ndwiLatMax) {
       return { error: "All bounds fields are required" };
@@ -243,7 +240,6 @@ export default function DataUpload() {
       return { error: "Coastline name is required" };
     }
 
-    // Accepts decimal degrees or DMS (e.g. 14°33'54.17"N).
     const lonMinParsed = parseDMSOrDecimal(ndwiLonMin);
     const latMinParsed = parseDMSOrDecimal(ndwiLatMin);
     const lonMaxParsed = parseDMSOrDecimal(ndwiLonMax);
@@ -364,7 +360,7 @@ export default function DataUpload() {
 
       const xhr = new XMLHttpRequest();
 
-      // Cap at 90% so the "processing" phase doesn't look stuck at 100%.
+      // Reserve the last 10% for the processing phase.
       xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
           const percentComplete = (e.loaded / e.total) * 90;
@@ -385,7 +381,7 @@ export default function DataUpload() {
           const response = JSON.parse(xhr.responseText);
           setUploadResults(response.uploads || []);
 
-          // Leave image bounds filled in — reuploading another year for the same scene needs them again
+          // Leave image bounds filled in — reuploading another year for the same scene needs them again.
           setDatasetFile(null);
           setSatelliteFile(null);
           if (datasetInputRef.current) datasetInputRef.current.value = "";
@@ -443,23 +439,9 @@ export default function DataUpload() {
               <img src="/NDWI.png" alt="" className="toggle-btn-icon" />
               NDWI Generator
             </button>
-            {/*
-              Satellite Image Upload hidden — NDWI-only scope now. Uncomment to bring back,
-              plus the matching card block below.
-              <button
-                type="button"
-                className={`toggle-btn ${uploadType === "satellite" ? "active" : ""}`}
-                onClick={() => setUploadType("satellite")}
-              >
-                <img src="/uploadSatellite.png" alt="" className="toggle-btn-icon" />
-                Satellite Image Upload
-              </button>
-            */}
           </div>
 
-          {/* GeoJSON temporarily disabled */}
           <div className="upload-files-grid">
-            {/* NDWI Generator */}
             {uploadType === "ndwi" && (
             <div className="upload-card">
               <div className="upload-card-header">
@@ -614,7 +596,6 @@ export default function DataUpload() {
             </div>
             )}
 
-            {/* Satellite Image Upload — hidden via SHOW_SATELLITE_UPLOAD */}
             {SHOW_SATELLITE_UPLOAD && uploadType === "satellite" && (
             <div className="upload-card">
               <div className="upload-card-header">

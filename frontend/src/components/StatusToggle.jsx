@@ -1,6 +1,4 @@
-// Toggle-switch icon for active/inactive state. Purely visual + click handler;
-// confirmation and the API call live in the parent. Inline SVG so both states
-// can be recolored from one shape. Labels default to account wording.
+// visual toggle only — confirmation and the API call live in the parent; inline SVG so both states share one recolorable shape
 export default function StatusToggle({
   active,
   onToggle,
