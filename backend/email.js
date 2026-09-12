@@ -67,7 +67,7 @@ const sendPasswordResetEmail = async (email, resetCode) => {
   }
 };
 
-const sendAccountApprovedEmail = async (email, username, municipalityName) => {
+const sendAccountApprovedEmail = async (email, username, password, municipalityName) => {
   try {
     await sendViaBrevo({
       to: email,
@@ -75,14 +75,16 @@ const sendAccountApprovedEmail = async (email, username, municipalityName) => {
       html: emailTemplate(
         "Account Approved",
         `
-        <p>Your DagatScan Bataan account request${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""} has been approved.</p>
+        <p>Your DagatScan Bataan account request${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""} has been approved. You can log in with the credentials below.</p>
 
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
           <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
-          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(username)}</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(username)}</p>
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Password:</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(password)}</p>
         </div>
 
-        <p>Your administrator will provide your initial password separately. If you do not receive it, use the <strong>Forgot Password</strong> option on the login page with this email address to set your own password.</p>
+        <p>Log in at the DagatScan Bataan website using this email address and the password above.</p>
         <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it after your first login.</p>
         `
       )
@@ -95,7 +97,7 @@ const sendAccountApprovedEmail = async (email, username, municipalityName) => {
   }
 };
 
-const sendAccountCreatedEmail = async (email, username, municipalityName) => {
+const sendAccountCreatedEmail = async (email, username, password, municipalityName) => {
   try {
     await sendViaBrevo({
       to: email,
@@ -103,14 +105,16 @@ const sendAccountCreatedEmail = async (email, username, municipalityName) => {
       html: emailTemplate(
         "Account Created",
         `
-        <p>An administrator has created a DagatScan Bataan account for you${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""}.</p>
+        <p>An administrator has created a DagatScan Bataan account for you${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""}. You can log in with the credentials below.</p>
 
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
           <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
-          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(username)}</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(username)}</p>
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Password:</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(password)}</p>
         </div>
 
-        <p>Your administrator will provide your initial password separately. If you do not receive it, use the <strong>Forgot Password</strong> option on the login page with this email address to set your own password.</p>
+        <p>Log in at the DagatScan Bataan website using this email address and the password above.</p>
         <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it after your first login.</p>
         `
       )

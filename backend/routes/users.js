@@ -233,7 +233,7 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
       user: newUser.rows[0]
     });
 
-    sendAccountCreatedEmail(email, username, municipality?.rows?.[0]?.name ?? null).catch((err) => {
+    sendAccountCreatedEmail(email, username, password, municipality?.rows?.[0]?.name ?? null).catch((err) => {
       logger.error(`Failed to send account-created email to ${email}:`, err.message);
     });
 
@@ -445,7 +445,7 @@ router.post("/account-requests/:id/approve", validate(schemas.approveRequest), a
     res.json({ message: "Request approved and account created", user: newUser.rows[0] });
 
     // fire-and-forget — a slow/failed email shouldn't block the response
-    sendAccountApprovedEmail(request.email, request.username, request.municipality_name).catch((err) => {
+    sendAccountApprovedEmail(request.email, request.username, password, request.municipality_name).catch((err) => {
       logger.error(`Failed to send account-approved email to ${request.email}:`, err.message);
     });
 

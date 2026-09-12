@@ -55,7 +55,10 @@ All of these were tested live and must still hold in production:
 
 - [ ] `localStorage.setItem("roles","superadmin")` in the browser console does NOT open
       admin pages (ProtectedRoute checks the real session; the backend re-checks the DB).
-- [ ] No plaintext passwords in any email; approval email instructs Forgot Password.
+- [ ] Approve Request and Add Account emails include the actual username/password —
+      a deliberate exception for these superadmin-issued, out-of-band accounts (not
+      public self-service). If asked, be ready to explain the tradeoff rather than
+      claim passwords are never emailed.
 - [ ] Old request-letter PDFs have been deleted from the PUBLIC Supabase bucket
       (new ones go to the private bucket automatically).
 
