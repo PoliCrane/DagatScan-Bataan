@@ -7,6 +7,26 @@ const { createClient } = require("@supabase/supabase-js");
 
 const BUCKET_NAME = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
 
+// Supabase Storage can't infer a MIME type from a raw Buffer the way it would
+// from a browser File/Blob — without this, .upload() silently defaults to
+// text/plain, which made PDFs (and everything else) get served back with the
+// wrong Content-Type and render as garbled text instead of opening properly.
+const CONTENT_TYPES = {
+  ".pdf": "application/pdf",
+  ".json": "application/json",
+  ".geojson": "application/geo+json",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+};
+
+function contentTypeFor(storagePath) {
+  const ext = storagePath.slice(storagePath.lastIndexOf(".")).toLowerCase();
+  return CONTENT_TYPES[ext] || "application/octet-stream";
+}
+
 let client = null;
 function getClient() {
   if (client) return client;
@@ -44,7 +64,7 @@ async function uploadLocalFile(localFilePath, storagePath) {
 
   const { error } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(storagePath, buffer, { upsert: true });
+    .upload(storagePath, buffer, { upsert: true, contentType: contentTypeFor(storagePath) });
   if (error) throw new Error(`Supabase upload failed for ${storagePath}: ${error.message}`);
 
   const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
@@ -56,7 +76,7 @@ async function uploadBuffer(buffer, storagePath) {
   const supabase = getClient();
   const { error } = await supabase.storage
     .from(BUCKET_NAME)
-    .upload(storagePath, buffer, { upsert: true });
+    .upload(storagePath, buffer, { upsert: true, contentType: contentTypeFor(storagePath) });
   if (error) throw new Error(`Supabase upload failed for ${storagePath}: ${error.message}`);
 
   const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
@@ -85,7 +105,7 @@ async function uploadPrivateFile(localFilePath, storagePath) {
 
   const { error } = await supabase.storage
     .from(PRIVATE_BUCKET_NAME)
-    .upload(storagePath, buffer, { upsert: true });
+    .upload(storagePath, buffer, { upsert: true, contentType: contentTypeFor(storagePath) });
   if (error) throw new Error(`Private upload failed for ${storagePath}: ${error.message}`);
   return storagePath;
 }
@@ -111,11 +131,18 @@ async function downloadToLocalFile(storagePath, localFilePath) {
   fs.writeFileSync(localFilePath, Buffer.from(arrayBuffer));
 }
 
-/** Best-effort delete — a missing object shouldn't fail an otherwise-committed action. */
+/** Best-effort delete from the public bucket — a missing object shouldn't fail an otherwise-committed action. */
 async function deleteFromStorage(storagePath) {
   const supabase = getClient();
   const { error } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
   if (error) logger.error(`Supabase delete failed for ${storagePath}:`, error.message);
+}
+
+/** Same as deleteFromStorage, but for the private (request-letters) bucket. */
+async function deletePrivateFile(storagePath) {
+  const supabase = getClient();
+  const { error } = await supabase.storage.from(PRIVATE_BUCKET_NAME).remove([storagePath]);
+  if (error) logger.error(`Supabase private delete failed for ${storagePath}:`, error.message);
 }
 
 module.exports = {
@@ -128,4 +155,5 @@ module.exports = {
   getPrivateSignedUrl,
   downloadToLocalFile,
   deleteFromStorage,
+  deletePrivateFile,
 };

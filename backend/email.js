@@ -95,6 +95,34 @@ const sendAccountApprovedEmail = async (email, username, municipalityName) => {
   }
 };
 
+const sendAccountCreatedEmail = async (email, username, municipalityName) => {
+  try {
+    await sendViaBrevo({
+      to: email,
+      subject: "Your DagatScan Bataan account has been created",
+      html: emailTemplate(
+        "Account Created",
+        `
+        <p>An administrator has created a DagatScan Bataan account for you${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""}.</p>
+
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(username)}</p>
+        </div>
+
+        <p>Your administrator will provide your initial password separately. If you do not receive it, use the <strong>Forgot Password</strong> option on the login page with this email address to set your own password.</p>
+        <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it after your first login.</p>
+        `
+      )
+    });
+    console.log(`Account created email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to send account created email:", error);
+    throw error;
+  }
+};
+
 const sendAccountDeactivatedEmail = async (email, username) => {
   try {
     await sendViaBrevo({
@@ -205,6 +233,7 @@ module.exports = {
   sendRiskEscalationEmail,
   sendPasswordResetEmail,
   sendAccountApprovedEmail,
+  sendAccountCreatedEmail,
   sendAccountDeactivatedEmail,
   sendAccountReactivatedEmail,
   sendBackupFailureEmail,

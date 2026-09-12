@@ -7,6 +7,7 @@ const pool = require("../db");
 const { getPrivateSignedUrl } = require("../services/supabaseStorage");
 const {
   sendAccountApprovedEmail,
+  sendAccountCreatedEmail,
   sendAccountDeactivatedEmail,
   sendAccountReactivatedEmail,
 } = require("../email");
@@ -204,7 +205,7 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
 
     const [municipality, existingUser] = await Promise.all([
       userRole === "municipal"
-        ? pool.query("SELECT id FROM municipalities WHERE id = $1", [req.body.municipality_id])
+        ? pool.query("SELECT id, name FROM municipalities WHERE id = $1", [req.body.municipality_id])
         : Promise.resolve(null),
       pool.query("SELECT * FROM users WHERE email = $1 OR username = $2", [email, username]),
     ]);
@@ -230,6 +231,10 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
     res.json({
       message: "User account created successfully",
       user: newUser.rows[0]
+    });
+
+    sendAccountCreatedEmail(email, username, municipality?.rows?.[0]?.name ?? null).catch((err) => {
+      logger.error(`Failed to send account-created email to ${email}:`, err.message);
     });
 
     logAction(null, {
