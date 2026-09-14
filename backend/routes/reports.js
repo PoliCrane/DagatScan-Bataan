@@ -442,7 +442,10 @@ router.get("/:zoneId/pdf/print", (req, res) => {
   const frontendOrigins = getFrontendOrigins().join(" ");
   res.setHeader(
     "Content-Security-Policy",
-    `default-src 'self'; frame-src 'self'; frame-ancestors 'self' ${frontendOrigins}; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';`
+    // frame-src needs blob: (not just 'self') — the iframe loads the PDF via a fetched
+    // Blob object URL rather than the network URL directly, a workaround for a Chromium
+    // bug where printing a page with a *network*-sourced embedded PDF renders blank.
+    `default-src 'self'; frame-src 'self' blob:; frame-ancestors 'self' ${frontendOrigins}; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';`
   );
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(`<!DOCTYPE html>
