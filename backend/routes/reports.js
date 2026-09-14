@@ -224,10 +224,26 @@ router.get("/:zoneId/pdf", async (req, res) => {
     doc.strokeColor(PRIMARY).lineWidth(1.5).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
     doc.moveDown(1);
 
-    // Section header: pale band + colored accent bar, echoing the app's card-header look
-    const addSectionHeader = (title) => {
+    // Every draw call in this report uses an explicit, already-captured y coordinate
+    // (rect/text at a fixed y), which never triggers pdfkit's own automatic pagination —
+    // that only happens for flowing text() calls with no explicit position. Without this,
+    // a section header can land a few points above the bottom margin, get drawn there
+    // anyway, and then have its body content auto-flow onto the next page, stranding the
+    // header alone. Call before each section header with the space it (and, ideally, a
+    // known/measured height of its body) will need.
+    const ensureSpace = (neededHeight) => {
+      const bottom = doc.page.height - doc.page.margins.bottom;
+      if (doc.y + neededHeight > bottom) doc.addPage();
+    };
+
+    // Section header: pale band + colored accent bar, echoing the app's card-header look.
+    // minBodyHeight is the caller's best estimate of the section's own content height, so
+    // the header never gets drawn right at the bottom of a page only for its body to spill
+    // onto the next one.
+    const addSectionHeader = (title, minBodyHeight = 80) => {
       doc.x = 50;
       doc.moveDown(0.4);
+      ensureSpace(22 + 10 + minBodyHeight);
       const bandY = doc.y;
       const bandH = 22;
       doc.rect(50, bandY, 495, bandH).fill(BAND_BG);
@@ -285,7 +301,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
     addRow("Specific Area:", specificArea);
     addRow("Year Analyzed:", String(row.year));
 
-    addSectionHeader("Map");
+    addSectionHeader("Map", 240 + 30); // map box (240) + legend row (~30)
     const mapBox = { x: 50, y: doc.y, w: 495, h: 240 };
 
     let mapImageBuffer = null;
@@ -402,7 +418,6 @@ router.get("/:zoneId/pdf", async (req, res) => {
       }
     }
 
-    addSectionHeader("Interpretation");
     const interpretation = buildInterpretation({
       specificArea,
       baselineYear: baselineRow?.year,
@@ -410,6 +425,11 @@ router.get("/:zoneId/pdf", async (req, res) => {
       erosionRate,
       riskLevel,
     });
+    // Measured up front (length varies with area name/dates/rate) so the section header
+    // never gets stranded at a page bottom with the paragraph itself spilling to the next.
+    doc.font("Body").fontSize(10.5);
+    const interpretationHeight = doc.heightOfString(interpretation, { width: 495, lineGap: 3 });
+    addSectionHeader("Interpretation", interpretationHeight);
     doc.font("Body").fontSize(10.5).fillColor(INK).text(interpretation, { align: "left", lineGap: 3 });
 
     doc.moveDown(1.5);
