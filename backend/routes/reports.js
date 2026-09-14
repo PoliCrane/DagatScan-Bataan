@@ -329,7 +329,15 @@ router.get("/:zoneId/pdf", async (req, res) => {
     }
 
     if (mapImageBuffer) {
-      doc.image(mapImageBuffer, mapBox.x, mapBox.y, { width: mapBox.w, height: mapBox.h });
+      // fit (aspect-preserving) rather than width+height (which stretches) — the rendered
+      // basemap keeps the area's true shape, so it letterboxes inside the fixed box. The
+      // tinted backdrop fills whatever margin that leaves, so the box still reads as solid.
+      doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).fill(BAND_BG);
+      doc.image(mapImageBuffer, mapBox.x, mapBox.y, {
+        fit: [mapBox.w, mapBox.h],
+        align: "center",
+        valign: "center",
+      });
       doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).lineWidth(1).stroke(MAP_BORDER);
     } else {
       doc.rect(mapBox.x, mapBox.y, mapBox.w, mapBox.h).fill(BAND_BG);
@@ -446,6 +454,62 @@ router.get("/:zoneId/pdf", async (req, res) => {
     logger.error("Error generating report PDF:", err.message);
     res.status(500).json({ error: "Failed to generate report PDF", details: err.message });
   }
+});
+
+// Same-origin print wrapper, so clicking Print opens the print dialog directly instead of
+// just showing the PDF. window.print() is only legal on a document sharing the caller's
+// origin, and the PDF above is cross-origin to the frontend — hence this page being served
+// from the backend itself rather than the frontend calling print on a popup handle.
+router.get("/:zoneId/pdf/print", (req, res) => {
+  const { zoneId } = req.params;
+  if (!/^\d+$/.test(zoneId)) {
+    return res.status(400).send("zoneId must be a positive integer");
+  }
+
+  const frontendOrigins = getFrontendOrigins().join(" ");
+  res.setHeader(
+    "Content-Security-Policy",
+    // frame-src must list blob: explicitly — 'self' does not cover blob: URLs, and the
+    // iframe below is fed one. Without it the browser blocks the frame outright.
+    `default-src 'self'; frame-src 'self' blob:; frame-ancestors 'self' ${frontendOrigins}; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';`
+  );
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Print report</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  iframe { width: 100%; height: 100%; border: none; display: block; }
+</style>
+</head>
+<body>
+  <iframe id="pdf-frame"></iframe>
+  <script>
+    // The PDF is loaded as a Blob object URL rather than straight from the network URL:
+    // Chromium's built-in viewer doesn't reliably render into the parent page's print
+    // output when its source is a live request, which produced a blank print preview.
+    fetch("/api/reports/${zoneId}/pdf")
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load PDF (status " + res.status + ")");
+        return res.blob();
+      })
+      .then(function (blob) {
+        document.getElementById("pdf-frame").src = URL.createObjectURL(blob);
+        // Lets the viewer finish its first render pass — printing immediately can catch it
+        // mid-layout and produce a blank or partial preview.
+        setTimeout(function () {
+          window.focus();
+          window.print();
+        }, 500);
+      })
+      .catch(function (err) {
+        document.body.textContent = "Could not load the report for printing: " + err.message;
+      });
+  </script>
+</body>
+</html>`);
 });
 
 module.exports = router;

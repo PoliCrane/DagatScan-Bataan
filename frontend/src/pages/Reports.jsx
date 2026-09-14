@@ -106,6 +106,7 @@ export default function Reports() {
       erosionRate: seg.erosionRate,
       riskLevel: seg.riskLevel || "UNKNOWN",
       pdfUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf`,
+      printUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf/print`,
     }));
   }, [allSegments]);
 
@@ -151,11 +152,10 @@ export default function Reports() {
 
   const handlePrintPdf = (record, e) => {
     e.stopPropagation();
-    // Opens the PDF directly (same as View) rather than an auto-print wrapper — printing
-    // an *embedded* PDF (iframe/object) is unreliable in Chromium (blank pages, wrong
-    // pagination); opening the PDF as its own tab and printing from the native viewer,
-    // which the user does with one extra click, is the only reliably-correct path.
-    window.open(record.pdfUrl, "_blank", "noopener,noreferrer");
+    // printUrl is a same-origin HTML wrapper that loads the PDF as a blob and calls
+    // window.print() itself, so this opens the print dialog directly — see
+    // GET /:zoneId/pdf/print in backend/routes/reports.js for why the wrapper is needed.
+    window.open(record.printUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleClosePreview = () => setSelectedRecord(null);

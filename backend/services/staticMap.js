@@ -141,8 +141,12 @@ async function renderShorelineMap({ bounds, lines, fillRibbon, outputWidth, outp
     .png()
     .toBuffer();
 
+  // "inside", not "fill" — the crop is already correctly proportioned by Web Mercator, so
+  // stretching it to an arbitrary output box distorts the coastline (a near-square area
+  // forced into a 2:1 box came out stretched ~2x horizontally). Callers draw the result
+  // aspect-preserved, so returning a smaller-than-requested image is expected.
   return sharp(cropped)
-    .resize(Math.round(outputWidth), Math.round(outputHeight), { fit: "fill" })
+    .resize(Math.round(outputWidth), Math.round(outputHeight), { fit: "inside" })
     .png()
     .toBuffer();
 }
