@@ -64,7 +64,9 @@ router.post("/generate-ndwi", verifyToken, verifyAdmin, async (req, res) => {
       });
     }
     const indexChoice = index === "mndwi" && yearNum >= SENTINEL_MIN_YEAR ? "mndwi" : "ndwi";
-    const seasonChoice = season === "dry" && yearNum >= SENTINEL_MIN_YEAR ? "dry" : "annual";
+    // 'dry' (March-April) is the default for every year, Sentinel or Landsat — pass
+    // season: "annual" explicitly to opt out (not exposed in any UI; debugging only).
+    const seasonChoice = season === "annual" ? "annual" : "dry";
 
     const safeName = (coastlineName || specificArea || "coastline").replace(/[^a-zA-Z0-9_-]/g, "_");
 

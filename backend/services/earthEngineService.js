@@ -118,39 +118,38 @@ function downloadToFile(url, destPath) {
   });
 }
 
-// masks cloud (8,9), cirrus (10), and cloud shadow (3) pixels via the Scene Classification band
-function maskSentinelClouds(image) {
-  const scl = image.select('SCL');
-  const clear = scl.neq(3).and(scl.neq(8)).and(scl.neq(9)).and(scl.neq(10));
-  return image.updateMask(clear);
-}
-
 // shared Sentinel-2 composite so NDWI and true-color read identical source pixels.
 // season 'dry' restricts to Nov-Apr scenes (consistent beach/tide state year-over-year,
 // PH dry season); 'annual' keeps the original whole-year behavior.
-function buildSentinelComposite(geometry, year, season = 'annual') {
+// No per-pixel cloud mask here (deliberately) — a per-pixel SCL mask was tried and
+// reverted: it leaves cloud/shadow pixels as nodata, which downstream shoreline
+// classification (ndwiMaskFromArray) has no "unknown" state for and always resolves
+// to "land," training the persistent CNN to trace a false coastline notch wherever a
+// scene had cloud/shadow. The CLOUDY_PIXEL_PERCENTAGE filter plus a whole-year median
+// already dilutes transient cloud contamination well enough without introducing nodata.
+function buildSentinelComposite(geometry, year, season = 'dry') {
   let collection = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
     .filterBounds(geometry)
     .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20));
 
-  if (season === 'dry') {
-    collection = collection.filter(
-      ee.Filter.or(
-        ee.Filter.date(`${year}-01-01`, `${year}-04-30`),
-        ee.Filter.date(`${year}-11-01`, `${year}-12-31`)
-      )
-    );
-  } else {
+  if (season === 'annual') {
     collection = collection.filterDate(`${year}-01-01`, `${year}-12-31`);
+  } else {
+    // Dry season, PH: March-April specifically (not the wider Nov-Apr range) —
+    // narrowest window that's still reliably cloud-free, for the most consistent
+    // tide/turbidity conditions across years. Default for every caller; a year-to-year
+    // full-year median otherwise blends whatever months happened to be cloud-free that
+    // particular year, which is itself a source of spurious year-over-year noise.
+    collection = collection.filterDate(`${year}-03-01`, `${year}-04-30`);
   }
 
-  return collection.map(maskSentinelClouds).median();
+  return collection.median();
 }
 
 // Landsat Collection 2 Level-2 composite for years before Sentinel-2 (1990-2014).
-// Applies the C02 optical scaling factors (NDWI is not invariant to the -0.2 offset)
-// and masks clouds/shadows via QA_PIXEL bits 3 and 4.
-function buildLandsatComposite(geometry, year) {
+// Applies the C02 optical scaling factors (NDWI is not invariant to the -0.2 offset).
+// No per-pixel QA_PIXEL cloud mask — same reasoning as buildSentinelComposite above.
+function buildLandsatComposite(geometry, year, season = 'dry') {
   const spec =
     year >= 2013
       ? { id: 'LANDSAT/LC08/C02/T1_L2', green: 'SR_B3', nir: 'SR_B5' }
@@ -158,16 +157,13 @@ function buildLandsatComposite(geometry, year) {
       ? { id: 'LANDSAT/LE07/C02/T1_L2', green: 'SR_B2', nir: 'SR_B4' }
       : { id: 'LANDSAT/LT05/C02/T1_L2', green: 'SR_B2', nir: 'SR_B4' };
 
-  const maskClouds = (image) => {
-    const qa = image.select('QA_PIXEL');
-    const clear = qa.bitwiseAnd(1 << 3).eq(0).and(qa.bitwiseAnd(1 << 4).eq(0));
-    return image.updateMask(clear);
-  };
+  let collection = ee.ImageCollection(spec.id).filterBounds(geometry);
+  collection =
+    season === 'annual'
+      ? collection.filterDate(`${year}-01-01`, `${year}-12-31`)
+      : collection.filterDate(`${year}-03-01`, `${year}-04-30`);
 
-  const scaled = ee.ImageCollection(spec.id)
-    .filterBounds(geometry)
-    .filterDate(`${year}-01-01`, `${year}-12-31`)
-    .map(maskClouds)
+  const scaled = collection
     .map((img) => img.select([spec.green, spec.nir]).multiply(0.0000275).add(-0.2))
     .median();
 
@@ -176,9 +172,10 @@ function buildLandsatComposite(geometry, year) {
 
 // NDWI (McFeeters) = (Green - NIR) / (Green + NIR). Positive = water, negative = land.
 // index 'mndwi' uses Green-SWIR (B3/B11, Sentinel-2 only) — better separation in turbid
-// coastal water. season 'dry' restricts the composite to Nov-Apr scenes. Years before
-// 2015 automatically use Landsat Collection 2 (30 m) instead of Sentinel-2.
-async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coastlineName, index = 'ndwi', season = 'annual' }) {
+// coastal water. season defaults to 'dry' (March-April) for every year, Sentinel or
+// Landsat — pass 'annual' explicitly to opt out (not exposed in any UI; debugging only).
+// Years before 2015 automatically use Landsat Collection 2 (30 m) instead of Sentinel-2.
+async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coastlineName, index = 'ndwi', season = 'dry' }) {
   await initEE();
 
   const geometry = ee.Geometry.Rectangle([lonMin, latMin, lonMax, latMax]);
@@ -187,7 +184,7 @@ async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coast
   let nir;
   let exportScale = 10;
   if (year < 2015) {
-    const landsat = buildLandsatComposite(geometry, year);
+    const landsat = buildLandsatComposite(geometry, year, season);
     green = landsat.composite.select(landsat.green);
     nir = landsat.composite.select(landsat.nir);
     exportScale = landsat.scaleMeters;
