@@ -71,6 +71,17 @@ async function generateThumbnail(imagePath) {
       const width = image.getWidth();
       const height = image.getHeight();
 
+      // Earth Engine exports cloud/shadow-masked pixels as a GDAL nodata sentinel
+      // (a large-magnitude finite value), not NaN — readRasters() doesn't convert
+      // it. Left alone, that sentinel blows out toGrayscale's min/max stretch to
+      // solid white instead of the neutral mid-gray toGrayscale already renders NaN as.
+      const nodata = image.getGDALNoData();
+      if (nodata !== null) {
+        for (let i = 0; i < data.length; i++) {
+          if (data[i] === nodata) data[i] = NaN;
+        }
+      }
+
       const gray = toGrayscale(data, width, height);
       await sharp(gray, { raw: { width, height, channels: 1 } })
         .resize(THUMB_WIDTH, null, { fit: "inside", withoutEnlargement: false })

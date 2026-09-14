@@ -114,8 +114,21 @@ async function tryReadSingleBandGeoTIFF(imagePath) {
     if (image.getSamplesPerPixel() !== 1) return null; // multi-band → treat as RGB
 
     const rasters = await image.readRasters();
+    const data = Float32Array.from(rasters[0]);
+
+    // Earth Engine exports cloud/shadow-masked pixels as a GDAL nodata sentinel
+    // (a large-magnitude finite value), not IEEE NaN — readRasters() doesn't
+    // convert it. Every consumer downstream of this function assumes masked
+    // pixels are NaN, so convert here, once, at the source.
+    const nodata = image.getGDALNoData();
+    if (nodata !== null) {
+      for (let i = 0; i < data.length; i++) {
+        if (data[i] === nodata) data[i] = NaN;
+      }
+    }
+
     return {
-      data: Float32Array.from(rasters[0]),
+      data,
       width: image.getWidth(),
       height: image.getHeight(),
     };
