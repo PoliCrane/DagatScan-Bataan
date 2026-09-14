@@ -713,7 +713,14 @@ export default function ErosionAnalysis() {
             isTimelinePaused={isTimelinePaused}
             contextYear={comparedYear}
             dataYearSpan={dataYearSpan}
-            availableYears={[...new Set(shorelineSegments.flatMap((s) => s.yearsAvailable || []))]}
+            // Scoped to the selected segment (deactivated years must not stay selectable
+            // just because another area in the same municipality still has that year active) —
+            // same fallback-to-union-when-nothing-selected pattern as canAnalyze above.
+            availableYears={
+              effectiveSelectedSegment
+                ? effectiveSelectedSegment.yearsAvailable
+                : [...new Set(shorelineSegments.flatMap((s) => s.yearsAvailable || []))]
+            }
             selectedMunicipality={selectedMunicipality}
             onSimulate={handlePredictSimulate}
             onEndSimulation={handleEndSimulation}
