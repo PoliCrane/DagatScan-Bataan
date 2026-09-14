@@ -118,8 +118,21 @@ function downloadToFile(url, destPath) {
   });
 }
 
+// Async count of an ee.ImageCollection's images — used to detect an empty dry-season
+// window (e.g. March-April with zero cloud-free scenes that year) before compositing,
+// since Image.select() on a bandless median() of an empty collection throws a confusing
+// "Band pattern applied to an Image with no bands" error instead of something actionable.
+function getCollectionSize(collection) {
+  return new Promise((resolve, reject) => {
+    collection.size().evaluate((size, err) => {
+      if (err) reject(new Error(`Earth Engine collection size check failed: ${err}`));
+      else resolve(size);
+    });
+  });
+}
+
 // shared Sentinel-2 composite so NDWI and true-color read identical source pixels.
-// season 'dry' restricts to Nov-Apr scenes (consistent beach/tide state year-over-year,
+// season 'dry' restricts to March-April (consistent beach/tide state year-over-year,
 // PH dry season); 'annual' keeps the original whole-year behavior.
 // No per-pixel cloud mask here (deliberately) — a per-pixel SCL mask was tried and
 // reverted: it leaves cloud/shadow pixels as nodata, which downstream shoreline
@@ -127,29 +140,32 @@ function downloadToFile(url, destPath) {
 // to "land," training the persistent CNN to trace a false coastline notch wherever a
 // scene had cloud/shadow. The CLOUDY_PIXEL_PERCENTAGE filter plus a whole-year median
 // already dilutes transient cloud contamination well enough without introducing nodata.
-function buildSentinelComposite(geometry, year, season = 'dry') {
-  let collection = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+async function buildSentinelComposite(geometry, year, season = 'dry') {
+  const base = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
     .filterBounds(geometry)
     .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20));
 
-  if (season === 'annual') {
-    collection = collection.filterDate(`${year}-01-01`, `${year}-12-31`);
-  } else {
-    // Dry season, PH: March-April specifically (not the wider Nov-Apr range) —
-    // narrowest window that's still reliably cloud-free, for the most consistent
-    // tide/turbidity conditions across years. Default for every caller; a year-to-year
-    // full-year median otherwise blends whatever months happened to be cloud-free that
-    // particular year, which is itself a source of spurious year-over-year noise.
-    collection = collection.filterDate(`${year}-03-01`, `${year}-04-30`);
-  }
+  const annual = base.filterDate(`${year}-01-01`, `${year}-12-31`);
+  if (season === 'annual') return annual.median();
 
-  return collection.median();
+  // Dry season, PH: March-April specifically (not the wider Nov-Apr range) —
+  // narrowest window that's still reliably cloud-free, for the most consistent
+  // tide/turbidity conditions across years. Default for every caller; a year-to-year
+  // full-year median otherwise blends whatever months happened to be cloud-free that
+  // particular year, which is itself a source of spurious year-over-year noise.
+  const dry = base.filterDate(`${year}-03-01`, `${year}-04-30`);
+  const dryCount = await getCollectionSize(dry);
+  if (dryCount === 0) {
+    console.warn(`[EE] No Sentinel-2 scenes in ${year}-03-01..${year}-04-30 for this area (e.g. 2015 predates Sentinel-2's June 2015 launch) — falling back to the full year for this year only.`);
+    return annual.median();
+  }
+  return dry.median();
 }
 
 // Landsat Collection 2 Level-2 composite for years before Sentinel-2 (1990-2014).
 // Applies the C02 optical scaling factors (NDWI is not invariant to the -0.2 offset).
 // No per-pixel QA_PIXEL cloud mask — same reasoning as buildSentinelComposite above.
-function buildLandsatComposite(geometry, year, season = 'dry') {
+async function buildLandsatComposite(geometry, year, season = 'dry') {
   const spec =
     year >= 2013
       ? { id: 'LANDSAT/LC08/C02/T1_L2', green: 'SR_B3', nir: 'SR_B5' }
@@ -157,11 +173,19 @@ function buildLandsatComposite(geometry, year, season = 'dry') {
       ? { id: 'LANDSAT/LE07/C02/T1_L2', green: 'SR_B2', nir: 'SR_B4' }
       : { id: 'LANDSAT/LT05/C02/T1_L2', green: 'SR_B2', nir: 'SR_B4' };
 
-  let collection = ee.ImageCollection(spec.id).filterBounds(geometry);
-  collection =
-    season === 'annual'
-      ? collection.filterDate(`${year}-01-01`, `${year}-12-31`)
-      : collection.filterDate(`${year}-03-01`, `${year}-04-30`);
+  const base = ee.ImageCollection(spec.id).filterBounds(geometry);
+  const annual = base.filterDate(`${year}-01-01`, `${year}-12-31`);
+
+  let collection = annual;
+  if (season !== 'annual') {
+    const dry = base.filterDate(`${year}-03-01`, `${year}-04-30`);
+    const dryCount = await getCollectionSize(dry);
+    if (dryCount === 0) {
+      console.warn(`[EE] No Landsat scenes in ${year}-03-01..${year}-04-30 for this area — falling back to the full year for this year only.`);
+    } else {
+      collection = dry;
+    }
+  }
 
   const scaled = collection
     .map((img) => img.select([spec.green, spec.nir]).multiply(0.0000275).add(-0.2))
@@ -184,12 +208,12 @@ async function generateNDWIGeoTIFF({ lonMin, latMin, lonMax, latMax, year, coast
   let nir;
   let exportScale = 10;
   if (year < 2015) {
-    const landsat = buildLandsatComposite(geometry, year, season);
+    const landsat = await buildLandsatComposite(geometry, year, season);
     green = landsat.composite.select(landsat.green);
     nir = landsat.composite.select(landsat.nir);
     exportScale = landsat.scaleMeters;
   } else {
-    const composite = buildSentinelComposite(geometry, year, season);
+    const composite = await buildSentinelComposite(geometry, year, season);
     green = composite.select('B3');
     nir = composite.select(index === 'mndwi' ? 'B11' : 'B8');
   }
@@ -229,7 +253,7 @@ async function generateTrueColorImage({ lonMin, latMin, lonMax, latMax, year, de
   await initEE();
 
   const geometry = ee.Geometry.Rectangle([lonMin, latMin, lonMax, latMax]);
-  const composite = buildSentinelComposite(geometry, year);
+  const composite = await buildSentinelComposite(geometry, year);
 
   const rgb = composite.visualize({ bands: ['B4', 'B3', 'B2'], min: 0, max: 3000, gamma: 1.4 });
 
