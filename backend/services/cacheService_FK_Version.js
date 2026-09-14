@@ -9,6 +9,7 @@ const { classifyErosionRisk } = require("./riskClassification");
 const { calculateLRR, calculateRobustLRR } = require("./eprCalculator");
 const { MIN_YEARS_FOR_LRR } = require("../config/constants");
 const { sendRiskEscalationEmail, RISK_ORDER } = require("../email");
+const { scheduleValidationRun } = require("./hindcastValidation");
 
 // Row predicate for active, satellite-detected zones only (excludes GeoJSON/CSV/manual/seed rows).
 // @param {string} alias - table alias with trailing dot (e.g. "sz."), or "" if unjoined.
@@ -445,6 +446,11 @@ async function recomputeMunicipalityAreaLRR(municipalityId) {
 async function refreshMunicipalityDerived(municipalityId) {
   await recomputeMunicipalityAreaLRR(municipalityId);
   await computeAndStoreMunicipalityAnalysis(municipalityId);
+  // Hindcast accuracy is a stored snapshot, and every path that mutates shoreline data
+  // (upload, reupload, deactivate, delete, backfill) funnels through here — so this is the
+  // one place that keeps it from going stale. Debounced and fire-and-forget: not awaited,
+  // so a slow or failing recompute can't hold up or fail the upload that triggered it.
+  scheduleValidationRun();
 }
 
 // Refresh cache for a municipality by name; recomputes immediately.

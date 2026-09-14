@@ -1,3 +1,4 @@
+const logger = require("../utils/logger");
 const pool = require("../db");
 const { calculateLRR } = require("./eprCalculator");
 const {
@@ -273,10 +274,39 @@ async function getLatestRun(municipalityId = null) {
   return result.rows[0] || null;
 }
 
+// Event-driven recompute so the stored accuracy can't silently describe data that has since
+// changed — the figure shown as "Hindcast Accuracy" is a stored snapshot, and before this it
+// only refreshed when someone remembered to run scripts/runHindcastValidation.js by hand.
+// Debounced (same pattern as storageSync.js's scheduleSync) so a multi-year batch upload
+// collapses into one run instead of one per year. A full run is ~50ms, so this is cheap.
+let validationTimer = null;
+const VALIDATION_DEBOUNCE_MS = 10000;
+
+function scheduleValidationRun() {
+  if (validationTimer) clearTimeout(validationTimer);
+  validationTimer = setTimeout(async () => {
+    validationTimer = null;
+    try {
+      const result = await runHindcast();
+      await storeRun(null, result);
+      const s = result.summary;
+      console.log(
+        `[validation] Recomputed: ${s.areasEvaluated} area(s) evaluated, ` +
+        `status accuracy ${s.statusAccuracyPct}%, risk tier accuracy ${s.riskTierAccuracyPct}%.`
+      );
+    } catch (err) {
+      // Never surfaced to the upload that triggered it — a failed refresh must not fail an
+      // otherwise-successful upload; the previous stored run simply stays until the next one.
+      logger.error("[validation] Scheduled hindcast recompute failed:", err.message);
+    }
+  }, VALIDATION_DEBOUNCE_MS);
+}
+
 module.exports = {
   runHindcast,
   storeRun,
   getLatestRun,
+  scheduleValidationRun,
   MIN_YEARS_FOR_HINDCAST,
   HOLDOUT_YEARS,
 };

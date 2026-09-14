@@ -139,7 +139,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
       FROM shoreline_zones sz
       JOIN coastal_areas ca ON sz.area_id = ca.id
       JOIN municipalities m ON ca.municipality_id = m.id
-      WHERE sz.id = $1
+      WHERE sz.id = $1 AND sz.active
     `;
     const result = await pool.query(query, [zoneId]);
 
@@ -157,7 +157,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
       pool.query(
         `SELECT year, geojson_data
          FROM shoreline_zones
-         WHERE area_id = $1 AND erosion_rate IS NULL
+         WHERE area_id = $1 AND erosion_rate IS NULL AND active
          ORDER BY year ASC LIMIT 1`,
         [row.area_id]
       ),

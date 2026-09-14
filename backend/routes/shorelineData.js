@@ -277,7 +277,7 @@ router.get("/municipality/:municipality", async (req, res) => {
       FROM shoreline_zones sz
       JOIN coastal_areas ca ON sz.area_id = ca.id
       JOIN municipalities m ON ca.municipality_id = m.id
-      WHERE LOWER(m.name) = LOWER($1)
+      WHERE LOWER(m.name) = LOWER($1) AND sz.active
     `;
 
     const params = [municipality];
@@ -353,7 +353,7 @@ router.get("/municipality/:municipality/year/:year", async (req, res) => {
       FROM shoreline_zones sz
       JOIN coastal_areas ca ON sz.area_id = ca.id
       JOIN municipalities m ON ca.municipality_id = m.id
-      WHERE LOWER(m.name) = LOWER($1) AND sz.year = $2
+      WHERE LOWER(m.name) = LOWER($1) AND sz.year = $2 AND sz.active
       ORDER BY sz.created_at DESC
       LIMIT 1`,
       [municipality, parseInt(year)]
@@ -397,6 +397,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
          WHERE LOWER(m.name) = LOWER($1)
            AND sz.year = $2
            AND sz.geojson_data IS NOT NULL
+           AND sz.active
          ORDER BY sz.area_id, sz.id DESC`
       : `SELECT DISTINCT ON (sz.area_id)
           sz.year, sz.source_type, sz.geojson_data, ca.name AS specific_area,
@@ -407,6 +408,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
          WHERE LOWER(m.name) = LOWER($1)
            AND sz.source_type IN ('Satellite Analysis', 'Satellite Analysis - Baseline')
            AND sz.geojson_data IS NOT NULL
+           AND sz.active
          ORDER BY sz.area_id, sz.year DESC, sz.id DESC`;
 
     const geomParams = year ? [municipality, parseInt(year)] : [municipality];
@@ -422,7 +424,7 @@ router.get("/satellite-coastline/:municipality", async (req, res) => {
        FROM shoreline_zones sz
        JOIN coastal_areas ca ON sz.area_id = ca.id
        JOIN municipalities m ON ca.municipality_id = m.id
-       WHERE LOWER(m.name) = LOWER($1) AND sz.cumulative_erosion IS NOT NULL
+       WHERE LOWER(m.name) = LOWER($1) AND sz.cumulative_erosion IS NOT NULL AND sz.active
        GROUP BY sz.area_id, ca.name, sz.year
        ORDER BY sz.area_id, sz.year ASC`,
       [municipality]
@@ -808,7 +810,7 @@ router.get("/municipality/:municipality/latest", async (req, res) => {
       FROM shoreline_zones sz
       JOIN coastal_areas ca ON sz.area_id = ca.id
       JOIN municipalities m ON ca.municipality_id = m.id
-      WHERE LOWER(m.name) = LOWER($1)
+      WHERE LOWER(m.name) = LOWER($1) AND sz.active
       ORDER BY sz.year DESC, sz.created_at DESC
       LIMIT 1`,
       [municipality]
@@ -887,6 +889,7 @@ router.get("/bataan/all-zones", async (req, res) => {
       FROM shoreline_zones sz
       JOIN coastal_areas ca ON sz.area_id = ca.id
       JOIN municipalities m ON ca.municipality_id = m.id
+      WHERE sz.active
       ORDER BY sz.id
     `;
 
@@ -942,7 +945,7 @@ router.get("/municipality/:municipality/zones", async (req, res) => {
       FROM shoreline_zones sz
       JOIN coastal_areas ca ON sz.area_id = ca.id
       JOIN municipalities m ON ca.municipality_id = m.id
-      WHERE LOWER(m.name) = LOWER($1)
+      WHERE LOWER(m.name) = LOWER($1) AND sz.active
     `;
 
     const params = [municipality];
