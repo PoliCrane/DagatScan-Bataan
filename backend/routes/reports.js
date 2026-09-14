@@ -456,18 +456,30 @@ router.get("/:zoneId/pdf/print", (req, res) => {
 </style>
 </head>
 <body>
-  <iframe id="pdf-frame" src="/api/reports/${zoneId}/pdf"></iframe>
+  <iframe id="pdf-frame"></iframe>
   <script>
-    // The iframe's own "load" event doesn't reliably fire for an embedded PDF in Chromium's
-    // built-in viewer; window's "load" reliably fires once all sub-resources finish instead.
-    window.addEventListener("load", function () {
-      // A short delay lets the PDF viewer finish its first render pass — printing immediately
-      // can catch it still laying out and produce a blank/partial preview.
-      setTimeout(function () {
-        window.focus();
-        window.print();
-      }, 300);
-    });
+    // Loading the PDF into the iframe via a fetched Blob object URL — rather than pointing
+    // the iframe straight at the network PDF URL — works around a Chromium bug where printing
+    // a page with a *network*-sourced embedded PDF produces a blank page: the built-in PDF
+    // viewer doesn't reliably participate in the print pipeline when its source is a live
+    // request. A blob: URL is local, which sidesteps that in most Chromium versions.
+    fetch("/api/reports/${zoneId}/pdf")
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load PDF (status " + res.status + ")");
+        return res.blob();
+      })
+      .then(function (blob) {
+        document.getElementById("pdf-frame").src = URL.createObjectURL(blob);
+        // A short delay lets the PDF viewer finish its first render pass — printing immediately
+        // can catch it still laying out and produce a blank/partial preview.
+        setTimeout(function () {
+          window.focus();
+          window.print();
+        }, 500);
+      })
+      .catch(function (err) {
+        document.body.textContent = "Could not load the report for printing: " + err.message;
+      });
   </script>
 </body>
 </html>`);
