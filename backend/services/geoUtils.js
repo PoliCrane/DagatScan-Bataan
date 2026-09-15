@@ -1,5 +1,47 @@
+const fs = require("fs");
+const path = require("path");
+
 const METERS_PER_DEGREE_LAT = 111320;
 const BATAAN_INTERIOR = [14.65, 120.42];
+
+// Real municipality land polygons, loaded once — ground truth for "which side of this
+// coastline point is actually land" instead of the old single-fixed-point heuristic below,
+// which only holds up for a roughly-straight coastline and gets it backward at coves/inlets
+// (verified empirically: 2/5 real areas had at least one point where the old method pointed
+// the "seaward" normal into land). Loaded lazily so a missing/malformed file doesn't crash
+// module load — callers fall back to the old heuristic if this is unavailable.
+let landRingsCache = null;
+function getLandRings() {
+  if (landRingsCache) return landRingsCache;
+  try {
+    const raw = fs
+      .readFileSync(path.join(__dirname, "../data/BATAAN.geojson"), "utf8")
+      .replace(/^﻿/, "");
+    const geo = JSON.parse(raw);
+    landRingsCache = geo.features.map((f) => f.geometry.coordinates[0]);
+  } catch (e) {
+    landRingsCache = [];
+  }
+  return landRingsCache;
+}
+
+// Ray-casting point-in-polygon. point = [lon, lat], ring = [[lon, lat], ...] (raw GeoJSON order).
+function pointInRing(point, ring) {
+  let inside = false;
+  const [x, y] = point;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function isOnLand(lat, lon) {
+  const rings = getLandRings();
+  return rings.some((ring) => pointInRing([lon, lat], ring));
+}
 
 function metersPerDegreeLon(latDeg) {
   return METERS_PER_DEGREE_LAT * Math.cos((latDeg * Math.PI) / 180);
@@ -48,10 +90,40 @@ function seawardSign(points, interior = BATAAN_INTERIOR) {
   return dot >= 0 ? 1 : -1;
 }
 
+// Per-point seaward normal: tests both perpendicular directions to the local tangent against
+// the real land polygons and picks whichever one is water. Tries a few increasing test radii
+// before giving up on a point — a traced coastline point can sit tens of meters from the true
+// boundary (10m Sentinel-2 pixels, subpixel tracing error), so a single small radius leaves
+// points that are merely noisy (not actually ambiguous) unresolved; empirically, one confirmed
+// bad point was buried ~50m into land and only resolved at an 80m test radius. Falls back to
+// the old global-fixed-point heuristic only if every radius stays ambiguous (both/neither
+// candidate reads as land — e.g. a genuinely complex local coastline), so behavior degrades
+// gracefully rather than guessing.
+const SEAWARD_TEST_RADII_METERS = [20, 40, 80, 150];
+
 function seawardUnitNormals(points, interior = BATAAN_INTERIOR) {
   const tangents = tangentsInMeters(points);
-  const s = seawardSign(points, interior);
-  return tangents.map(([tN, tE]) => [s * -tE, s * tN]);
+  const fallbackSign = seawardSign(points, interior);
+
+  return points.map((point, i) => {
+    const [tN, tE] = tangents[i];
+    if (tN === 0 && tE === 0) return [fallbackSign * -tE, fallbackSign * tN];
+
+    const [lat, lon] = point;
+    const mLon = metersPerDegreeLon(lat);
+    const candA = [-tE, tN];
+    const candB = [tE, -tN];
+
+    const offsetIsOnLand = ([cN, cE], radius) =>
+      isOnLand(lat + (cN * radius) / METERS_PER_DEGREE_LAT, lon + (cE * radius) / mLon);
+
+    for (const radius of SEAWARD_TEST_RADII_METERS) {
+      const aOnLand = offsetIsOnLand(candA, radius);
+      const bOnLand = offsetIsOnLand(candB, radius);
+      if (aOnLand !== bOnLand) return aOnLand ? candB : candA;
+    }
+    return [fallbackSign * -tE, fallbackSign * tN];
+  });
 }
 
 function offsetCoastlineSeaward(points, offsetMeters, interior = BATAAN_INTERIOR) {

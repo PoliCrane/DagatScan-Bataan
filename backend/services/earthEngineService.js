@@ -141,9 +141,14 @@ function getCollectionSize(collection) {
 // scene had cloud/shadow. The CLOUDY_PIXEL_PERCENTAGE filter plus a whole-year median
 // already dilutes transient cloud contamination well enough without introducing nodata.
 async function buildSentinelComposite(geometry, year, season = 'dry') {
+  // Tightened from 20 to 10 — a scene at 18% cloud was counting exactly as much as one at
+  // 2% in the median composite. Both the dry-season window and the annual fallback below
+  // read from this same filtered collection, so tightening it here strengthens both at
+  // once; the empty-window fallback already handles a year coming up empty at the stricter
+  // bar by widening to the full year, which has ~6x more candidate scenes to draw from.
   const base = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
     .filterBounds(geometry)
-    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20));
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 10));
 
   const annual = base.filterDate(`${year}-01-01`, `${year}-12-31`);
   if (season === 'annual') return annual.median();

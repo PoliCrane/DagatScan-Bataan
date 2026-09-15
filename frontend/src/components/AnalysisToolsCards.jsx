@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "../pages/styles/analysisToolsCards.css";
 import PredictionResultCard from "./PredictionResultCard";
 import EventContextCard from "./EventContextCard";
@@ -26,8 +26,13 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
 
   const BASE_YEAR = new Date().getFullYear();
 
-  // years without data are shown but disabled rather than silently comparable against nothing; null/omitted means unknown, so none are disabled
-  const availableYearSet = availableYears ? new Set(availableYears.map((y) => y.toString())) : null;
+  // years without data are shown but disabled rather than silently comparable against nothing; null/omitted means unknown, so none are disabled.
+  // Memoized on the array itself (not recreated every render) so the effects below that depend
+  // on it don't reschedule their debounce on every unrelated re-render.
+  const availableYearSet = useMemo(
+    () => (availableYears ? new Set(availableYears.map((y) => y.toString())) : null),
+    [availableYears]
+  );
 
   // 2015 is Sentinel-2/Earth Engine's earliest available year
   const historicalYears = Array.from({ length: BASE_YEAR - 2015 + 1 }, (_, i) => {
@@ -56,6 +61,28 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
   // last year-pair/year actually sent to onCompare/onSimulate, so the auto-update effects below don't double-fire the instant isComparing/isSimulating flips true from the button's own click
   const lastComparedRef = useRef(null);
   const lastPredictedRef = useRef(null);
+
+  // A stale selection can otherwise survive a segment switch — disabling a dropdown option
+  // only blocks a fresh click on it, it doesn't clear an already-held value. Re-validate
+  // whenever the available-years set changes and correct to a valid pair for the new segment.
+  useEffect(() => {
+    if (!availableYearSet) return;
+    const validYears = historicalYears
+      .filter((y) => !y.disabled)
+      .map((y) => parseInt(y.value))
+      .sort((a, b) => a - b);
+    if (validYears.length === 0) return;
+
+    const newPastYear = availableYearSet.has(comparePastYear) ? parseInt(comparePastYear) : validYears[0];
+    if (newPastYear.toString() !== comparePastYear) setComparePastYear(newPastYear.toString());
+
+    if (!availableYearSet.has(compareSelectedYear) || parseInt(compareSelectedYear) <= newPastYear) {
+      const candidates = validYears.filter((y) => y > newPastYear);
+      const newSelectedYear = candidates.length > 0 ? candidates[candidates.length - 1] : newPastYear;
+      if (newSelectedYear.toString() !== compareSelectedYear) setCompareSelectedYear(newSelectedYear.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-validate when the available set itself changes
+  }, [availableYearSet]);
 
   // Validate Selected Year when Past Year changes
   const handleComparePastYearChange = (e) => {
@@ -93,9 +120,17 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
 
     const pastYearNum = parseInt(comparePastYear);
     const selectedYearNum = parseInt(compareSelectedYear);
-    
+
     if (selectedYearNum <= pastYearNum) {
       await showInfo("Selected Year must be greater than Past Year");
+      return;
+    }
+
+    // A disabled dropdown option only blocks a fresh click on it — it doesn't clear an
+    // already-selected value (e.g. carried over from switching segments). Re-check here so
+    // Analyze can't run on a year that's deactivated or flagged untrustworthy for this area.
+    if (availableYearSet && (!availableYearSet.has(comparePastYear) || !availableYearSet.has(compareSelectedYear))) {
+      await showInfo("One of the selected years isn't available for this area (deactivated, or its trace couldn't be verified). Pick a different year.");
       return;
     }
 
@@ -119,6 +154,11 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
     const pastYearNum = parseInt(comparePastYear);
     const selectedYearNum = parseInt(compareSelectedYear);
     if (selectedYearNum <= pastYearNum) return undefined;
+    // Same availability re-check as handleCompareAnalyze — a segment switch while already
+    // comparing must not silently re-run against a year that's no longer available.
+    if (availableYearSet && (!availableYearSet.has(comparePastYear) || !availableYearSet.has(compareSelectedYear))) {
+      return undefined;
+    }
 
     const key = `${pastYearNum}-${selectedYearNum}`;
     if (key === lastComparedRef.current) return undefined;
@@ -128,7 +168,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
       lastComparedRef.current = key;
     }, 350);
     return () => clearTimeout(timeoutId);
-  }, [comparePastYear, compareSelectedYear, isComparing]);
+  }, [comparePastYear, compareSelectedYear, isComparing, availableYearSet]);
 
   const handleSimulate = async () => {
     if (!selectedMunicipality) {
