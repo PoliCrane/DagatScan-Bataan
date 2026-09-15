@@ -131,6 +131,55 @@ function getCollectionSize(collection) {
   });
 }
 
+// CLOUDY_PIXEL_PERCENTAGE describes a whole ~110x110 km Sentinel-2 tile, while an AOI here is
+// ~1.7 km across — so it says almost nothing about whether *this bay* is clouded. Measured
+// against real data: scenes reading 3-9% tile cloud were 100% cloud over the bay and passed
+// the filter, while genuinely clean scenes (1.5% over the bay) were rejected for 23% tile
+// cloud. This computes the actual cloud fraction inside the AOI from the SCL band and ranks
+// on that instead. SCL classes: 3 = cloud shadow, 8/9 = cloud medium/high probability,
+// 10 = cirrus. Null (no overlap) sorts as fully cloudy so ordering stays well-defined.
+function withAoiCloudFraction(collection, geometry) {
+  return collection.map((image) => {
+    const scl = image.select('SCL');
+    const cloudy = scl.eq(3).or(scl.eq(8)).or(scl.eq(9)).or(scl.eq(10));
+    const fraction = cloudy
+      .reduceRegion({
+        reducer: ee.Reducer.mean(),
+        geometry,
+        scale: 20, // SCL's native resolution
+        maxPixels: 1e9,
+        bestEffort: true,
+      })
+      .get('SCL');
+    return image.set('AOI_CLOUD', ee.Algorithms.If(fraction, fraction, 1));
+  });
+}
+
+// Keep only scenes genuinely clear over the AOI, cleanest first. Capped rather than taking
+// everything: the median needs several clear observations to outvote residual cloud, but
+// letting progressively dirtier scenes in past that point only dilutes it.
+const MAX_AOI_CLOUD_FRACTION = 0.1;
+const MAX_SCENES_IN_COMPOSITE = 8;
+
+function cleanestOverAoi(collection, geometry) {
+  return withAoiCloudFraction(collection, geometry)
+    .filter(ee.Filter.lt('AOI_CLOUD', MAX_AOI_CLOUD_FRACTION))
+    .sort('AOI_CLOUD')
+    .limit(MAX_SCENES_IN_COMPOSITE);
+}
+
+// Last resort when nothing clears the threshold: take the least-cloudy scenes available
+// regardless. Some area/years genuinely have no clear view all year (measured: Bagac Bay
+// 2017 has zero Sentinel-2 scenes under 10% AOI cloud across the entire year), and an empty
+// collection medians to a bandless image, which fails later with an opaque "Band pattern
+// 'B3' was applied to an Image with no bands". Best-available keeps the year usable, and the
+// result still gets vetted downstream by the trace plausibility gate.
+function leastCloudyOverAoi(collection, geometry) {
+  return withAoiCloudFraction(collection, geometry)
+    .sort('AOI_CLOUD')
+    .limit(MAX_SCENES_IN_COMPOSITE);
+}
+
 // shared Sentinel-2 composite so NDWI and true-color read identical source pixels.
 // season 'dry' restricts to March-April (consistent beach/tide state year-over-year,
 // PH dry season); 'annual' keeps the original whole-year behavior.
@@ -138,33 +187,50 @@ function getCollectionSize(collection) {
 // reverted: it leaves cloud/shadow pixels as nodata, which downstream shoreline
 // classification (ndwiMaskFromArray) has no "unknown" state for and always resolves
 // to "land," training the persistent CNN to trace a false coastline notch wherever a
-// scene had cloud/shadow. The CLOUDY_PIXEL_PERCENTAGE filter plus a whole-year median
-// already dilutes transient cloud contamination well enough without introducing nodata.
+// scene had cloud/shadow. Selecting whole scenes by AOI cloud cover (below) avoids that
+// entirely — it changes which images enter the median, never masking pixels within one.
 async function buildSentinelComposite(geometry, year, season = 'dry') {
-  // Tightened from 20 to 10 — a scene at 18% cloud was counting exactly as much as one at
-  // 2% in the median composite. Both the dry-season window and the annual fallback below
-  // read from this same filtered collection, so tightening it here strengthens both at
-  // once; the empty-window fallback already handles a year coming up empty at the stricter
-  // bar by widening to the full year, which has ~6x more candidate scenes to draw from.
+  // Deliberately loose: this is only a cheap prefilter to drop hopeless scenes before the
+  // per-image AOI computation. Tightening it is actively harmful — at <10% the 2026 pool
+  // fell from 16 scenes to 3, two of which were fully clouded over the bay, leaving the
+  // median nothing clear to outvote them with. AOI cloud is the real selector.
   const base = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
     .filterBounds(geometry)
-    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 10));
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 60));
 
-  const annual = base.filterDate(`${year}-01-01`, `${year}-12-31`);
-  if (season === 'annual') return annual.median();
+  const annualAll = base.filterDate(`${year}-01-01`, `${year}-12-31`);
+  const annualClean = cleanestOverAoi(annualAll, geometry);
+
+  // Widens in tiers, each only when the one above finds nothing usable, so a year is never
+  // silently dropped: dry-season clear -> full-year clear -> full-year least-cloudy.
+  const bestAvailable = async (label) => {
+    if ((await getCollectionSize(annualClean)) > 0) {
+      console.warn(`[EE] ${label} — falling back to the clearest full-year scenes for ${year}.`);
+      return annualClean.median();
+    }
+    console.warn(`[EE] ${label}, and no scene anywhere in ${year} is clear over this AOI — using the least-cloudy scenes available. Expect a noisier trace for this year.`);
+    return leastCloudyOverAoi(annualAll, geometry).median();
+  };
+
+  if (season === 'annual') {
+    return (await getCollectionSize(annualClean)) > 0
+      ? annualClean.median()
+      : leastCloudyOverAoi(annualAll, geometry).median();
+  }
 
   // Dry season, PH: March-April specifically (not the wider Nov-Apr range) —
   // narrowest window that's still reliably cloud-free, for the most consistent
   // tide/turbidity conditions across years. Default for every caller; a year-to-year
   // full-year median otherwise blends whatever months happened to be cloud-free that
   // particular year, which is itself a source of spurious year-over-year noise.
-  const dry = base.filterDate(`${year}-03-01`, `${year}-04-30`);
-  const dryCount = await getCollectionSize(dry);
-  if (dryCount === 0) {
-    console.warn(`[EE] No Sentinel-2 scenes in ${year}-03-01..${year}-04-30 for this area (e.g. 2015 predates Sentinel-2's June 2015 launch) — falling back to the full year for this year only.`);
-    return annual.median();
+  const dryClean = cleanestOverAoi(base.filterDate(`${year}-03-01`, `${year}-04-30`), geometry);
+  if ((await getCollectionSize(dryClean)) === 0) {
+    // Covers "no scenes at all" (2015 predates Sentinel-2's June 2015 launch) and "scenes
+    // exist but all are clouded over this bay" (2017's only two March-April scenes are both
+    // 100% cloud over Bagac/Morong).
+    return bestAvailable(`No Sentinel-2 scene clear over this AOI in ${year}-03-01..${year}-04-30`);
   }
-  return dry.median();
+  return dryClean.median();
 }
 
 // Landsat Collection 2 Level-2 composite for years before Sentinel-2 (1990-2014).

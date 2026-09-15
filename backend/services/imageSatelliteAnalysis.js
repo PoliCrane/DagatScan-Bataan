@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const { signedSeawardChanges, haversineMeters } = require('./geoUtils');
-const { PLAUSIBLE_MAX_RATE_M_PER_YEAR } = require('../config/constants');
+const { PLAUSIBLE_MAX_RATE_M_PER_YEAR, POSITION_NOISE_SIGMA_M } = require('../config/constants');
 
 async function compareWithReferenceCoastline(
   detectedCoastline,
@@ -148,14 +148,26 @@ function calculateErosionFromDistances(distances, referenceYear, currentYear) {
         : 1
       : Math.min(1, Math.abs(netChange) / (1.96 * standardError));
 
-  // Plausibility gate: real coastal erosion rarely exceeds ~5 m/year (CVI "Very High" ceiling).
-  // A rate many times that means a defective trace, not real erosion - refuse to store it
-  // rather than report garbage; caller should flag the image for re-upload.
-  const PLAUSIBLE_MAX_RATE = PLAUSIBLE_MAX_RATE_M_PER_YEAR;
-  if (Math.abs(erosionRate) > PLAUSIBLE_MAX_RATE) {
+  // Plausibility gate: catch defective traces without punishing measurement noise.
+  //
+  // This budget is in METERS OF DISPLACEMENT, not meters per year. Testing the rate instead
+  // divides by the year gap, so the allowance shrinks the closer a year sits to the baseline:
+  // a 1-year gap was allowed 20 m while an 11-year gap was allowed 220 m. That rejected
+  // Morong Bay 2016 at -33.6 m while accepting 2020 at -54.4 m — a larger displacement
+  // passing and a smaller one failing purely by position in the series, which systematically
+  // deleted the earliest years and shortened the very time span the trend depends on.
+  //
+  // Positional error is absolute, not per-year: each yearly position carries sigma ~= 45 m
+  // (Docs/ERROR_BUDGET.md), so differencing two of them carries sigma * sqrt(2) ~= 64 m.
+  // Allow 2 sigma of that before calling a trace defective, plus whatever real erosion could
+  // physically produce over the gap. A genuinely broken trace runs to hundreds of meters and
+  // is still caught.
+  const noiseAllowance = 2 * POSITION_NOISE_SIGMA_M * Math.SQRT2;
+  const maxPlausibleChange = noiseAllowance + PLAUSIBLE_MAX_RATE_M_PER_YEAR * yearsDifference;
+  if (Math.abs(netChange) > maxPlausibleChange) {
     return {
       valid: false,
-      message: `Computed erosion rate (${erosionRate.toFixed(2)} m/year) exceeds plausible bounds (±${PLAUSIBLE_MAX_RATE} m/year) — likely a defective coastline trace for ${referenceYear} or ${currentYear}, not real erosion. Re-check/re-upload the source image for one of these years.`,
+      message: `Computed shoreline change (${netChange.toFixed(2)} m over ${yearsDifference} year(s), ${erosionRate.toFixed(2)} m/year) exceeds plausible bounds (±${maxPlausibleChange.toFixed(0)} m: ${noiseAllowance.toFixed(0)} m measurement noise + ${PLAUSIBLE_MAX_RATE_M_PER_YEAR} m/year × ${yearsDifference}) — likely a defective coastline trace for ${referenceYear} or ${currentYear}, not real erosion. Re-check/re-upload the source image for one of these years.`,
       implausible: true,
       computedRate: parseFloat(erosionRate.toFixed(4)),
     };
