@@ -282,12 +282,14 @@ router.get("/", async (req, res) => {
                         u.roles AS uploaded_by_role,
                         (uh.area_id IS NOT NULL AND uh.upload_type = 'Satellite_Image') AS can_deactivate,
                         (si.bounds IS NOT NULL) AS has_bounds,
-                        si.bounds AS bounds
+                        si.bounds AS bounds,
+                        sz.data_quality AS data_quality
                  FROM upload_history uh
                  JOIN municipalities m ON uh.municipality_id = m.id
                  LEFT JOIN coastal_areas ca ON uh.area_id = ca.id
                  LEFT JOIN users u ON uh.admin_id = u.id
                  LEFT JOIN satellite_imagery si ON si.area_id = uh.area_id AND si.year = uh.year
+                 LEFT JOIN shoreline_zones sz ON sz.area_id = uh.area_id AND sz.year = uh.year AND sz.source_type LIKE 'Satellite Analysis%'
                  WHERE 1=1`;
     const params = [];
     let paramIndex = 1;

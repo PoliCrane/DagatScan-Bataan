@@ -487,6 +487,21 @@ export default function DataManagement() {
                 }
               />
               <Column
+                field="data_quality"
+                header="Data Quality"
+                sortable
+                // A "Needs Review" year is silently excluded from Erosion Analysis/Compare
+                // elsewhere (the trend comparison rejected it as implausible) — this is the
+                // only place that's visible, so it only needs to call out that case.
+                body={(d) =>
+                  d.data_quality?.startsWith("Needs Review") ? (
+                    <Tag severity="warning" value={d.data_quality} />
+                  ) : (
+                    <span className="dm-confidence-badge">—</span>
+                  )
+                }
+              />
+              <Column
                 header="Actions"
                 style={{ minWidth: "16rem" }}
                 body={(d) => {

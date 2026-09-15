@@ -22,11 +22,10 @@ const { computeTransectStatistics } = require("../services/transectAnalysis");
 
 const router = express.Router();
 
-// Data only changes on new uploads, so a short max-age cuts repeat map loads without risking stale demos.
-router.use((req, res, next) => {
-  if (req.method === "GET") res.set("Cache-Control", "public, max-age=300");
-  next();
-});
+// No caching here — deactivating/reactivating a dataset changes what every one of these
+// GET routes returns (map shorelines, year availability, reports), and a stale 5-minute
+// browser cache meant the change wouldn't visibly take effect until it expired. This was a
+// low-traffic thesis demo app to begin with, so the cache was never buying much anyway.
 
 router.get("/config/risk-tiers", (req, res) => {
   const { RISK_COLORS, RISK_LABELS, STABLE_BAND_M_PER_YEAR } = require("../services/riskClassification");
