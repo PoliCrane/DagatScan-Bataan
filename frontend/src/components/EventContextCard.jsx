@@ -1,24 +1,8 @@
-import { memo, useEffect, useState } from "react";
-import { api } from "../api/client";
-
-const MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+import { memo } from "react";
+import useEventContext, { MONTHS } from "../hooks/useEventContext";
 
 function EventContextCard({ year }) {
-  const [context, setContext] = useState(null);
-
-  useEffect(() => {
-    setContext(null);
-    if (!year) return;
-    let cancelled = false;
-    api(`/api/shoreline/context/${year}`)
-      .then((data) => {
-        if (!cancelled) setContext(data);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [year]);
+  const context = useEventContext(year);
 
   if (!year || !context) return null;
   const hasAnything = context.enso || context.waves || (context.typhoons || []).length > 0;

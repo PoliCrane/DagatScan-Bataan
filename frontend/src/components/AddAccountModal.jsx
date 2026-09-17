@@ -4,7 +4,6 @@ import { showSuccessHtml, showError } from "../utils/sweetAlertUtils";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
-import { Password } from "primereact/password";
 import { Dropdown } from "primereact/dropdown";
 import { Message } from "primereact/message";
 import { getMunicipalities } from "../api/auth";
@@ -17,29 +16,18 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    password: "",
-    confirmPassword: "",
     roles: "municipal",
     municipality_id: "",
   });
   const [municipalities, setMunicipalities] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [expandPassword, setExpandPassword] = useState(false);
 
   useEffect(() => {
     getMunicipalities()
       .then((data) => setMunicipalities(Array.isArray(data) ? data : []))
       .catch((err) => console.error("Could not load municipalities:", err.message));
   }, []);
-
-  const passwordRequirements = {
-    minLength: formData.password.length >= 8,
-    hasUppercase: /[A-Z]/.test(formData.password),
-    hasLowercase: /[a-z]/.test(formData.password),
-    hasNumber: /[0-9]/.test(formData.password),
-    hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,45 +48,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
       setError("Email is required");
       return;
     }
-    if (!formData.password.trim()) {
-      setError("Password is required");
-      return;
-    }
-
-    if (!formData.confirmPassword.trim()) {
-      setError("Please confirm the password");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
-    if (!passwordRequirements.hasUppercase) {
-      setError("Password must contain at least one uppercase letter");
-      return;
-    }
-
-    if (!passwordRequirements.hasLowercase) {
-      setError("Password must contain at least one lowercase letter");
-      return;
-    }
-
-    if (!passwordRequirements.hasNumber) {
-      setError("Password must contain at least one number");
-      return;
-    }
-
-    if (!passwordRequirements.hasSpecial) {
-      setError("Password must contain at least one special character (! @ # $ % ^ & * ( ) _ + - = [ ] { } ; ' : \" \\ | , . < > /)");
-      return;
-    }
 
     if (formData.roles === "municipal" && !formData.municipality_id) {
       setError("Please select a municipality for this account");
@@ -115,7 +64,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      console.log("Creating account with data:", formData);
       const response = await fetch(`${API_BASE_URL}/admin/create-user`, {
         method: "POST",
         headers: {
@@ -125,7 +73,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
         body: JSON.stringify({
           username: formData.username,
           email: formData.email,
-          password: formData.password,
           roles: formData.roles,
           municipality_id: formData.municipality_id,
         }),
@@ -142,7 +89,14 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
         return;
       }
 
-      await showSuccessHtml(`Account created successfully!<br/><small>Username: ${formData.username}</small>`);
+      // Shown once here as well as emailed, so the account is still usable if the
+      // email bounces or lands in spam.
+      await showSuccessHtml(
+        `Account created successfully!<br/>` +
+        `<small>Username: <strong>${formData.username}</strong></small><br/>` +
+        `<small>Temporary password: <strong>${data.temporaryPassword}</strong></small><br/>` +
+        `<small>Also emailed to ${formData.email}. They can change it from their account menu after signing in.</small>`
+      );
       onSuccess();
       handleCancel();
     } catch (err) {
@@ -160,8 +114,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
     setFormData({
       username: "",
       email: "",
-      password: "",
-      confirmPassword: "",
       roles: "municipal",
       municipality_id: "",
     });
@@ -178,13 +130,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
         onClick={handleSave}
         loading={loading}
       />
-    </div>
-  );
-
-  const requirementRow = (met, text) => (
-    <div className={`requirement ${met ? "met" : ""}`}>
-      <span className="requirement-icon">{met ? "✓" : "○"}</span>
-      {text}
     </div>
   );
 
@@ -235,52 +180,6 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
       </div>
 
       <div className="form-group">
-        <label htmlFor="password">Password *</label>
-        <Password
-          id="password"
-          name="password"
-          className="w-full"
-          inputClassName="form-input w-full"
-          value={formData.password}
-          onChange={handleChange}
-          onFocus={() => setExpandPassword(true)}
-          onBlur={() => setExpandPassword(false)}
-          placeholder="Enter password"
-          toggleMask
-          feedback={false}
-        />
-        {expandPassword && (
-          <div className="password-requirements">
-            {requirementRow(passwordRequirements.minLength, "At least 8 characters")}
-            {requirementRow(passwordRequirements.hasUppercase, "One uppercase letter (A-Z)")}
-            {requirementRow(passwordRequirements.hasLowercase, "One lowercase letter (a-z)")}
-            {requirementRow(passwordRequirements.hasNumber, "One number (0-9)")}
-            {requirementRow(passwordRequirements.hasSpecial, "Special Characters (! @ # $ % ^ & * ( ) _ +)")}
-          </div>
-        )}
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="confirmPassword">Confirm Password *</label>
-        <Password
-          id="confirmPassword"
-          name="confirmPassword"
-          className="w-full"
-          inputClassName="form-input w-full"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          placeholder="Re-enter password"
-          toggleMask
-          feedback={false}
-        />
-        {formData.confirmPassword && (
-          <div className={`password-match-hint ${formData.password === formData.confirmPassword ? "match" : "mismatch"}`}>
-            {formData.password === formData.confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
-          </div>
-        )}
-      </div>
-
-      <div className="form-group">
         <label htmlFor="roles">Account Role:</label>
         <Dropdown
           id="roles"
@@ -305,6 +204,12 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
           />
         </div>
       )}
+
+      <Message
+        severity="info"
+        className="w-full"
+        text="A temporary password is generated automatically and emailed to the user. It is also shown once here after the account is created."
+      />
     </Dialog>
   );
 }

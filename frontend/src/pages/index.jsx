@@ -12,7 +12,7 @@ import "./index-organized.css";
 // PDF report (backend/routes/reports.js), so these previews match the real output.
 const SHORELINE_COLORS = {
   previous: "#FFEA00",
-  current: "#FF3131",
+  current: "#FF10F0",
   predicted: "#7CFC00",
   erosion: "#fc4c00",
 };

@@ -24,15 +24,15 @@ export const dataManagementSteps = [
     placement: "center",
     title: "Welcome to Data Management",
     content:
-      "The Data Management page allows administrators to view and manage all uploaded historical coastal datasets. You can continue this guide by clicking the 'Next' button or close it at any time. To reopen the guide, simply click the information (i) icon available on the page.",
+      "The Data Management page allows administrators to view and manage all uploaded historical coastal area records. You can continue this guide by clicking the 'Next' button or close it at any time. To reopen the guide, simply click the information (i) icon available on the page.",
   },
   {
     target: ".dm-stats",
     placement: "bottom",
-    title: "Dataset Summary",
+    title: "Coastal Area Record Summary",
     before: scrollTargetIntoViewNearest(".dm-stats"),
     content:
-      "The summary cards show a quick overview of the dataset library: Total Datasets, Active Datasets, Inactive Datasets, and Total Uploaded By, based on all uploads recorded in the system.",
+      "The summary cards show a quick overview of the coastal area records on file: Total Records, Active Records, Inactive Records, and Total Uploaded By, based on all uploads recorded in the system.",
   },
   {
     target: ".dm-filter-bar",
@@ -40,30 +40,30 @@ export const dataManagementSteps = [
     title: "Search and Filters",
     before: scrollTargetIntoView(".dm-filter-bar"),
     content:
-      "Use the Search box to find a dataset by file name, municipality, uploader, or year. The Municipality, Year, and Status filters narrow the list further, and Reset Filters clears everything back to the full list.",
+      "Use the Search box to find a coastal area record by file name, municipality, uploader, or year. The Municipality, Year, and Status filters narrow the list further, and Reset Filters clears everything back to the full list.",
   },
   {
     target: ".dm-table-container",
     placement: "top",
-    title: "Dataset List",
+    title: "Coastal Area Record List",
     before: scrollTargetIntoView(".dm-table-container"),
     content:
-      "The Dataset List shows every uploaded dataset with its satellite image preview, municipality, year, uploader, upload date, and status.",
+      "The record list shows every uploaded coastal area record with its satellite image preview, municipality, year, uploader, upload date, and status.",
   },
   {
     target: ".dm-view-btn",
     placement: "top",
-    title: "Dataset Actions",
+    title: "Record Actions",
     before: waitForElement(".dm-view-btn"),
     content:
-      "Each row's actions let you View the NDWI preview, fetch true-color Satellite Imagery for that area and year, and (for Superadmins) activate or deactivate the dataset. Datasets that were superseded by a later upload show a delete option instead, since their data no longer contributes to any analysis.",
+      "Each row's actions let you View the NDWI preview, fetch true-color Satellite Imagery for that area and year, and (for Superadmins) activate or deactivate the record. Records that were superseded by a later upload show a delete option instead, since their data no longer contributes to any analysis.",
   },
   {
     target: ".dm-pagination",
     placement: "top",
     title: "Pagination",
     before: waitForElement(".dm-pagination"),
-    content: "Use the pagination controls to browse through the full dataset list, page by page.",
+    content: "Use the pagination controls to browse through the full record list, page by page.",
   },
   {
     target: "body",

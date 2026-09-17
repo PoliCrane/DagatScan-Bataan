@@ -32,7 +32,7 @@ export const auditTrailSteps = [
     title: "Activity Summary",
     before: scrollTargetIntoViewNearest(".at-stats"),
     content:
-      "The summary cards show Total Activities logged, Critical Actions (deletions, deactivations, and role escalations), Data Activities (uploads and dataset changes), and User Activities (account and role changes).",
+      "The summary cards show Total Activities logged, Critical Actions (deletions, deactivations, and role escalations), Data Activities (uploads and coastal area record changes), and User Activities (account and role changes).",
   },
   {
     target: ".at-filter-bar",

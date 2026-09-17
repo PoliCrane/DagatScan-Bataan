@@ -4,7 +4,7 @@ import ErosionAnalysisCards from "../components/ErosionAnalysisCards";
 import AnalysisToolsCards from "../components/AnalysisToolsCards";
 import SatelliteToggle from "../components/SatelliteToggle";
 import { MapContainer, Marker, Popup, TileLayer, GeoJSON, useMap, useMapEvents, Polyline, Polygon } from 'react-leaflet'
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "./index-organized.css";
@@ -22,8 +22,11 @@ import { TOUR_PAGE_IDS } from "../tours/pageIds";
 import { erosionAnalysisSteps } from "../tours/steps/erosionAnalysisSteps";
 import { API_BASE_URL } from "../config/api";
 import MapWorkspace from "../components/MapWorkspace";
+import AnalysisPopout from "../components/AnalysisPopout";
+import useOffScreen from "../hooks/useOffScreen";
+import useEventContext, { formatTyphoons } from "../hooks/useEventContext";
 // Colors match ErosionLegend's meaning-based palette (current/previous/predicted).
-const CURRENT_SHORELINE_COLOR = "#FF3131";
+const CURRENT_SHORELINE_COLOR = "#FF10F0";
 // Matches the "Erosion Area" legend swatch and the PDF report map's shaded ribbon.
 const EROSION_AREA_COLOR = "#fc4c00";
 // Shown instead of EROSION_AREA_COLOR for accretion (positive erosion rate)
@@ -96,6 +99,10 @@ export default function ErosionAnalysis() {
   const [predictionResult, setPredictionResult] = useState(null);
 
   const mapWorkspaceRef = useRef(null);
+  // Watched so a result that has scrolled out of the analysis panel can be echoed
+  // over the map instead of making the user hunt for it.
+  const erosionCardRef = useRef(null);
+  const predictionCardRef = useRef(null);
   // Compare/Predict auto-rerun on every dropdown change (see AnalysisToolsCards.jsx);
   // these ids guard against a stale in-flight response overwriting a newer one's state.
   const compareRequestIdRef = useRef(0);
@@ -675,10 +682,105 @@ export default function ErosionAnalysis() {
         ? "No analyzed area in this municipality has 2+ years of data yet — upload another year to enable Compare/Predict."
         : null;
 
+  // --- Result pop-outs -------------------------------------------------------
+  // Compare and Predict both write their answer into the analysis panel, but the
+  // controls that trigger them sit further down that panel's scroll, so the result is
+  // usually off-screen the moment it arrives. While that is true it gets echoed over
+  // the map; once the real card scrolls back into view the echo disappears on its own.
+  const [erosionSummary, setErosionSummary] = useState(null);
+  const handleErosionSummary = useCallback((summary) => setErosionSummary(summary), []);
+
+  const comparePoppedOut = useOffScreen(erosionCardRef, !!comparedYear);
+  const predictionPoppedOut = useOffScreen(predictionCardRef, !!predictionResult);
+
+  const revealInPanel = (ref) => {
+    mapWorkspaceRef.current?.open();
+    // The panel slides open over 0.3s; scrolling before it lands goes nowhere.
+    setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 320);
+  };
+
+  // A newly generated prediction brings itself into view. Only the first one — later
+  // re-runs happen because the user changed a year, and yanking them back down while
+  // they are working in another section is exactly what this is meant to avoid.
+  const predictionShownRef = useRef(false);
+  useEffect(() => {
+    if (!predictionResult) {
+      predictionShownRef.current = false;
+      return;
+    }
+    if (predictionShownRef.current) return;
+    predictionShownRef.current = true;
+    revealInPanel(predictionCardRef);
+  }, [predictionResult]);
+
+  // Same year the sidebar's "What Happened in {year}" card uses, so the two can never
+  // show different storms for the same comparison.
+  const comparedYearContext = useEventContext(comparedYear);
+  const comparedTyphoons = formatTyphoons(comparedYearContext?.typhoons);
+
+  const summaryData = erosionSummary?.erosionData;
+  const popoutCards = [
+    {
+      key: "compare",
+      icon: "pi pi-chart-line",
+      title: "Erosion Analysis",
+      show: comparePoppedOut && !!erosionSummary,
+      onReturn: () => revealInPanel(erosionCardRef),
+      note: erosionSummary?.error
+        ? erosionSummary.error
+        : erosionSummary?.insufficientDataMessage || null,
+      items: summaryData
+        ? [
+            { label: "Compared", value: `${comparedYear} → ${selectedYearComparison}` },
+            ...(erosionSummary.hasSegmentSelected
+              ? [{ label: "Coastline Length", value: summaryData.coastlineLength, unit: "km" }]
+              : []),
+            { label: "Erosion Rate", value: summaryData.erosionRate, unit: "m/year" },
+            {
+              label: "Risk Level",
+              value: SEGMENT_RISK_LEVELS[summaryData.riskLevel] || summaryData.riskLevel,
+              color: getRiskColor(summaryData.riskLevel),
+            },
+            // Dropped entirely for a quiet year rather than shown as "None" — the
+            // pop-out only has room for what actually happened.
+            ...(comparedTyphoons
+              ? [{ label: `Typhoons ${comparedYear}`, value: comparedTyphoons, stacked: true }]
+              : []),
+          ]
+        : [],
+    },
+    {
+      key: "predict",
+      icon: "pi pi-sitemap",
+      title: "Prediction Result",
+      show: predictionPoppedOut && !!predictionResult,
+      onReturn: () => revealInPanel(predictionCardRef),
+      items: predictionResult
+        ? [
+            { label: "Predicted Year", value: predictionResult.predictedYear },
+            {
+              label: "Est. Retreat",
+              value:
+                predictionResult.retreatCi != null
+                  ? `${predictionResult.estimatedRetreat} ± ${predictionResult.retreatCi}`
+                  : predictionResult.estimatedRetreat,
+              unit: predictionResult.estimatedRetreatUnit,
+            },
+            {
+              label: "Projected Rate",
+              value: predictionResult.projectedLRR,
+              unit: predictionResult.projectedLRRUnit,
+            },
+          ]
+        : [],
+    },
+  ];
+
   return (
     <Layout>
       {Tour}
       <TourInfoButton onClick={replay} />
+      <AnalysisPopout cards={popoutCards} />
       <ErosionLegend />
       <SatelliteToggle isSatellite={isSatellite} onToggle={() => setIsSatellite(!isSatellite)} />
 
@@ -695,7 +797,7 @@ export default function ErosionAnalysis() {
         }
         emptyHint="Click a highlighted municipality on the map to load its shoreline record, then compare two years or project a future shoreline."
       >
-        <section className="map-workspace-section">
+        <section className="map-workspace-section" ref={erosionCardRef}>
           <ErosionAnalysisCards
             selectedMunicipality={selectedMunicipality}
             municipalityStats={municipalityStats}
@@ -703,6 +805,7 @@ export default function ErosionAnalysis() {
             predictedYear={predictedYear}
             shorelineSegments={shorelineSegments}
             selectedSegmentId={selectedSegmentId}
+            onSummaryChange={handleErosionSummary}
           />
         </section>
 
@@ -729,6 +832,7 @@ export default function ErosionAnalysis() {
             canAnalyze={canAnalyze}
             disabledReason={analyzeDisabledReason}
             predictionResult={predictionResult}
+            resultRef={predictionCardRef}
           />
         </section>
       </MapWorkspace>
@@ -969,12 +1073,12 @@ export default function ErosionAnalysis() {
                 />
               ))}
 
-              {/* Selected-year compared shoreline(s), red, on top */}
+              {/* Selected-year compared shoreline(s), neon pink, on top */}
               {selectedYearShoreline && selectedYearComparison && selectedYearShoreline.map((line, i) => (
                 <Polyline
                   key={`selected-year-${i}`}
                   positions={line}
-                  color="#FF3131"
+                  color="#FF10F0"
                   weight={3}
                   opacity={1}
                 />

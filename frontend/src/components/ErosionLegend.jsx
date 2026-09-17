@@ -1,6 +1,14 @@
 import { memo, useRef, useState } from "react";
 import "../pages/styles/erosionLegend.css";
 
+// The swatch is a 21px bar, so a dashed entry is drawn as a gradient rather than a
+// border-style — that keeps the same box size/shadow as every solid entry. Dashes are
+// kept long against short gaps; at this size anything shorter reads as blocks, not a line.
+const swatchStyle = (item) =>
+  item.dashed
+    ? { backgroundImage: `repeating-linear-gradient(90deg, ${item.color} 0 8px, transparent 8px 11px)` }
+    : { backgroundColor: item.color };
+
 function ErosionLegend() {
   const legendRef = useRef(null);
   const [expanded, setExpanded] = useState(true);
@@ -12,8 +20,11 @@ function ErosionLegend() {
   ];
 
   const rightColumn = [
-    { color: "#FF3131", label: "Current Shoreline" },
+    { color: "#FF10F0", label: "Current Shoreline" },
     { color: "#7CFC00", label: "Predicted Shoreline" },
+    // The dashed pair drawn either side of the predicted line — same colour, so the
+    // swatch has to carry the dash itself to distinguish it from the solid entry above.
+    { color: "#7CFC00", label: "Prediction Range", dashed: true },
   ];
 
   return (
@@ -36,7 +47,7 @@ function ErosionLegend() {
               <div key={index} className="legend-item">
                 <div
                   className="legend-line"
-                  style={{ backgroundColor: item.color }}
+                  style={swatchStyle(item)}
                 ></div>
                 <span className="legend-label">{item.label}</span>
               </div>
@@ -48,7 +59,7 @@ function ErosionLegend() {
               <div key={index} className="legend-item">
                 <div
                   className="legend-line"
-                  style={{ backgroundColor: item.color }}
+                  style={swatchStyle(item)}
                 ></div>
                 <span className="legend-label">{item.label}</span>
               </div>

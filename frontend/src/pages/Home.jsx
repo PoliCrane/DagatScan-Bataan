@@ -1,8 +1,8 @@
 import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Polyline, Marker, Popup, useMap } from 'react-leaflet';
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./styles/dashboard.css";
@@ -31,6 +31,33 @@ const STAT_CARD_VARIANTS = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
 };
 
+// MapContainer only reads `bounds` when it initialises, and the preview mounts before
+// .map-container reaches its final size — so the fit is applied from inside the map,
+// where it can be redone once the real size is known. Same pattern as CoastalMonitoring.
+function DashboardMapFocus({ bounds, containerRef }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || !bounds) return undefined;
+
+    const fit = () => {
+      map.invalidateSize();
+      // maxZoom stops a single short stretch of monitored coast from zooming the
+      // preview down to street level, where nothing is recognisable.
+      map.fitBounds(bounds, { padding: [24, 24], maxZoom: 14 });
+    };
+    fit();
+
+    const node = containerRef.current;
+    if (!node || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(fit);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [map, bounds, containerRef]);
+
+  return null;
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("User");
@@ -46,7 +73,6 @@ export default function Home() {
   const [backendStatus, setBackendStatus] = useState("checking");
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DASHBOARD, dashboardSteps);
   const mapContainerRef = useRef(null);
-  const mapRef = useRef(null);
 
   // Boundary fetched (not hardcoded) so fitted bounds match the real province shape.
   const [geoJsonData, setGeoJsonData] = useState(null);
@@ -81,21 +107,69 @@ export default function Home() {
     };
   }, []);
 
-  // .map-container's size changes once sidebar content replaces its loading
-  // state; Leaflet caches its initial size, so force a resize check.
-  useEffect(() => {
-    const node = mapContainerRef.current;
-    if (!node || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(() => mapRef.current?.invalidateSize());
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
   // Dashboard is admin/superadmin/municipal only; others get redirected.
   const userRole = localStorage.getItem("roles");
   const isMunicipal = userRole === "municipal";
   const municipalityName = isMunicipal ? localStorage.getItem("municipality") : null;
   const scopeLabel = isMunicipal && municipalityName ? municipalityName : "Bataan";
+
+  // Only the municipality-scoped /zones endpoint returns geometry, so the shoreline
+  // overlay is a municipal-account feature — the province-wide payload has none.
+  const scopedShorelines = useMemo(() => {
+    if (!isMunicipal) return [];
+
+    return allZones
+      .map((zone) => {
+        const geometry = zone.geojsonData?.geometry;
+        const coordinates =
+          geometry?.type === "LineString"
+            ? geometry.coordinates
+            : geometry?.type === "MultiLineString"
+              ? geometry.coordinates.flat()
+              : null;
+        if (!coordinates || coordinates.length < 2) return null;
+
+        return {
+          id: zone.id,
+          name: zone.specificArea,
+          risk: zone.riskLevel,
+          erosionRate: zone.erosionRate,
+          year: zone.year,
+          positions: coordinates.map(([lon, lat]) => [lat, lon]),
+          color: getRiskColor(zone.riskLevel),
+        };
+      })
+      .filter(Boolean);
+  }, [isMunicipal, allZones]);
+
+  // Municipal accounts open onto their own monitored coast rather than the whole
+  // province. Fitting the municipality polygon isn't close enough to be useful — several
+  // are far taller than the map box is, so the fit is height-bound and leaves the
+  // segments a few pixels wide. Fitting the segments themselves is what makes them
+  // legible; the municipality outline is the fallback when none have geometry yet.
+  const focusBounds = useMemo(() => {
+    if (!isMunicipal || !municipalityName) return bataanBounds;
+
+    const segmentPoints = scopedShorelines.flatMap((line) => line.positions);
+    if (segmentPoints.length > 1) return L.latLngBounds(segmentPoints);
+
+    if (!geoJsonData) return bataanBounds;
+    const owned = geoJsonData.features.filter(
+      (feature) => feature.properties?.MUNICIPALI?.toUpperCase() === municipalityName.toUpperCase()
+    );
+    if (owned.length === 0) return bataanBounds;
+
+    // Several municipalities are split into multiple polygons (offshore islets);
+    // fit the largest one so the preview lands on the mainland coast, not a rock.
+    const boxArea = (feature) => {
+      const b = L.geoJSON(feature).getBounds();
+      return (b.getEast() - b.getWest()) * (b.getNorth() - b.getSouth());
+    };
+    const mainland = owned.reduce((largest, current) =>
+      boxArea(current) > boxArea(largest) ? current : largest
+    );
+    return L.geoJSON(mainland).getBounds();
+  }, [isMunicipal, municipalityName, scopedShorelines, geoJsonData, bataanBounds]);
 
   useEffect(() => {
     if (userRole !== "admin" && userRole !== "superadmin" && userRole !== "municipal") {
@@ -235,8 +309,7 @@ export default function Home() {
               <div className="map-container" ref={mapContainerRef}>
                 {bataanBounds && (
                   <MapContainer
-                    ref={mapRef}
-                    bounds={bataanBounds}
+                    bounds={focusBounds}
                     style={{ height: '100%', width: '100%' }}
                     zoomControl={false}
                     dragging={true}
@@ -244,6 +317,7 @@ export default function Home() {
                     scrollWheelZoom={false}
                     keyboard={false}
                   >
+                    <DashboardMapFocus bounds={focusBounds} containerRef={mapContainerRef} />
                     <TileLayer
                       url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                       attribution="Tiles &copy; Esri"
@@ -251,15 +325,82 @@ export default function Home() {
                     {geoJsonData && (
                       <GeoJSON
                         data={geoJsonData}
-                        style={() => ({
-                          color: "#0096FF",
-                          weight: 2,
-                          opacity: 0.6,
-                          fillColor: "#F0FFFF",
-                          fillOpacity: 0.15,
-                        })}
+                        style={(feature) => {
+                          // Neighbouring municipalities fade back so a municipal user's
+                          // own coastline reads as the subject of the preview.
+                          const isOwn =
+                            feature.properties?.MUNICIPALI?.toUpperCase() ===
+                            municipalityName?.toUpperCase();
+                          if (isMunicipal && !isOwn) {
+                            return {
+                              color: "#0096FF",
+                              weight: 1,
+                              opacity: 0.25,
+                              fillColor: "#F0FFFF",
+                              fillOpacity: 0.05,
+                            };
+                          }
+                          return {
+                            color: "#0096FF",
+                            weight: 2,
+                            opacity: 0.6,
+                            fillColor: "#F0FFFF",
+                            fillOpacity: 0.15,
+                          };
+                        }}
                       />
                     )}
+
+                    {scopedShorelines.map((line) => (
+                      <Polyline
+                        key={`dashboard-shoreline-${line.id}`}
+                        positions={line.positions}
+                        pathOptions={{ color: line.color, weight: 4, opacity: 0.95 }}
+                      />
+                    ))}
+
+                    {/* One marker per monitored area, so segments are identifiable and
+                        not just visible. Same treatment as the Coastal Monitoring map. */}
+                    {scopedShorelines.map((line) => {
+                      const midpoint = line.positions[Math.floor(line.positions.length / 2)];
+                      if (!midpoint) return null;
+
+                      return (
+                        <Marker
+                          key={`dashboard-marker-${line.id}`}
+                          position={midpoint}
+                          icon={L.divIcon({
+                            className: "segment-marker",
+                            html: `<div class="segment-marker-icon" style="background:${line.color}; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,0.3); border:2px solid white;">!</div>`,
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 14],
+                          })}
+                        >
+                          <Popup>
+                            <div style={{ fontWeight: 600, marginBottom: 4 }}>{line.name}</div>
+                            <div
+                              style={{
+                                display: "inline-block",
+                                padding: "2px 8px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                background: `${line.color}22`,
+                                color: line.color,
+                              }}
+                            >
+                              {SEGMENT_RISK_LEVELS[line.risk] || line.risk}
+                            </div>
+                            <div style={{ fontSize: 12, marginTop: 6 }}>
+                              {line.erosionRate != null
+                                ? `${Number(line.erosionRate).toFixed(2)} m/year`
+                                : "No rate yet"}
+                              {line.year != null && ` · ${line.year}`}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      );
+                    })}
                   </MapContainer>
                 )}
               </div>

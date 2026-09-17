@@ -35,12 +35,8 @@ const schemas = {
   createUser: z.object({
     username: z.string().min(1, "Username is required"),
     email: z.string().min(1, "Email is required"),
-    password: z.string().min(1, "Password is required"),
     roles: z.string().min(1, "Role is required"),
     municipality_id: z.union([z.string(), z.number()]).optional(),
-  }),
-  approveRequest: z.object({
-    password: z.string().min(1, "A password for the new account is required"),
   }),
   rejectRequest: z.object({
     reason: z.string().max(500).optional().nullable(),

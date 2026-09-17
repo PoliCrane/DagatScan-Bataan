@@ -74,7 +74,7 @@ export default function DataManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to load datasets");
+      if (!response.ok) throw new Error(data.error || "Failed to load coastal area records");
       setDatasets(Array.isArray(data.uploads) ? data.uploads : []);
     } catch (err) {
       console.error("Error fetching datasets:", err);
@@ -234,7 +234,7 @@ export default function DataManagement() {
     if (!confirmed) return;
 
     setBusyId(dataset.id);
-    await showLoading(turningOff ? "Deactivating dataset..." : "Reactivating dataset...", 1200);
+    await showLoading(turningOff ? "Deactivating coastal area record..." : "Reactivating coastal area record...", 1200);
 
     try {
       const token = localStorage.getItem("token");
@@ -247,7 +247,7 @@ export default function DataManagement() {
         body: JSON.stringify({ active: !dataset.active }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to update dataset");
+      if (!response.ok) throw new Error(data.error || "Failed to update coastal area record");
 
       await showSuccess(data.message);
       await fetchDatasets();
@@ -299,7 +299,7 @@ export default function DataManagement() {
         <div className="data-management-header">
           <div>
             <h1>Data Management</h1>
-            <p>View and manage all uploaded historical coastal datasets.</p>
+            <p>View and manage all uploaded historical coastal area records.</p>
           </div>
         </div>
 
@@ -309,7 +309,7 @@ export default function DataManagement() {
           <div className="dm-stat-card">
             <div className="dm-stat-icon-badge blue"><span className="dm-stat-icon" /></div>
             <div className="dm-stat-text">
-              <div className="dm-stat-label">Total Datasets</div>
+              <div className="dm-stat-label">Total Records</div>
               <div className="dm-stat-value">{loading ? "..." : stats.total}</div>
               <div className="dm-stat-info">All time uploaded</div>
             </div>
@@ -317,7 +317,7 @@ export default function DataManagement() {
           <div className="dm-stat-card">
             <div className="dm-stat-icon-badge green"><span className="dm-stat-icon" /></div>
             <div className="dm-stat-text">
-              <div className="dm-stat-label">Active Datasets</div>
+              <div className="dm-stat-label">Active Records</div>
               <div className="dm-stat-value">{loading ? "..." : stats.active}</div>
               <div className="dm-stat-info">Counted in analysis</div>
             </div>
@@ -325,7 +325,7 @@ export default function DataManagement() {
           <div className="dm-stat-card">
             <div className="dm-stat-icon-badge orange"><span className="dm-stat-icon" /></div>
             <div className="dm-stat-text">
-              <div className="dm-stat-label">Inactive Datasets</div>
+              <div className="dm-stat-label">Inactive Records</div>
               <div className="dm-stat-value">{loading ? "..." : stats.inactive}</div>
               <div className="dm-stat-info">Excluded from analysis</div>
             </div>
@@ -344,10 +344,10 @@ export default function DataManagement() {
           <IconField iconPosition="left" className="dm-search-box">
             <InputIcon className="pi pi-search" />
             <InputText
-              placeholder="Search dataset..."
+              placeholder="Search coastal area records..."
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              aria-label="Search datasets"
+              aria-label="Search coastal area records"
             />
           </IconField>
 
@@ -392,7 +392,7 @@ export default function DataManagement() {
         </div>
 
         {loading ? (
-          <p className="user-management-loading">Loading datasets...</p>
+          <p className="user-management-loading">Loading coastal area records...</p>
         ) : (
           <div className="dm-table-container">
             <DataTable
@@ -410,8 +410,8 @@ export default function DataManagement() {
               paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
               emptyMessage={
                 datasets.length === 0
-                  ? "No datasets have been uploaded yet."
-                  : "No datasets match the selected filters."
+                  ? "No coastal area records have been uploaded yet."
+                  : "No coastal area records match the selected filters."
               }
               rowClassName={(d) => `dm-row ${!d.active ? "inactive" : ""}`}
               size="small"
@@ -534,7 +534,7 @@ export default function DataManagement() {
                         tooltip={
                           d.has_bounds
                             ? "Fetch a true-color satellite photo for this area/year"
-                            : "No location data available for this dataset"
+                            : "No location data available for this coastal area record"
                         }
                         tooltipOptions={{ position: "top" }}
                       />
@@ -552,7 +552,7 @@ export default function DataManagement() {
                           tooltip={
                             d.bounds
                               ? "Regenerate NDWI imagery for this area/year"
-                              : "No stored bounds for this dataset"
+                              : "No stored bounds for this coastal area record"
                           }
                           tooltipOptions={{ position: "top" }}
                         />
@@ -564,8 +564,8 @@ export default function DataManagement() {
                             active={d.active}
                             onToggle={() => handleToggleActive(d)}
                             disabled={busyId !== null}
-                            deactivateLabel="Deactivate dataset"
-                            activateLabel="Reactivate dataset"
+                            deactivateLabel="Deactivate coastal area record"
+                            activateLabel="Reactivate coastal area record"
                           />
                         )}
                         {canDelete ? (
@@ -580,11 +580,11 @@ export default function DataManagement() {
                             disabled={busyId !== null}
                             tooltip={
                               d.can_deactivate
-                                ? "Permanently delete this dataset's shoreline data \u2014 can't be undone"
+                                ? "Permanently delete this coastal area record's shoreline data \u2014 can't be undone"
                                 : "Superseded upload \u2014 delete its audit record and file."
                             }
                             tooltipOptions={{ position: "top" }}
-                            aria-label="Delete dataset"
+                            aria-label="Delete coastal area record"
                           />
                         ) : (
                           <span

@@ -16,6 +16,7 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
   canAnalyze = true,
   disabledReason = null,
   predictionResult = null,
+  resultRef = null,
 }) {
   const cardsRef = useRef(null);
   const [isVisible, setIsVisible] = useState(true);
@@ -355,12 +356,15 @@ export default function AnalysisToolsCards({ contextYear = null, onPlayTimeline 
         </div>
       </div>
 
-      {/* positioned left via CSS */}
-      <PredictionResultCard
-        isActive={!!predictionResult}
-        predictionData={predictionResult}
-        onClear={handleEndSimulation}
-      />
+      {/* positioned left via CSS; the wrapper is what the page watches to decide
+          whether the result needs a map-side stand-in */}
+      <div ref={resultRef}>
+        <PredictionResultCard
+          isActive={!!predictionResult}
+          predictionData={predictionResult}
+          onClear={handleEndSimulation}
+        />
+      </div>
     </>
   );
 }

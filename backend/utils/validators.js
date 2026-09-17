@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 // re-checked server-side so the frontend's rules can't be bypassed by calling the API directly
 function meetsPasswordRequirements(password) {
   return (
@@ -12,6 +14,38 @@ function meetsPasswordRequirements(password) {
 
 const PASSWORD_REQUIREMENTS_MESSAGE =
   "Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character";
+
+// Ambiguous glyphs (0/O, 1/l/I) are left out — these passwords get read off an email
+// and retyped, so a character a recipient can misread costs a support round-trip.
+// The specials also exclude & < > " so the value stays safe to drop straight into the
+// HTML email body and the admin-facing confirmation dialog without escaping.
+const TEMP_PASSWORD_POOLS = [
+  "ABCDEFGHJKLMNPQRSTUVWXYZ",
+  "abcdefghijkmnopqrstuvwxyz",
+  "23456789",
+  "!@#$%*_-",
+];
+
+/**
+ * Cryptographically random temporary password, guaranteed to satisfy
+ * meetsPasswordRequirements() by drawing one character from every required class
+ * before filling the rest — so the two can never drift apart.
+ */
+function generateTemporaryPassword(length = 14) {
+  const everyChar = TEMP_PASSWORD_POOLS.join("");
+  const pick = (pool) => pool[crypto.randomInt(pool.length)];
+
+  const chars = TEMP_PASSWORD_POOLS.map(pick);
+  while (chars.length < length) chars.push(pick(everyChar));
+
+  // Fisher-Yates, otherwise the first four characters are always in class order.
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+
+  return chars.join("");
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PH_MOBILE_REGEX = /^(09\d{9}|\+639\d{9})$/;
@@ -30,6 +64,7 @@ function escapeHtml(value) {
 
 module.exports = {
   meetsPasswordRequirements,
+  generateTemporaryPassword,
   PASSWORD_REQUIREMENTS_MESSAGE,
   EMAIL_REGEX,
   PH_MOBILE_REGEX,

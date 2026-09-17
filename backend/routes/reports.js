@@ -14,7 +14,7 @@ const router = express.Router();
 
 // Same fixed shoreline colors as the Erosion Analysis legend (ErosionLegend.jsx) so the PDF matches the live app.
 const PREVIOUS_SHORELINE_COLOR = "#FFEA00";
-const CURRENT_SHORELINE_COLOR = "#FF3131";
+const CURRENT_SHORELINE_COLOR = "#FF10F0";
 const EROSION_AREA_COLOR = "#fc4c00";
 
 // Same design tokens the live app uses in light contexts (frontend/src/styles/app.css), not
@@ -31,7 +31,6 @@ const MAP_BORDER = "#c2e4fd";
 const FONTS = {
   body: path.join(__dirname, "../assets/fonts/Mulish-Regular.ttf"),
   bodyBold: path.join(__dirname, "../assets/fonts/Mulish-Bold.ttf"),
-  display: path.join(__dirname, "../assets/fonts/InstrumentSerif-Regular.ttf"),
 };
 const LOGO_PATH = path.join(__dirname, "../assets/DSLogo.png");
 
@@ -194,7 +193,6 @@ router.get("/:zoneId/pdf", async (req, res) => {
 
     doc.registerFont("Body", FONTS.body);
     doc.registerFont("Body-Bold", FONTS.bodyBold);
-    doc.registerFont("Display", FONTS.display);
 
     // Masthead
     const mastheadTop = doc.y;
@@ -207,7 +205,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
     doc
       .fillColor(INK)
       .fontSize(24)
-      .font("Display")
+      .font("Body-Bold")
       .text("Coastal Erosion Assessment Report", { align: "center" });
     doc
       .fontSize(13)
@@ -218,8 +216,17 @@ router.get("/:zoneId/pdf", async (req, res) => {
     doc
       .fontSize(9)
       .fillColor(MUTED)
-      .font("Body")
+      .font("Body-Bold")
       .text("DagatScan Bataan — Coastal Erosion Monitoring System", { align: "center" });
+    doc.moveDown(0.35);
+    doc
+      .fontSize(8.5)
+      .fillColor(MUTED)
+      .font("Body")
+      .text(
+        `Report generated on ${generatedOn}. Values are auto-computed from satellite-derived shoreline data using the End Point Rate (EPR) methodology.`,
+        { align: "center", lineGap: 1 }
+      );
     doc.moveDown(0.6);
     doc.strokeColor(PRIMARY).lineWidth(1.5).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
     doc.moveDown(1);
@@ -440,14 +447,9 @@ router.get("/:zoneId/pdf", async (req, res) => {
     addSectionHeader("Interpretation", interpretationHeight);
     doc.font("Body").fontSize(10.5).fillColor(INK).text(interpretation, { align: "left", lineGap: 3 });
 
+    // Generation date + methodology note live in the masthead now, not here.
     doc.moveDown(1.5);
     doc.strokeColor(LINE).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown(0.7);
-    doc
-      .font("Body")
-      .fontSize(9)
-      .fillColor(MUTED)
-      .text(`Report generated on ${generatedOn}. Values are auto-computed from satellite-derived shoreline data using the End Point Rate (EPR) methodology.`);
 
     doc.end();
   } catch (err) {

@@ -30,6 +30,51 @@
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
 }
 
+/* Periodic availability hint (TourInfoButton.jsx drives the .is-hinting class).
+   The expanding ring lives on ::after so it never fights Framer Motion for the
+   button's own transform, same reason the hover rule only owns color. */
+.tour-info-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.65);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tour-info-btn.is-hinting::after {
+  animation: tour-hint-ring 1.5s ease-out 3;
+}
+
+.tour-info-btn.is-hinting {
+  animation: tour-hint-glow 1.5s ease-out 3;
+}
+
+@keyframes tour-hint-ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes tour-hint-glow {
+  0%,
+  100% {
+    box-shadow: 0 14px 34px -16px rgb(2 10 22 / 0.85);
+  }
+  35% {
+    box-shadow:
+      0 14px 34px -16px rgb(2 10 22 / 0.85),
+      0 0 0 6px rgba(56, 189, 248, 0.16);
+  }
+}
+
 .tour-info-icon {
   font-size: 20px;
   color: var(--color-cyan, #38bdf8);
@@ -38,6 +83,11 @@
 @media (prefers-reduced-motion: reduce) {
   .tour-info-btn {
     transition: none;
+  }
+
+  .tour-info-btn.is-hinting,
+  .tour-info-btn.is-hinting::after {
+    animation: none;
   }
 }
 

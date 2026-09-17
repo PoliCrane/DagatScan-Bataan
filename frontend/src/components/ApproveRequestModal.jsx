@@ -1,51 +1,25 @@
 import { useState } from "react";
 import "../pages/styles/accountModals.css";
-import { showSuccess, showError } from "../utils/sweetAlertUtils";
+import { showSuccessHtml, showError } from "../utils/sweetAlertUtils";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
-import { Password } from "primereact/password";
 import { Message } from "primereact/message";
 import { openRequestLetter } from "../utils/requestLetter";
 
 import { API_BASE_URL } from "../config/api";
-// admin sets the initial password at approval time — the request form no longer collects one from the applicant
+// The system issues the initial password on approval — neither the applicant nor the
+// approver picks one. It is emailed to the applicant and shown once here as a fallback.
 export default function ApproveRequestModal({ isOpen, request, onClose, onSuccess }) {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [expandPassword, setExpandPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const passwordRequirements = {
-    minLength: password.length >= 8,
-    hasUppercase: /[A-Z]/.test(password),
-    hasLowercase: /[a-z]/.test(password),
-    hasNumber: /[0-9]/.test(password),
-    hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
-  };
-
   const handleClose = () => {
-    setPassword("");
-    setConfirmPassword("");
     setError("");
     onClose();
   };
 
   const handleApprove = async () => {
     setError("");
-    if (!confirmPassword.trim()) {
-      setError("Please confirm the password");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (!Object.values(passwordRequirements).every(Boolean)) {
-      setError("Password does not meet all requirements below");
-      return;
-    }
-
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
@@ -57,16 +31,18 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ password }),
+          body: JSON.stringify({}),
         }
       );
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || "Failed to approve request");
       }
-      await showSuccess(`Account created for ${request.username}`);
-      setPassword("");
-      setConfirmPassword("");
+      await showSuccessHtml(
+        `Account created for <strong>${request.username}</strong><br/>` +
+        `<small>Temporary password: <strong>${data.temporaryPassword}</strong></small><br/>` +
+        `<small>Also emailed to ${request.email}. They can change it from their account menu after signing in.</small>`
+      );
       onSuccess();
     } catch (err) {
       await showError(err.message);
@@ -88,13 +64,6 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
         onClick={handleApprove}
         loading={loading}
       />
-    </div>
-  );
-
-  const requirementRow = (met, text) => (
-    <div className={`requirement ${met ? "met" : ""}`}>
-      <span className="requirement-icon">{met ? "✓" : "○"}</span>
-      {text}
     </div>
   );
 
@@ -126,53 +95,11 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
         {request.additional_remarks && <p>Remarks: {request.additional_remarks}</p>}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="approve-password">Set Initial Password *</label>
-        <Password
-          id="approve-password"
-          className="w-full"
-          inputClassName="form-input w-full"
-          inputStyle={{ width: "100%" }}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onFocus={() => setExpandPassword(true)}
-          onBlur={() => setExpandPassword(false)}
-          placeholder="Set initial password"
-          disabled={loading}
-          toggleMask
-          feedback={false}
-        />
-        {expandPassword && (
-          <div className="password-requirements">
-            {requirementRow(passwordRequirements.minLength, "At least 8 characters")}
-            {requirementRow(passwordRequirements.hasUppercase, "One uppercase letter (A-Z)")}
-            {requirementRow(passwordRequirements.hasLowercase, "One lowercase letter (a-z)")}
-            {requirementRow(passwordRequirements.hasNumber, "One number (0-9)")}
-            {requirementRow(passwordRequirements.hasSpecial, "Special Characters (! @ # $ % ^ & * ( ) _ +)")}
-          </div>
-        )}
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="approve-confirm-password">Confirm Password *</label>
-        <Password
-          id="approve-confirm-password"
-          className="w-full"
-          inputClassName="form-input w-full"
-          inputStyle={{ width: "100%" }}
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Re-enter password"
-          disabled={loading}
-          toggleMask
-          feedback={false}
-        />
-        {confirmPassword && (
-          <div className={`password-match-hint ${password === confirmPassword ? "match" : "mismatch"}`}>
-            {password === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
-          </div>
-        )}
-      </div>
+      <Message
+        severity="info"
+        className="w-full"
+        text="Approving creates the account with an automatically generated temporary password, emailed to the applicant and shown once here."
+      />
     </Dialog>
   );
 }

@@ -80,12 +80,12 @@ const sendAccountApprovedEmail = async (email, username, password, municipalityN
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
           <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
           <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(username)}</p>
-          <p style="font-size: 14px; margin: 0 0 10px 0;">Password:</p>
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Temporary password:</p>
           <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(password)}</p>
         </div>
 
         <p>Log in at the DagatScan Bataan website using this email address and the password above.</p>
-        <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it after your first login.</p>
+        <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it from your account menu after your first login.</p>
         `
       )
     });
@@ -110,12 +110,12 @@ const sendAccountCreatedEmail = async (email, username, password, municipalityNa
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
           <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
           <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(username)}</p>
-          <p style="font-size: 14px; margin: 0 0 10px 0;">Password:</p>
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Temporary password:</p>
           <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(password)}</p>
         </div>
 
         <p>Log in at the DagatScan Bataan website using this email address and the password above.</p>
-        <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it after your first login.</p>
+        <p style="color: #999; font-size: 12px;">For security, never share your password with anyone, and change it from your account menu after your first login.</p>
         `
       )
     });

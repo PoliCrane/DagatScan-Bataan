@@ -120,7 +120,7 @@
   color: var(--color-ink, #0b1a2b);
 }
 
-.layout-main h3:not([class*="card-title"]):not([class*="legend-title"]):not([class*="segments-panel-title"]) {
+.layout-main h3:not([class*="card-title"]):not([class*="legend-title"]):not([class*="segments-panel-title"]):not([class*="popout-title"]) {
   font-family: var(--font-sans, "Archivo", sans-serif);
   font-size: 0.95rem;
   font-weight: 700;

@@ -11,6 +11,7 @@ function ErosionAnalysisCards({
   predictedYear = null,
   shorelineSegments = [],
   selectedSegmentId = null,
+  onSummaryChange = null,
   autoRefreshInterval = 30000 // 30s, in ms
 }) {
   const cardsRef = useRef(null);
@@ -169,6 +170,33 @@ function ErosionAnalysisCards({
       window.removeEventListener("resize", positionCards);
     };
   }, []);
+
+  // Mirrored up so the map-side pop-out can show exactly these numbers rather than
+  // refetching and risking a different answer. Dependencies are the primitive fields,
+  // not the erosionData object, which is rebuilt on every render.
+  const hasSegmentSelected = !!selectedSegment;
+  useEffect(() => {
+    if (!onSummaryChange) return;
+    onSummaryChange({
+      erosionData,
+      insufficientDataMessage,
+      hasSegmentSelected,
+      hasMunicipality: !!selectedMunicipality,
+      error,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    onSummaryChange,
+    erosionData.municipalityName,
+    erosionData.coastlineLength,
+    erosionData.affectedAreaHa,
+    erosionData.riskLevel,
+    erosionData.erosionRate,
+    insufficientDataMessage,
+    hasSegmentSelected,
+    selectedMunicipality,
+    error,
+  ]);
 
   useEffect(() => {
     const handleScroll = () => {

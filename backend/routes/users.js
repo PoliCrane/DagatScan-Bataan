@@ -14,8 +14,7 @@ const {
 const { logAction } = require("../services/auditLog");
 const { validate, schemas } = require("../middleware/validate");
 const {
-  meetsPasswordRequirements,
-  PASSWORD_REQUIREMENTS_MESSAGE,
+  generateTemporaryPassword,
   USERNAME_REGEX,
   USERNAME_REQUIREMENTS_MESSAGE,
 } = require("../utils/validators");
@@ -176,19 +175,19 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
 
 router.post("/create-user", validate(schemas.createUser), async (req, res) => {
   try {
-    const { username, email, password, roles } = req.body;
+    const { username, email, roles } = req.body;
 
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: "Username, email, and password are required" });
+    if (!username || !email) {
+      return res.status(400).json({ error: "Username and email are required" });
     }
 
     if (!USERNAME_REGEX.test(username)) {
       return res.status(400).json({ error: USERNAME_REQUIREMENTS_MESSAGE });
     }
 
-    if (!meetsPasswordRequirements(password)) {
-      return res.status(400).json({ error: PASSWORD_REQUIREMENTS_MESSAGE });
-    }
+    // Issued by the system, never chosen by the admin — the recipient changes it
+    // from the navbar's Change Password dialog after their first sign-in.
+    const password = generateTemporaryPassword();
 
     if (!roles || !VALID_ROLES.includes(roles)) {
       return res.status(400).json({
@@ -230,7 +229,8 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
 
     res.json({
       message: "User account created successfully",
-      user: newUser.rows[0]
+      user: newUser.rows[0],
+      temporaryPassword: password,
     });
 
     sendAccountCreatedEmail(email, username, password, municipality?.rows?.[0]?.name ?? null).catch((err) => {
@@ -387,15 +387,10 @@ router.get("/account-requests/:id/letter", async (req, res) => {
   }
 });
 
-// Creates the real users row; admin sets the password here.
-router.post("/account-requests/:id/approve", validate(schemas.approveRequest), async (req, res) => {
-  const { password } = req.body;
-  if (!password) {
-    return res.status(400).json({ error: "A password for the new account is required" });
-  }
-  if (!meetsPasswordRequirements(password)) {
-    return res.status(400).json({ error: PASSWORD_REQUIREMENTS_MESSAGE });
-  }
+// Creates the real users row; the system issues the initial password, the approver
+// never picks one. It reaches the applicant by email and they change it themselves.
+router.post("/account-requests/:id/approve", async (req, res) => {
+  const password = generateTemporaryPassword();
 
   const client = await pool.connect();
   try {
@@ -442,7 +437,13 @@ router.post("/account-requests/:id/approve", validate(schemas.approveRequest), a
     );
 
     await client.query("COMMIT");
-    res.json({ message: "Request approved and account created", user: newUser.rows[0] });
+    // Returned so the approver can relay it if the email bounces; shown once in the
+    // UI and never stored anywhere but the user's own bcrypt hash.
+    res.json({
+      message: "Request approved and account created",
+      user: newUser.rows[0],
+      temporaryPassword: password,
+    });
 
     // fire-and-forget — a slow/failed email shouldn't block the response
     sendAccountApprovedEmail(request.email, request.username, password, request.municipality_name).catch((err) => {
