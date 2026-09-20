@@ -30,6 +30,14 @@ export function buildDataUploadSteps(setUploadType) {
         "The NDWI Generator uses Google Earth Engine to generate NDWI satellite imagery. Enter the required information: Latitude Min (South), Latitude Max (North), Longitude Min (West), Longitude Max (East), Municipality, and Coastline Name. These values define the area that will be processed.",
     },
     {
+      target: "#ndwi-aoi-picker",
+      placement: "top",
+      title: "Pick the Area on the Map",
+      before: scrollNdwiTargetIntoView(setUploadType, "#ndwi-aoi-picker"),
+      content:
+        "Instead of typing coordinates, pick a municipality then click its coast on the map. The pin snaps to the coastline and the box around it is the area that gets analysed — the slider sets how wide that box is. Because every image is resampled to a 256×256 grid before the shoreline is traced, a smaller box measures more precisely; the readout shows the resulting metres per pixel. Warnings appear here if the box misses the shoreline or drifts from the bounds used for this area in earlier years.",
+    },
+    {
       target: "#generate-ndwi-btn",
       placement: "top",
       title: "Generate This Year",

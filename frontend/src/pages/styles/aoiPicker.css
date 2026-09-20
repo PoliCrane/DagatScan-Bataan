@@ -1,0 +1,238 @@
+/* Map picker inside the NDWI card on Data Upload. Deliberately light chrome to match
+   data-upload.css — the dark "Deep Survey" map styling is scoped to the public map
+   pages and would clash inside this white admin card. */
+
+.aoi-picker {
+  margin: 8px 0 24px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+.aoi-picker-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.aoi-picker-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.aoi-picker-sub {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.aoi-picker-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.aoi-snap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #475569;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Leaflet needs a resolved height at mount, so this is fixed px rather than a ratio.
+   Tall enough that fitting a whole municipality still leaves the coast clickable. */
+.aoi-picker-map {
+  position: relative;
+  height: 420px;
+  background: #e5eaf0;
+}
+
+.aoi-picker-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #475569;
+  background: rgba(233, 238, 244, 0.82);
+  pointer-events: none;
+}
+
+/* The pin is drawn rather than loaded — this app ships no Leaflet marker images. */
+.aoi-pin {
+  background: none;
+  border: 0;
+}
+
+.aoi-pin-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #c1440e;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.aoi-picker-controls {
+  padding: 14px 16px;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+}
+
+.aoi-size-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.aoi-size-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.aoi-size-slider {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.aoi-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.aoi-preset {
+  padding: 5px 10px;
+  border: 1px solid #cbd5e0;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.75rem;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.aoi-preset:hover:not(:disabled) {
+  border-color: #0077b6;
+  color: #0077b6;
+}
+
+.aoi-preset.is-active {
+  border-color: #0077b6;
+  background: #e6f3fa;
+  color: #0077b6;
+  font-weight: 600;
+}
+
+.aoi-preset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aoi-preset-star {
+  margin-left: 4px;
+  color: #16a34a;
+}
+
+.aoi-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: #334155;
+  font-variant-numeric: tabular-nums;
+}
+
+.aoi-readout-sep {
+  color: #cbd5e0;
+}
+
+.aoi-readout-quality {
+  font-weight: 700;
+}
+
+.aoi-readout.tone-recommended .aoi-readout-quality { color: #16a34a; }
+.aoi-readout.tone-acceptable .aoi-readout-quality { color: #b45309; }
+.aoi-readout.tone-coarse .aoi-readout-quality { color: #b91c1c; }
+
+.aoi-picker-note {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.aoi-messages {
+  margin: 0;
+  padding: 12px 16px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.aoi-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.aoi-message .pi {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.aoi-message.tone-error { color: #b91c1c; }
+.aoi-message.tone-warn { color: #b45309; }
+.aoi-message.tone-info { color: #0369a1; }
+
+.aoi-message-action {
+  padding: 0 !important;
+  font-size: 0.78rem !important;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .aoi-picker-map {
+    height: 260px;
+  }
+
+  .aoi-picker-head,
+  .aoi-picker-head-actions {
+    width: 100%;
+  }
+
+  .aoi-size-row {
+    gap: 10px;
+  }
+
+  .aoi-presets {
+    width: 100%;
+  }
+}

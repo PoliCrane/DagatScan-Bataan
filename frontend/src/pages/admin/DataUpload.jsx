@@ -12,6 +12,10 @@ import TourInfoButton from "../../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../../tours/pageIds";
 import { buildDataUploadSteps } from "../../tours/steps/dataUploadSteps";
 import { useNdwiGeneration } from "../../contexts/NdwiGenerationContext";
+import { parseDMSOrDecimal, formatDeg } from "../../utils/coordinates";
+import AoiPicker from "../../components/admin/AoiPicker";
+import { normalizeBox, validateAoi, DEFAULT_AOI_METERS } from "../../utils/aoiGeometry";
+import { isLandlocked } from "../../utils/coastalMunicipalities";
 
 import { API_BASE_URL } from "../../config/api";
 export default function DataUpload() {
@@ -40,6 +44,38 @@ export default function DataUpload() {
   // Only pre-request validation errors; generation state lives in NdwiGenerationContext below.
   const [ndwiError, setNdwiError] = useState(null);
 
+  // Map picker state. The four strings above stay the single source of truth for bounds —
+  // these only describe how the picker should behave, never what the box is.
+  const [aoiSizeMeters, setAoiSizeMeters] = useState(DEFAULT_AOI_METERS);
+  const [aoiSnapDistance, setAoiSnapDistance] = useState(null);
+  const [storedAreaBounds, setStoredAreaBounds] = useState(null);
+  // Reported up by the picker, which is where the municipality's coastline gets resolved;
+  // held here because the straddle check has to run even with the panel collapsed.
+  const [aoiCoastlines, setAoiCoastlines] = useState([]);
+  // Same reasoning — the picker already has the land polygons loaded for the balance check.
+  const [aoiLandFraction, setAoiLandFraction] = useState(null);
+
+  // Derived, not stored: a second copy of the bounds as numbers is what would create a
+  // render loop between the map and the text fields.
+  const ndwiBox = useMemo(() => {
+    const lonMin = parseDMSOrDecimal(ndwiLonMin);
+    const latMin = parseDMSOrDecimal(ndwiLatMin);
+    const lonMax = parseDMSOrDecimal(ndwiLonMax);
+    const latMax = parseDMSOrDecimal(ndwiLatMax);
+    if ([lonMin, latMin, lonMax, latMax].some((v) => v === null || Number.isNaN(v))) return null;
+    return { lonMin, latMin, lonMax, latMax };
+  }, [ndwiLonMin, ndwiLatMin, ndwiLonMax, ndwiLatMax]);
+
+  // The only writer from map to form. Normalising here is what guarantees the API never
+  // sees inverted bounds, which Earth Engine rejects with an opaque error.
+  const applyAoiBox = (box) => {
+    const n = normalizeBox(box);
+    setNdwiLonMin(formatDeg(n.lonMin));
+    setNdwiLatMin(formatDeg(n.latMin));
+    setNdwiLonMax(formatDeg(n.lonMax));
+    setNdwiLatMax(formatDeg(n.latMax));
+  };
+
   // Tracked app-wide so progress survives navigating away, and a second click can't start a duplicate request.
   const ndwiGeneration = useNdwiGeneration();
 
@@ -58,7 +94,7 @@ export default function DataUpload() {
   const datasetInputRef = useRef(null);
   const satelliteInputRef = useRef(null);
 
-  const municipalities = [
+  const municipalityNames = [
     "Balanga",
     "Bagac",
     "Dinalupihan",
@@ -72,6 +108,14 @@ export default function DataUpload() {
     "Mariveles",
     "Abucay",
   ];
+  // Landlocked municipalities still need to exist for their DENR office elsewhere in
+  // the app, but there's no coastline to generate NDWI against — greyed out here
+  // rather than removed, so it's clear why they're unavailable.
+  const municipalities = municipalityNames.map((name) => ({
+    label: isLandlocked(name) ? `${name} (no coastline)` : name,
+    value: name,
+    disabled: isLandlocked(name),
+  }));
 
   const years = Array.from(
     { length: 20 },
@@ -80,6 +124,20 @@ export default function DataUpload() {
 
   // NDWI card has no location concept of its own, so this feeds the Coastline Name dropdown.
   const [ndwiMunicipality, setNdwiMunicipality] = useState("");
+
+  const { errors: aoiErrors, warnings: aoiWarnings } = useMemo(
+    () =>
+      validateAoi({
+        box: ndwiBox,
+        polylines: aoiCoastlines,
+        snapDistanceMeters: aoiSnapDistance,
+        storedBounds: storedAreaBounds,
+        areaName: ndwiCoastlineName,
+        isLandlockedMunicipality: isLandlocked(ndwiMunicipality),
+        landFraction: aoiLandFraction,
+      }),
+    [ndwiBox, aoiCoastlines, aoiSnapDistance, storedAreaBounds, ndwiCoastlineName, ndwiMunicipality, aoiLandFraction]
+  );
 
   const extractGeoJSONProperties = (file) => {
     const reader = new FileReader();
@@ -105,10 +163,10 @@ export default function DataUpload() {
           const val = props[key];
           if (val) {
             const match = municipalities.find(
-              (m) => m.toLowerCase() === String(val).trim().toLowerCase()
+              (m) => m.value.toLowerCase() === String(val).trim().toLowerCase()
             );
             if (match) {
-              setMunicipality(match);
+              setMunicipality(match.value);
               break;
             }
           }
@@ -139,43 +197,6 @@ export default function DataUpload() {
       }
     };
     reader.readAsText(file);
-  };
-
-  // Accepts decimal degrees, symbol-based DMS, or raw concatenated DMS with no separators.
-  const parseDMSOrDecimal = (value) => {
-    if (!value) return null;
-    const str = value.trim();
-
-    // Symbol-based DMS, e.g. 14°32'34.39"N.
-    const dmsRegex = /(\d+(?:\.\d+)?)[°\s]+(\d+(?:\.\d+)?)['’′\s]+(\d+(?:\.\d+)?)["”″]?\s*([NSEW])?/i;
-    const dmsMatch = str.match(dmsRegex);
-    if (dmsMatch) {
-      const [, deg, min, sec, dir] = dmsMatch;
-      let decimal = parseFloat(deg) + parseFloat(min) / 60 + parseFloat(sec) / 3600;
-      if (dir && /[SW]/i.test(dir)) decimal = -decimal;
-      return decimal;
-    }
-
-    // Raw concatenated DMS with no separators, e.g. 143234.87 -> deg=14 min=32 sec=34.87.
-    const rawMatch = str.match(/^(\d{5,7})(\.\d+)?\s*([NSEW])?$/i);
-    if (rawMatch) {
-      const [, intPart, frac = "", dir] = rawMatch;
-      const sec = parseFloat(intPart.slice(-2) + frac);
-      const min = parseInt(intPart.slice(-4, -2), 10);
-      const deg = parseInt(intPart.slice(0, -4), 10);
-      if (min < 60 && sec < 60) {
-        let decimal = deg + min / 60 + sec / 3600;
-        if (dir && /[SW]/i.test(dir)) decimal = -decimal;
-        return decimal;
-      }
-    }
-
-    // Plain decimal degrees, e.g. 14.542886.
-    if (/^-?\d+(\.\d+)?$/.test(str)) {
-      return parseFloat(str);
-    }
-
-    return null;
   };
 
   const handleFileSelect = (e, setFile) => {
@@ -247,6 +268,12 @@ export default function DataUpload() {
 
     if ([lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed].some((v) => v === null || isNaN(v))) {
       return { error: 'Could not parse one or more bounds. Use decimal degrees (120.3816) or DMS (120°22\'53.66"E).' };
+    }
+
+    // Same check the picker shows live, repeated here so a blocking problem can't reach
+    // Earth Engine even if the map panel was never opened.
+    if (aoiErrors.length > 0) {
+      return { error: aoiErrors[0].message };
     }
 
     return { bounds: { lonMinParsed, latMinParsed, lonMaxParsed, latMaxParsed } };
@@ -514,6 +541,9 @@ export default function DataUpload() {
                     value={ndwiMunicipality}
                     onChange={(e) => setNdwiMunicipality(e.value)}
                     options={municipalities}
+                    optionLabel="label"
+                    optionValue="value"
+                    optionDisabled="disabled"
                     placeholder="Select Municipality"
                     filter
                   />
@@ -525,16 +555,53 @@ export default function DataUpload() {
                     value={ndwiCoastlineName}
                     onChange={setNdwiCoastlineName}
                     onAreaSelect={(area) => {
-                      if (!area.bounds) return;
+                      if (!area.bounds) {
+                        setStoredAreaBounds(null);
+                        return;
+                      }
                       const { north, south, east, west } = area.bounds;
                       if (north != null) setNdwiLatMax(String(north));
                       if (south != null) setNdwiLatMin(String(south));
                       if (east != null) setNdwiLonMax(String(east));
                       if (west != null) setNdwiLonMin(String(west));
+                      // Remembered so the picker can warn if the box later drifts from
+                      // what earlier years for this area were generated with.
+                      setStoredAreaBounds(
+                        [north, south, east, west].every((v) => v != null)
+                          ? { north, south, east, west }
+                          : null
+                      );
+                      setAoiSnapDistance(null);
                     }}
                   />
                 </div>
               </div>
+
+              <AoiPicker
+                municipality={ndwiMunicipality}
+                box={ndwiBox}
+                sizeMeters={aoiSizeMeters}
+                onSizeChange={setAoiSizeMeters}
+                onApplyBox={applyAoiBox}
+                onSnapDistanceChange={setAoiSnapDistance}
+                onCoastlinesChange={setAoiCoastlines}
+                onLandFractionChange={setAoiLandFraction}
+                errors={aoiErrors}
+                warnings={aoiWarnings}
+                onRestoreStoredBounds={
+                  storedAreaBounds
+                    ? () => {
+                        applyAoiBox({
+                          lonMin: storedAreaBounds.west,
+                          lonMax: storedAreaBounds.east,
+                          latMin: storedAreaBounds.south,
+                          latMax: storedAreaBounds.north,
+                        });
+                        setAoiSnapDistance(null);
+                      }
+                    : null
+                }
+              />
 
               <div className="upload-actions" style={{ marginTop: '16px', gap: '10px', flexWrap: 'wrap' }}>
                 <Button
@@ -542,7 +609,7 @@ export default function DataUpload() {
                   id="generate-ndwi-btn"
                   icon="pi pi-cloud-download"
                   onClick={handleGenerateNDWI}
-                  disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running}
+                  disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running || aoiErrors.length > 0}
                   loading={ndwiGeneration.singleYear.generating}
                   label={ndwiGeneration.singleYear.generating ? "Generating..." : "Generate & Upload Selected Year"}
                 />
@@ -552,7 +619,7 @@ export default function DataUpload() {
                   icon="pi pi-calendar"
                   severity="secondary"
                   onClick={handleGenerateAllYears}
-                  disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running}
+                  disabled={ndwiGeneration.singleYear.generating || ndwiGeneration.running || aoiErrors.length > 0}
                   loading={ndwiGeneration.running}
                   label={ndwiGeneration.running ? "Generating All Years..." : `Generate & Upload All Years (2015–${new Date().getFullYear()})`}
                 />
@@ -717,7 +784,10 @@ export default function DataUpload() {
                       className="form-select"
                       value={municipality}
                       onChange={(e) => setMunicipality(e.value)}
-                      options={municipalities.map((mun) => ({ label: mun, value: mun }))}
+                      options={municipalities}
+                      optionLabel="label"
+                      optionValue="value"
+                      optionDisabled="disabled"
                       placeholder="Select Municipality"
                     />
                   </div>
