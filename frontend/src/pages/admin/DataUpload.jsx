@@ -127,6 +127,8 @@ export default function DataUpload() {
 
   // NDWI card has no location concept of its own, so this feeds the Coastline Name dropdown.
   const [ndwiMunicipality, setNdwiMunicipality] = useState("");
+  // Open on arrival so new admins still meet it, collapsible so regulars can reclaim the space.
+  const [coordinateHelpOpen, setCoordinateHelpOpen] = useState(true);
 
   const { errors: aoiErrors, warnings: aoiWarnings } = useMemo(
     () =>
@@ -489,6 +491,54 @@ export default function DataUpload() {
               <p className="placeholder-secondary" style={{ margin: '0 0 16px' }}>
                 Generate NDWI imagery from Google Earth Engine using a bounding box, then generate a single year or all available years (2015–{new Date().getFullYear()}) at once — each is analyzed and saved automatically, no manual upload step needed.
               </p>
+
+              <div
+                className={`info-box ndwi-coordinate-help ${coordinateHelpOpen ? "is-expanded" : "is-collapsed"}`}
+                id="ndwi-coordinate-help"
+              >
+                <button
+                  type="button"
+                  className="coordinate-help-header"
+                  onClick={() => setCoordinateHelpOpen((v) => !v)}
+                  aria-expanded={coordinateHelpOpen}
+                  aria-controls="ndwi-coordinate-help-body"
+                >
+                  <h4>Where do I get these coordinates?</h4>
+                  <i
+                    className={`pi ${coordinateHelpOpen ? "pi-chevron-up" : "pi-chevron-down"} coordinate-help-chevron`}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                <div className="coordinate-help-body" id="ndwi-coordinate-help-body">
+                <p>
+                  A bounding box is just two corners. The <strong>south-west</strong> corner gives you Latitude Min and Longitude Min; the <strong>north-east</strong> corner gives you Latitude Max and Longitude Max.
+                </p>
+                <p>
+                  <strong>Google Earth Pro</strong> is a free desktop app and the easiest way to find them: open it, navigate to the stretch of coast you want, and read the latitude and longitude off the status bar at the bottom of the window as you move the cursor. It displays coordinates as <code>14&deg;33'0.76&quot;N</code> — paste that straight into these fields, no conversion needed.
+                </p>
+                <a
+                  className="coordinate-help-link"
+                  href="https://www.google.com/earth/about/versions/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Download Google Earth Pro
+                </a>
+                <p className="coordinate-help-alt-label">Other ways to get them:</p>
+                <ul>
+                  <li>
+                    <strong>Google Maps</strong> — right-click any point; the coordinates appear at the top of the menu, click them to copy.
+                  </li>
+                  <li>
+                    <strong>Google Earth on the web</strong> (earth.google.com) — the same idea, with nothing to install.
+                  </li>
+                  <li>
+                    <strong>An area already in the system</strong> — pick it under Coastline Name below and all four fields fill in automatically from the bounds used for it before.
+                  </li>
+                </ul>
+                </div>
+              </div>
 
               <div className="form-grid" id="ndwi-generator-fields">
                 <div className="form-group">

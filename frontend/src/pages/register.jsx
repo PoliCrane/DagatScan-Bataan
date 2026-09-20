@@ -17,7 +17,6 @@ import { Button } from "primereact/button";
 const POSITION_OPTIONS = [
   "DENR Officer",
   "Municipal Environment and Natural Resources Officer (MENRO)",
-  "LGU Staff",
   "Environmental Researcher",
   "Coastal Resource Management Officer",
   "Others",

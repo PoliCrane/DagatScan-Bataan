@@ -30,12 +30,12 @@ export function buildDataUploadSteps(setUploadType) {
         "The NDWI Generator uses Google Earth Engine to generate NDWI satellite imagery. Enter the required information: Latitude Min (South), Latitude Max (North), Longitude Min (West), Longitude Max (East), Municipality, and Coastline Name. These values define the area that will be processed.",
     },
     {
-      target: "#ndwi-aoi-picker",
-      placement: "top",
-      title: "Pick the Area on the Map",
-      before: scrollNdwiTargetIntoView(setUploadType, "#ndwi-aoi-picker"),
+      target: "#ndwi-coordinate-help",
+      placement: "bottom",
+      title: "Where the Coordinates Come From",
+      before: scrollNdwiTargetIntoView(setUploadType, "#ndwi-coordinate-help"),
       content:
-        "Instead of typing coordinates, pick a municipality then click its coast on the map. The pin snaps to the coastline and the box around it is the area that gets analysed — the slider sets how wide that box is. Because every image is resampled to a 256×256 grid before the shoreline is traced, a smaller box measures more precisely; the readout shows the resulting metres per pixel. Warnings appear here if the box misses the shoreline or drifts from the bounds used for this area in earlier years.",
+        "If you don't already have coordinates for the area you want, this panel is where to start — it lists the tools that give you them, including a download link for Google Earth Pro. The key idea is that a bounding box is just two corners: south-west sets the two Min fields, north-east sets the two Max fields. Whatever tool you use, coordinates can be pasted in exactly as that tool displays them, in either decimal or degrees-minutes-seconds form.",
     },
     {
       target: "#generate-ndwi-btn",
