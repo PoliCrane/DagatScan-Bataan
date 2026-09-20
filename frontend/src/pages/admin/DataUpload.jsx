@@ -22,6 +22,9 @@ export default function DataUpload() {
 
   // Satellite upload hidden but not removed; flip to true to restore.
   const SHOW_SATELLITE_UPLOAD = false;
+  // Map/pin picker hidden but not removed; flip to true to restore. Old manual-only
+  // bounds entry is what's left underneath — it never depended on the picker.
+  const SHOW_AOI_PICKER = false;
 
   const [uploadType, setUploadType] = useState("ndwi");
   const [datasetFile, setDatasetFile] = useState(null);
@@ -127,16 +130,18 @@ export default function DataUpload() {
 
   const { errors: aoiErrors, warnings: aoiWarnings } = useMemo(
     () =>
-      validateAoi({
-        box: ndwiBox,
-        polylines: aoiCoastlines,
-        snapDistanceMeters: aoiSnapDistance,
-        storedBounds: storedAreaBounds,
-        areaName: ndwiCoastlineName,
-        isLandlockedMunicipality: isLandlocked(ndwiMunicipality),
-        landFraction: aoiLandFraction,
-      }),
-    [ndwiBox, aoiCoastlines, aoiSnapDistance, storedAreaBounds, ndwiCoastlineName, ndwiMunicipality, aoiLandFraction]
+      SHOW_AOI_PICKER
+        ? validateAoi({
+            box: ndwiBox,
+            polylines: aoiCoastlines,
+            snapDistanceMeters: aoiSnapDistance,
+            storedBounds: storedAreaBounds,
+            areaName: ndwiCoastlineName,
+            isLandlockedMunicipality: isLandlocked(ndwiMunicipality),
+            landFraction: aoiLandFraction,
+          })
+        : { errors: [], warnings: [] },
+    [SHOW_AOI_PICKER, ndwiBox, aoiCoastlines, aoiSnapDistance, storedAreaBounds, ndwiCoastlineName, ndwiMunicipality, aoiLandFraction]
   );
 
   const extractGeoJSONProperties = (file) => {
@@ -577,31 +582,33 @@ export default function DataUpload() {
                 </div>
               </div>
 
-              <AoiPicker
-                municipality={ndwiMunicipality}
-                box={ndwiBox}
-                sizeMeters={aoiSizeMeters}
-                onSizeChange={setAoiSizeMeters}
-                onApplyBox={applyAoiBox}
-                onSnapDistanceChange={setAoiSnapDistance}
-                onCoastlinesChange={setAoiCoastlines}
-                onLandFractionChange={setAoiLandFraction}
-                errors={aoiErrors}
-                warnings={aoiWarnings}
-                onRestoreStoredBounds={
-                  storedAreaBounds
-                    ? () => {
-                        applyAoiBox({
-                          lonMin: storedAreaBounds.west,
-                          lonMax: storedAreaBounds.east,
-                          latMin: storedAreaBounds.south,
-                          latMax: storedAreaBounds.north,
-                        });
-                        setAoiSnapDistance(null);
-                      }
-                    : null
-                }
-              />
+              {SHOW_AOI_PICKER && (
+                <AoiPicker
+                  municipality={ndwiMunicipality}
+                  box={ndwiBox}
+                  sizeMeters={aoiSizeMeters}
+                  onSizeChange={setAoiSizeMeters}
+                  onApplyBox={applyAoiBox}
+                  onSnapDistanceChange={setAoiSnapDistance}
+                  onCoastlinesChange={setAoiCoastlines}
+                  onLandFractionChange={setAoiLandFraction}
+                  errors={aoiErrors}
+                  warnings={aoiWarnings}
+                  onRestoreStoredBounds={
+                    storedAreaBounds
+                      ? () => {
+                          applyAoiBox({
+                            lonMin: storedAreaBounds.west,
+                            lonMax: storedAreaBounds.east,
+                            latMin: storedAreaBounds.south,
+                            latMax: storedAreaBounds.north,
+                          });
+                          setAoiSnapDistance(null);
+                        }
+                      : null
+                  }
+                />
+              )}
 
               <div className="upload-actions" style={{ marginTop: '16px', gap: '10px', flexWrap: 'wrap' }}>
                 <Button
