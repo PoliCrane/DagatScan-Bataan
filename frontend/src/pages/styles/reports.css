@@ -36,7 +36,7 @@
 .filter-group-inline {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .filter-group-inline label {
@@ -150,6 +150,62 @@
 .reports-preview-title span {
   color: #888;
   font-size: 0.8rem;
+}
+
+/* States which shoreline the open report measured against. Reads as a quiet fact, not a
+   warning — except in the fallback case, where the interval requested wasn't the interval
+   available and the amber tint flags that the label is the honest one, not the asked-for one. */
+.reports-preview-title .reports-comparison-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 3px 9px;
+  border: 1px solid #cfe4f2;
+  border-radius: 999px;
+  background: #f2f9fd;
+  color: #2b6a92;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.reports-preview-title .reports-comparison-note.is-fallback {
+  border-color: #f0dcb4;
+  background: #fdf7ec;
+  color: #96702b;
+}
+
+.reports-comparison-note i {
+  font-size: 0.72rem;
+}
+
+.reports-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reports-reset-btn:hover {
+  background: #f7f9fa;
+  border-color: #0077b6;
+  color: #0077b6;
+}
+
+.reports-reset-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
 }
 
 .reports-preview-actions {

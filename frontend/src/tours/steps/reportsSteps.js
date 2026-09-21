@@ -39,6 +39,13 @@ export const reportsSteps = [
       "Use the Year filter to display reports for a specific year. Select All to view reports from all available years.",
   },
   {
+    target: "#comparison-filter",
+    placement: "bottom",
+    title: "Comparison Basis",
+    content:
+      "Every report measures shoreline change between two years. 'Oldest shoreline' compares against the earliest year on record for that area, which shows the full long-term change. '3-year interval' compares against the shoreline three years earlier — so a 2026 report is measured against 2023 — which shows recent movement instead. The erosion rate and risk level are recalculated for whichever pair you choose, and the note beside the preview always states the exact year used.",
+  },
+  {
     target: ".reports-search-box",
     placement: "bottom",
     title: "Search",

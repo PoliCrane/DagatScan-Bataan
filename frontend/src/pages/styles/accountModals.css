@@ -89,14 +89,26 @@
 .approve-request-summary {
   background: #f7fafc;
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 16px 18px;
   margin-bottom: 16px;
 }
 
 .approve-request-summary p {
   font-size: 14px;
   color: #1a1a1a;
-  margin: 0 0 8px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.approve-request-summary p:last-child {
+  margin-bottom: 0;
+}
+
+/* RejectRequestModal's confirmation line — an explicit rule so the space above/below
+   it is deliberate rather than whatever the browser's default <p> margin happens to be. */
+.reject-confirm-text {
+  margin: 4px 0 18px;
+  line-height: 1.5;
 }
 
 .approve-request-summary a {
@@ -121,7 +133,7 @@
 }
 
 .form-group {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
 }

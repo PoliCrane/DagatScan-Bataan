@@ -20,13 +20,18 @@ export default function Reports() {
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.REPORTS, reportsSteps);
   const [filters, setFilters] = useState({ year: "", municipality: "" });
   const [search, setSearch] = useState("");
+  // Which shoreline each report measures against; the backend resolves the actual year.
+  const [comparisonMode, setComparisonMode] = useState("oldest");
+  const [comparisonInfo, setComparisonInfo] = useState(null);
 
   const [allSegments, setAllSegments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Selected record for PDF preview (null = show Bataan map instead)
-  const [selectedRecord, setSelectedRecord] = useState(null);
+  // Selected record for PDF preview (null = show Bataan map instead). Held as an id and
+  // derived from `records`, so switching comparison mode re-points the preview at the new
+  // URL instead of leaving a snapshot with the old mode baked in.
+  const [selectedRecordId, setSelectedRecordId] = useState(null);
 
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [bataanBounds, setBataanBounds] = useState(null);
@@ -105,10 +110,10 @@ export default function Reports() {
       year: seg.year,
       erosionRate: seg.erosionRate,
       riskLevel: seg.riskLevel || "UNKNOWN",
-      pdfUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf`,
-      printUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf/print`,
+      pdfUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf?compare=${comparisonMode}`,
+      printUrl: `${API_BASE}/api/reports/${seg.id ?? idx}/pdf/print?compare=${comparisonMode}`,
     }));
-  }, [allSegments]);
+  }, [allSegments, comparisonMode]);
 
   const years = useMemo(() => {
     const uniqueYears = [...new Set(records.map((r) => r.year))].sort((a, b) => b - a);
@@ -137,12 +142,46 @@ export default function Reports() {
     return filtered;
   }, [records, filters, search]);
 
+  const selectedRecord = useMemo(
+    () => records.find((r) => r.id === selectedRecordId) ?? null,
+    [records, selectedRecordId]
+  );
+
+  // The note under the segment name has to describe the document actually rendered, so the
+  // comparison year comes from the same backend resolver the PDF uses rather than being
+  // recomputed here from the segment list.
+  useEffect(() => {
+    if (!selectedRecordId) {
+      setComparisonInfo(null);
+      return undefined;
+    }
+    let cancelled = false;
+    setComparisonInfo(null);
+    fetch(`${API_BASE}/api/reports/${selectedRecordId}/comparison?compare=${comparisonMode}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled) setComparisonInfo(data);
+      })
+      .catch(() => {
+        if (!cancelled) setComparisonInfo(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRecordId, comparisonMode]);
+
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleResetFilters = () => {
+    setFilters({ year: "", municipality: "" });
+    setSearch("");
+    setComparisonMode("oldest");
+  };
+
   const handleSelectRecord = (record) => {
-    setSelectedRecord(record);
+    setSelectedRecordId(record.id);
   };
 
   const handleViewPdf = (record, e) => {
@@ -158,7 +197,7 @@ export default function Reports() {
     window.open(record.printUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleClosePreview = () => setSelectedRecord(null);
+  const handleClosePreview = () => setSelectedRecordId(null);
 
   return (
     <Layout>
@@ -195,6 +234,20 @@ export default function Reports() {
             />
           </div>
 
+          <div className="filter-group-inline">
+            <label htmlFor="comparison-filter">Compared to:</label>
+            <Dropdown
+              inputId="comparison-filter"
+              className="filter-dropdown"
+              value={comparisonMode}
+              onChange={(e) => setComparisonMode(e.value)}
+              options={[
+                { label: "Oldest shoreline", value: "oldest" },
+                { label: "3-year interval", value: "interval3" },
+              ]}
+            />
+          </div>
+
           <IconField iconPosition="left" className="reports-search-box">
             <InputIcon className="pi pi-search" />
             <InputText
@@ -204,6 +257,11 @@ export default function Reports() {
               aria-label="Search reports"
             />
           </IconField>
+
+          <button className="reports-reset-btn" onClick={handleResetFilters}>
+            <img src="/resetFilter.png" alt="" className="reports-reset-icon" />
+            Reset Filters
+          </button>
         </div>
 
         <div className="reports-body">
@@ -214,6 +272,14 @@ export default function Reports() {
                   <div className="reports-preview-title">
                     <strong>{selectedRecord.title}</strong>
                     <span>{selectedRecord.specificArea} · {selectedRecord.year}</span>
+                    {comparisonInfo?.description && (
+                      <span
+                        className={`reports-comparison-note${comparisonInfo.fellBack ? " is-fallback" : ""}`}
+                      >
+                        <i className="pi pi-info-circle" aria-hidden="true" />
+                        {comparisonInfo.description}
+                      </span>
+                    )}
                   </div>
                   <div className="reports-preview-actions">
                     <button className="btn-view-pdf" onClick={(e) => handleViewPdf(selectedRecord, e)}>
@@ -225,7 +291,7 @@ export default function Reports() {
                   </div>
                 </div>
                 <iframe
-                  key={selectedRecord.id}
+                  key={`${selectedRecord.id}-${comparisonMode}`}
                   src={selectedRecord.pdfUrl}
                   title={selectedRecord.title}
                   className="reports-pdf-frame"
@@ -301,7 +367,7 @@ export default function Reports() {
                       filteredRecords.map((record) => (
                         <tr
                           key={record.id}
-                          className={selectedRecord?.id === record.id ? "selected-row" : ""}
+                          className={selectedRecordId === record.id ? "selected-row" : ""}
                           onClick={() => handleSelectRecord(record)}
                         >
                           <td>

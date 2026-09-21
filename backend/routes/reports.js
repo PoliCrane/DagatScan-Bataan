@@ -8,9 +8,17 @@ const pool = require("../db");
 const { extractCoordinatesFromGeoJSON } = require("../services/eprAutoCalculator");
 const { renderShorelineMap } = require("../services/staticMap");
 const { classifyErosionRisk, RISK_COLORS, RISK_LABELS } = require("../services/riskClassification");
+const { calculateEPR } = require("../services/eprCalculator");
 const { getFrontendOrigins } = require("../config/env");
 
 const router = express.Router();
+
+// How a report picks the shoreline it measures against.
+//   oldest    - the area's baseline (earliest year on record), the original behaviour
+//   interval3 - a 3-year step: 2026 vs 2023, 2025 vs 2022, ...
+const COMPARISON_MODES = ["oldest", "interval3"];
+const INTERVAL_YEARS = 3;
+const normalizeMode = (raw) => (COMPARISON_MODES.includes(raw) ? raw : "oldest");
 
 // Same fixed shoreline colors as the Erosion Analysis legend (ErosionLegend.jsx) so the PDF matches the live app.
 const PREVIOUS_SHORELINE_COLOR = "#FFEA00";
@@ -91,14 +99,59 @@ function projectCoordinateSets(coordinateSets, box) {
   return coordinateSets.map((coords) => coords.map(project));
 }
 
-function buildInterpretation({ specificArea, baselineYear, year, erosionRate, riskLevel }) {
+// Picks the shoreline a report measures against. Single source of truth for both the PDF
+// and the /comparison metadata the Reports page labels the preview with, so the note can't
+// describe a different comparison than the document beside it.
+//
+// interval3 aims at reportYear - 3 but the record isn't always complete (one Bagac segment
+// jumps 2015 -> 2018), so it takes the nearest earlier year instead of giving up; `fellBack`
+// tells the caller to say so rather than claim an interval that wasn't used. Ties go to the
+// earlier year: a longer span yields the more conservative rate.
+async function resolveComparisonZone(areaId, reportYear, mode) {
+  if (mode === "interval3") {
+    const targetYear = reportYear - INTERVAL_YEARS;
+    const { rows } = await pool.query(
+      `SELECT year, geojson_data
+         FROM shoreline_zones
+        WHERE area_id = $1 AND active AND year < $2
+        ORDER BY ABS(year - $3) ASC, year ASC
+        LIMIT 1`,
+      [areaId, reportYear, targetYear]
+    );
+    const zone = rows[0];
+    if (!zone) return null;
+    return { year: zone.year, geojson_data: zone.geojson_data, fellBack: zone.year !== targetYear, targetYear };
+  }
+
+  const { rows } = await pool.query(
+    `SELECT year, geojson_data
+       FROM shoreline_zones
+      WHERE area_id = $1 AND erosion_rate IS NULL AND active
+      ORDER BY year ASC LIMIT 1`,
+    [areaId]
+  );
+  const zone = rows[0];
+  if (!zone) return null;
+  return { year: zone.year, geojson_data: zone.geojson_data, fellBack: false, targetYear: null };
+}
+
+// One phrase, used for the PDF's "Comparison Basis" row and the page's preview note.
+function describeComparison(mode, comparisonYear, fellBack) {
+  if (comparisonYear === null || comparisonYear === undefined) return "No earlier shoreline on record";
+  if (mode !== "interval3") return `Oldest on record — compared to ${comparisonYear}`;
+  return fellBack
+    ? `Nearest to ${INTERVAL_YEARS}-year interval — compared to ${comparisonYear}`
+    : `${INTERVAL_YEARS}-year interval — compared to ${comparisonYear}`;
+}
+
+function buildInterpretation({ specificArea, comparisonYear, year, erosionRate, riskLevel }) {
   if (erosionRate === null || erosionRate === undefined) {
     return `${specificArea} is currently the baseline year on record (${year}). An erosion rate will be available once a later satellite-detected shoreline is uploaded for comparison.`;
   }
 
   const trend = erosionRate < 0 ? "experienced shoreline retreat" : "showed shoreline stability or growth";
   const riskLabel = riskLevel === "NO_DATA" ? "No Data" : `${RISK_LABELS[riskLevel] || riskLevel} Risk`;
-  const fromTo = baselineYear && baselineYear !== year ? ` from ${baselineYear} to ${year}` : ` in ${year}`;
+  const fromTo = comparisonYear && comparisonYear !== year ? ` from ${comparisonYear} to ${year}` : ` in ${year}`;
 
   return `The selected coastal area (${specificArea})${fromTo} ${trend}. Based on the calculated erosion rate of ${Math.abs(erosionRate).toFixed(2)} m/year, the area is classified as ${riskLabel}.`;
 }
@@ -147,28 +200,38 @@ router.get("/:zoneId/pdf", async (req, res) => {
     }
 
     const row = result.rows[0];
-    const erosionRate = row.erosion_rate !== null ? parseFloat(row.erosion_rate) : null;
-    const riskLevel = classifyErosionRisk(erosionRate);
+    const mode = normalizeMode(req.query.compare);
     const specificArea = row.specific_area || `Zone ${row.id}`;
 
-    // baseline zone (earliest year) is the "previous shoreline"; run concurrently with the imagery lookup
-    const [baselineResult, imageryResult] = await Promise.all([
-      pool.query(
-        `SELECT year, geojson_data
-         FROM shoreline_zones
-         WHERE area_id = $1 AND erosion_rate IS NULL AND active
-         ORDER BY year ASC LIMIT 1`,
-        [row.area_id]
-      ),
+    // The comparison shoreline is the "previous shoreline"; run concurrently with the imagery lookup
+    const [comparisonZone, imageryResult] = await Promise.all([
+      resolveComparisonZone(row.area_id, row.year, mode),
       pool.query(
         `SELECT bounds FROM satellite_imagery WHERE area_id = $1 AND year = $2 LIMIT 1`,
         [row.area_id, row.year]
       ),
     ]);
-    const baselineRow = baselineResult.rows[0] || null;
+    const baselineRow = comparisonZone;
 
     const currentCoords = extractCoordinatesFromGeoJSON(row.geojson_data);
     const baselineCoords = baselineRow ? extractCoordinatesFromGeoJSON(baselineRow.geojson_data) : null;
+
+    // The stored erosion_rate is an EPR against the *baseline*, so it's only valid in
+    // "oldest" mode. In interval3 it would describe a different pair of shorelines than the
+    // map shows, so recompute it for the pair actually drawn. On any failure fall back to
+    // the stored rate rather than printing a number we can't stand behind.
+    let erosionRate = row.erosion_rate !== null ? parseFloat(row.erosion_rate) : null;
+    let effectiveMode = mode;
+    if (mode === "interval3" && baselineCoords && baselineCoords.length > 1 && currentCoords && currentCoords.length > 1) {
+      try {
+        erosionRate = calculateEPR(baselineCoords, currentCoords, baselineRow.year, row.year).erosionRate;
+      } catch (eprErr) {
+        logger.warn(`EPR recompute failed for zone ${row.id} (${mode}), using stored rate:`, eprErr.message);
+        effectiveMode = "oldest";
+      }
+    }
+    const riskLevel = classifyErosionRisk(erosionRate);
+    const comparisonBasis = describeComparison(effectiveMode, baselineRow?.year, baselineRow?.fellBack);
 
     // Prefer the actual satellite image's bounds so the basemap lines up with what was analyzed.
     let mapBounds = null;
@@ -414,6 +477,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
       "Erosion Rate:",
       erosionRate !== null ? `${erosionRate.toFixed(2)} m/year` : "No data (baseline year)"
     );
+    addRow("Comparison Basis:", comparisonBasis);
 
     // Only shown when ENSO/wave/typhoon context exists for this year.
     const eventContext = getEventContextForYear(String(row.year));
@@ -435,7 +499,7 @@ router.get("/:zoneId/pdf", async (req, res) => {
 
     const interpretation = buildInterpretation({
       specificArea,
-      baselineYear: baselineRow?.year,
+      comparisonYear: baselineRow?.year,
       year: row.year,
       erosionRate,
       riskLevel,
@@ -462,11 +526,48 @@ router.get("/:zoneId/pdf", async (req, res) => {
 // just showing the PDF. window.print() is only legal on a document sharing the caller's
 // origin, and the PDF above is cross-origin to the frontend — hence this page being served
 // from the backend itself rather than the frontend calling print on a popup handle.
+// Tells the Reports page which shoreline a report actually measured against, so the note
+// beside the preview is this resolver's own answer rather than a second, drift-prone
+// re-derivation of the same rule on the client.
+router.get("/:zoneId/comparison", async (req, res) => {
+  try {
+    const { zoneId } = req.params;
+    if (!/^\d+$/.test(zoneId)) {
+      return res.status(400).json({ error: "zoneId must be a positive integer" });
+    }
+    const mode = normalizeMode(req.query.compare);
+
+    const { rows } = await pool.query(
+      `SELECT area_id, year FROM shoreline_zones WHERE id = $1 AND active`,
+      [zoneId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Report record not found" });
+    }
+
+    const zone = await resolveComparisonZone(rows[0].area_id, rows[0].year, mode);
+    res.json({
+      mode,
+      year: rows[0].year,
+      comparisonYear: zone?.year ?? null,
+      targetYear: zone?.targetYear ?? null,
+      fellBack: zone?.fellBack ?? false,
+      description: describeComparison(mode, zone?.year, zone?.fellBack),
+    });
+  } catch (err) {
+    logger.error("Error resolving report comparison:", err);
+    res.status(500).json({ error: "Failed to resolve comparison" });
+  }
+});
+
 router.get("/:zoneId/pdf/print", (req, res) => {
   const { zoneId } = req.params;
   if (!/^\d+$/.test(zoneId)) {
     return res.status(400).send("zoneId must be a positive integer");
   }
+  // Forwarded so Print produces the same comparison the preview is showing; without this
+  // the wrapper below would silently always fetch the default mode.
+  const compare = normalizeMode(req.query.compare);
 
   const frontendOrigins = getFrontendOrigins().join(" ");
   res.setHeader(
@@ -492,7 +593,7 @@ router.get("/:zoneId/pdf/print", (req, res) => {
     // The PDF is loaded as a Blob object URL rather than straight from the network URL:
     // Chromium's built-in viewer doesn't reliably render into the parent page's print
     // output when its source is a live request, which produced a blank print preview.
-    fetch("/api/reports/${zoneId}/pdf")
+    fetch("/api/reports/${zoneId}/pdf?compare=${compare}")
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load PDF (status " + res.status + ")");
         return res.blob();

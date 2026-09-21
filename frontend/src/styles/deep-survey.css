@@ -246,11 +246,18 @@ body {
 .p-dialog .p-dialog-content {
   background: transparent;
   color: #ffffff;
+  /* The base theme's content padding has 0 top (dagatscan-theme.css) — fine for a
+     header with no border, but this file adds a divider line below the header, so
+     without this the content starts flush against that line with no gap at all. */
+  padding-top: 20px;
 }
 
 .p-dialog .p-dialog-footer {
   background: transparent;
   border-top: 1px solid rgba(56, 189, 248, 0.22);
+  /* Same issue as the content padding above, for the line this file adds above the
+     footer — the base theme's footer padding also has 0 top. */
+  padding-top: 20px;
 }
 
 .p-dialog .p-dialog-title {

@@ -95,7 +95,7 @@ export default function RejectRequestModal({ isOpen, request, onClose, onSuccess
         {request.additional_remarks && <p>Remarks: {request.additional_remarks}</p>}
       </div>
 
-      <p>Are you sure you want to reject this request? The applicant will not be able to log in.</p>
+      <p className="reject-confirm-text">Are you sure you want to reject this request? The applicant will not be able to log in.</p>
 
       <div className="form-group">
         <label htmlFor="reject-reason">Rejection Reason</label>

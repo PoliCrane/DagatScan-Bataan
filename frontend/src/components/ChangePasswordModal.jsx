@@ -4,6 +4,11 @@ import { Button } from "primereact/button";
 import { Password } from "primereact/password";
 import { Message } from "primereact/message";
 import "../pages/styles/changePasswordModal.css";
+// Shares .form-group spacing with Approve/Reject/EditAccountModal — this modal has no
+// className on its own Dialog, so changePasswordModal.css's .change-password-modal
+// .form-group rule never matches; without this import, spacing depended on whichever
+// other modal happened to load accountModals.css first.
+import "../pages/styles/accountModals.css";
 import { showSuccess, showError, showLoading } from "../utils/sweetAlertUtils";
 
 import { API_BASE_URL } from "../config/api";

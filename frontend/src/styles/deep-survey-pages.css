@@ -404,10 +404,21 @@
   border-radius: 9px;
 }
 
+/* The rule above zeroes the container's own padding (needed so min-height/align-items
+   behave), but never gave the visible text any padding of its own — .p-dropdown-label
+   is where the placeholder/selected text actually renders, and it sat ~1px from the
+   edge. Same fix already used correctly for the map sidebar's dropdown
+   (deep-survey-map.css's .analysis-tools-container .p-dropdown.form-select .p-dropdown-label). */
+.dm-filter-bar .p-dropdown.dm-filter-select .p-dropdown-label,
+.at-filter-bar .p-dropdown.at-filter-select .p-dropdown-label,
+.reports-filter-bar .p-dropdown.filter-dropdown .p-dropdown-label {
+  padding: 0 12px;
+}
+
 .reports-filter-bar .filter-group-inline {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
 }
 
 .reports-filter-bar .filter-group-inline > label {
@@ -439,6 +450,13 @@
   min-height: 40px;
   padding: 0;
   border-radius: 9px;
+}
+
+/* Same fix as the filter-bar dropdowns above: the container's padding is zeroed, so
+   the label needs its own padding or the text sits flush against the edge. */
+.form-group .p-dropdown.form-select .p-dropdown-label,
+.form-group .p-dropdown.form-input .p-dropdown-label {
+  padding: 0 12px;
 }
 
 .bounds-compass-cell .p-inputtext.form-input {
