@@ -874,6 +874,12 @@ router.get("/municipality/:municipality/summary", async (req, res) => {
 /** All zones/segments across all municipalities, with risk classification, for the Reports page. */
 router.get("/bataan/all-zones", async (req, res) => {
   try {
+    // geojson_data is opt-in — Reports (the original caller here) never needs it, and
+    // always including a full traced coastline per row, per year, per area would bloat
+    // that payload for no reason. The Dashboard's province-wide overlay is what asks
+    // for it, via ?includeGeometry=true.
+    const includeGeometry = req.query.includeGeometry === "true";
+
     const query = `
       SELECT DISTINCT ON (sz.id)
         sz.id,
@@ -885,6 +891,7 @@ router.get("/bataan/all-zones", async (req, res) => {
         sz.source_type,
         ca.name as specific_area,
         sz.created_at
+        ${includeGeometry ? ", sz.geojson_data" : ""}
       FROM shoreline_zones sz
       JOIN coastal_areas ca ON sz.area_id = ca.id
       JOIN municipalities m ON ca.municipality_id = m.id
@@ -909,6 +916,9 @@ router.get("/bataan/all-zones", async (req, res) => {
         specificArea: row.specific_area,
         name: row.specific_area || `Zone ${row.id}`,
         riskLevel: riskLevel,
+        // Same key name as GET /municipality/:municipality/zones's geojsonData, so
+        // frontend code that maps one also works unchanged against the other.
+        ...(includeGeometry ? { geojsonData: row.geojson_data } : {}),
       };
     });
 

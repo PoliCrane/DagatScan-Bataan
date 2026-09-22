@@ -113,11 +113,11 @@ export default function Home() {
   const municipalityName = isMunicipal ? localStorage.getItem("municipality") : null;
   const scopeLabel = isMunicipal && municipalityName ? municipalityName : "Bataan";
 
-  // Only the municipality-scoped /zones endpoint returns geometry, so the shoreline
-  // overlay is a municipal-account feature — the province-wide payload has none.
-  const scopedShorelines = useMemo(() => {
-    if (!isMunicipal) return [];
-
+  // Traced shoreline lines for the map overlay + markers below. Municipal accounts get
+  // this from the municipality-scoped /zones endpoint; admin/superadmin get it from
+  // /bataan/all-zones?includeGeometry=true — both return geometry under the same
+  // `geojsonData` key, so this mapping is identical either way.
+  const dashboardShorelines = useMemo(() => {
     return allZones
       .map((zone) => {
         const geometry = zone.geojsonData?.geometry;
@@ -140,7 +140,7 @@ export default function Home() {
         };
       })
       .filter(Boolean);
-  }, [isMunicipal, allZones]);
+  }, [allZones]);
 
   // Municipal accounts open onto their own monitored coast rather than the whole
   // province. Fitting the municipality polygon isn't close enough to be useful — several
@@ -150,7 +150,7 @@ export default function Home() {
   const focusBounds = useMemo(() => {
     if (!isMunicipal || !municipalityName) return bataanBounds;
 
-    const segmentPoints = scopedShorelines.flatMap((line) => line.positions);
+    const segmentPoints = dashboardShorelines.flatMap((line) => line.positions);
     if (segmentPoints.length > 1) return L.latLngBounds(segmentPoints);
 
     if (!geoJsonData) return bataanBounds;
@@ -169,7 +169,7 @@ export default function Home() {
       boxArea(current) > boxArea(largest) ? current : largest
     );
     return L.geoJSON(mainland).getBounds();
-  }, [isMunicipal, municipalityName, scopedShorelines, geoJsonData, bataanBounds]);
+  }, [isMunicipal, municipalityName, dashboardShorelines, geoJsonData, bataanBounds]);
 
   useEffect(() => {
     if (userRole !== "admin" && userRole !== "superadmin" && userRole !== "municipal") {
@@ -200,7 +200,7 @@ export default function Home() {
         : `${API_BASE_URL}/api/shoreline/bataan/summary`;
       const zonesUrl = isMunicipal
         ? `${API_BASE_URL}/api/shoreline/municipality/${encodeURIComponent(municipalityName)}/zones`
-        : `${API_BASE_URL}/api/shoreline/bataan/all-zones`;
+        : `${API_BASE_URL}/api/shoreline/bataan/all-zones?includeGeometry=true`;
 
       const summaryResponse = await fetch(summaryUrl);
       const summaryData = summaryResponse.ok ? await summaryResponse.json() : null;
@@ -214,31 +214,34 @@ export default function Home() {
           (z) => z.erosionRate !== null && z.erosionRate !== undefined
         );
 
-        // "Active" means this year's uploads, not every site ever monitored. Falls
-        // back to the latest year with data so this doesn't show a misleading 0
-        // right after the calendar rolls over.
-        const currentYear = new Date().getFullYear();
-        const yearsWithData = [...new Set(zonesWithData.map((z) => z.year))];
-        const activeYear = yearsWithData.includes(currentYear)
-          ? currentYear
-          : (yearsWithData.length ? Math.max(...yearsWithData) : currentYear);
-        const activeYearZones = zonesWithData.filter((z) => z.year === activeYear);
-
-        // Distinct physical monitoring locations (municipality + specific area)
-        const totalSites = new Set(activeYearZones.map(z => `${z.municipality}::${z.specificArea}`)).size;
+        // "Active" means each area's own latest shoreline, not every year ever
+        // uploaded — but NOT a single global year either. A single global cutoff
+        // (e.g. "whichever year is newest anywhere") would silently drop any area
+        // that hasn't been re-surveyed yet this cycle, even though its own most
+        // recent data is perfectly valid — e.g. Morong Bay Area's latest is 2025,
+        // and it must still show up even when some other area already has 2026.
+        const latestByArea = new Map();
+        for (const zone of zonesWithData) {
+          const key = `${zone.municipality}::${zone.specificArea}`;
+          const current = latestByArea.get(key);
+          if (!current || zone.year > current.year) {
+            latestByArea.set(key, zone);
+          }
+        }
+        const latestZones = [...latestByArea.values()];
 
         const totalRecords = zonesWithData.length;
 
         setStats({
-          activeMonitoringSites: totalSites,
+          activeMonitoringSites: latestZones.length,
           latestErosionRate: Math.abs(summaryData.avgErosionRate || 0).toFixed(2),
           dataRecords: totalRecords,
           highRiskAreas: summaryData.riskDistribution?.veryHighRisk || 0
         });
 
-        // The segment list below should reflect the same "active year" as the
-        // stat card above, not every year ever uploaded.
-        setAllZones(activeYearZones);
+        // The segment list below should reflect the same "one row per area" set as
+        // the stat card above, not every year ever uploaded.
+        setAllZones(latestZones);
         console.log("✓ Dashboard data loaded successfully");
       }
     } catch (error) {
@@ -351,7 +354,7 @@ export default function Home() {
                       />
                     )}
 
-                    {scopedShorelines.map((line) => (
+                    {dashboardShorelines.map((line) => (
                       <Polyline
                         key={`dashboard-shoreline-${line.id}`}
                         positions={line.positions}
@@ -361,7 +364,7 @@ export default function Home() {
 
                     {/* One marker per monitored area, so segments are identifiable and
                         not just visible. Same treatment as the Coastal Monitoring map. */}
-                    {scopedShorelines.map((line) => {
+                    {dashboardShorelines.map((line) => {
                       const midpoint = line.positions[Math.floor(line.positions.length / 2)];
                       if (!midpoint) return null;
 
