@@ -313,6 +313,10 @@ export default function Home() {
                 {bataanBounds && (
                   <MapContainer
                     bounds={focusBounds}
+                    // Admin/superadmin fit the whole province, which naturally lands on a
+                    // wide zoom; floor it so the default view stays legible. Municipal
+                    // already fits its own tight coastline and needs no floor.
+                    minZoom={isMunicipal ? undefined : 11}
                     style={{ height: '100%', width: '100%' }}
                     zoomControl={false}
                     dragging={true}
