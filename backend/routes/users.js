@@ -15,8 +15,8 @@ const { logAction } = require("../services/auditLog");
 const { validate, schemas } = require("../middleware/validate");
 const {
   generateTemporaryPassword,
-  USERNAME_REGEX,
   USERNAME_REQUIREMENTS_MESSAGE,
+  isValidFullName,
 } = require("../utils/validators");
 
 // Mounted behind verifyToken + verifySuperadmin (server.js) — every route here is superadmin-only.
@@ -175,13 +175,14 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
 
 router.post("/create-user", validate(schemas.createUser), async (req, res) => {
   try {
-    const { username, email, roles } = req.body;
+    const { email, roles } = req.body;
+    const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
 
     if (!username || !email) {
       return res.status(400).json({ error: "Username and email are required" });
     }
 
-    if (!USERNAME_REGEX.test(username)) {
+    if (!isValidFullName(username)) {
       return res.status(400).json({ error: USERNAME_REQUIREMENTS_MESSAGE });
     }
 
@@ -256,13 +257,13 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
 router.put("/users/:userId/edit", async (req, res) => {
   try {
     const { userId } = req.params;
-    const { username } = req.body;
+    const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
 
     if (!username) {
       return res.status(400).json({ error: "Username is required" });
     }
 
-    if (!USERNAME_REGEX.test(username)) {
+    if (!isValidFullName(username)) {
       return res.status(400).json({ error: USERNAME_REQUIREMENTS_MESSAGE });
     }
 

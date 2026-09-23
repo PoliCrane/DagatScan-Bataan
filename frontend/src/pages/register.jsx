@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { requestAccount, getMunicipalities } from "../api/auth";
 import { showError, showSuccessHtml, showLoading } from "../utils/sweetAlertUtils";
-import { isValidPhilippineMobile, isValidEmail } from "../utils/validation";
+import { isValidPhilippineMobile, isValidEmail, isValidFullName } from "../utils/validation";
 import AuthModals from "../components/AuthModals";
 import SiteFooter from "../components/SiteFooter";
 import IndexNavBar from "./indexNavBar";
@@ -104,6 +104,13 @@ export default function Register() {
       return;
     }
 
+    if (!isValidFullName(fullName)) {
+      const msg = "Please enter your full name (at least 2 letters, not just spaces)";
+      await showError(msg);
+      setError(msg);
+      return;
+    }
+
     if (!isValidEmail(email)) {
       const msg = "Please enter a valid email address";
       await showError(msg);
@@ -140,7 +147,7 @@ export default function Register() {
       await showLoading("Submitting request...", 1500);
 
       const formData = new FormData();
-      formData.append("username", fullName);
+      formData.append("username", fullName.trim());
       formData.append("email", email);
       formData.append("municipality_id", municipalityId);
       formData.append("contact_number", contactNumber);

@@ -17,8 +17,8 @@ const {
   PASSWORD_REQUIREMENTS_MESSAGE,
   EMAIL_REGEX,
   PH_MOBILE_REGEX,
-  USERNAME_REGEX,
   USERNAME_REQUIREMENTS_MESSAGE,
+  isValidFullName,
 } = require("../utils/validators");
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -45,7 +45,10 @@ router.post(
       if (req.file) fs.unlink(req.file.path, () => {});
     };
     try {
-      const { username, email, municipality_id, contact_number, position, additional_remarks } = req.body;
+      const { email, municipality_id, contact_number, position, additional_remarks } = req.body;
+      // Trimmed once, up front, so every downstream use (duplicate checks, the INSERT
+      // itself) sees the clean value — not just the validation check below.
+      const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
 
       if (!username || !email || !municipality_id || !contact_number || !position) {
         cleanupFile();
@@ -54,7 +57,7 @@ router.post(
         });
       }
 
-      if (!USERNAME_REGEX.test(username)) {
+      if (!isValidFullName(username)) {
         cleanupFile();
         return res.status(400).json({ error: USERNAME_REQUIREMENTS_MESSAGE });
       }

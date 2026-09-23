@@ -7,6 +7,7 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { Message } from "primereact/message";
 import { getMunicipalities } from "../api/auth";
+import { isValidFullName } from "../utils/validation";
 
 import { API_BASE_URL } from "../config/api";
 export default function AddAccountModal({ isOpen, onClose, onSuccess, onError }) {
@@ -40,8 +41,8 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
   const handleSave = async () => {
     setError("");
 
-    if (!formData.username.trim()) {
-      setError("Username is required");
+    if (!isValidFullName(formData.username)) {
+      setError("Enter a full name (at least 2 letters, not just spaces)");
       return;
     }
     if (!formData.email.trim()) {

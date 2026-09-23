@@ -5,7 +5,7 @@ const {
   classifyShorelineStatus,
   STABLE_BAND_M_PER_YEAR,
 } = require("../services/riskClassification");
-const { meetsPasswordRequirements, escapeHtml, USERNAME_REGEX } = require("../utils/validators");
+const { meetsPasswordRequirements, escapeHtml, USERNAME_REGEX, isValidFullName } = require("../utils/validators");
 
 test("risk tiers follow the negative-is-erosion convention", () => {
   assert.strictEqual(classifyErosionRisk(-6), "VERY_HIGH");
@@ -51,4 +51,19 @@ test("username regex accepts names and rejects markup", () => {
   assert.strictEqual(USERNAME_REGEX.test("Ma. Peñaflorida-Reyes"), true);
   assert.strictEqual(USERNAME_REGEX.test("<script>"), false);
   assert.strictEqual(USERNAME_REGEX.test("a"), false);
+});
+
+// USERNAME_REGEX alone passes whitespace-padded input, since it counts spaces toward
+// the 2-60 length requirement — isValidFullName is the actual gate used at every call
+// site, and closes exactly that gap.
+test("isValidFullName rejects whitespace-only and whitespace-padded single letters", () => {
+  assert.strictEqual(isValidFullName("Juan Dela Cruz Jr."), true);
+  assert.strictEqual(isValidFullName("Ma. Peñaflorida-Reyes"), true);
+  assert.strictEqual(isValidFullName("   "), false);
+  assert.strictEqual(isValidFullName("A"), false);
+  assert.strictEqual(isValidFullName("A          "), false);
+  assert.strictEqual(isValidFullName("          A"), false);
+  assert.strictEqual(isValidFullName("12"), false);
+  assert.strictEqual(isValidFullName(""), false);
+  assert.strictEqual(isValidFullName(null), false);
 });
