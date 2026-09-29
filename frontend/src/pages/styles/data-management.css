@@ -395,15 +395,13 @@
 .dm-view-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #fff;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
   border: 1.5px solid #0077b6;
   color: #0077b6;
-  border-radius: 999px;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
+  border-radius: 8px;
+  background: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -430,17 +428,14 @@
 .dm-satellite-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #0077b6;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
   border: 1.5px solid #0077b6;
+  border-radius: 8px;
+  background: #0077b6;
   color: #fff;
-  border-radius: 999px;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -459,17 +454,14 @@
 .dm-reupload-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: #fff;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
   border: 1.5px solid #10b981;
   color: #10b981;
-  border-radius: 999px;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
+  border-radius: 8px;
+  background: #fff;
   cursor: pointer;
-  white-space: nowrap;
   transition: all 0.2s ease;
 }
 

@@ -204,6 +204,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
 }
 
 .info-box {
@@ -237,39 +238,6 @@
   font-size: 11px !important;
   margin-top: 6px !important;
   color: var(--text-secondary) !important;
-}
-
-/* Status palette shared by .info-box.system-status and .status-indicator
-   below: green = online, yellow = degraded, red = critical, blue = ongoing,
-   gray = inactive. */
-.info-box.system-status.status-blue { border-left-color: var(--primary); }
-.info-box.system-status.status-blue:hover {
-  border-left-color: #005fa3;
-  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
-}
-
-.info-box.system-status.status-green { border-left-color: var(--secondary); }
-.info-box.system-status.status-green:hover {
-  border-left-color: #00875f;
-  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.1);
-}
-
-.info-box.system-status.status-yellow { border-left-color: var(--accent); }
-.info-box.system-status.status-yellow:hover {
-  border-left-color: #c9a800;
-  box-shadow: 0 4px 12px rgba(255, 217, 61, 0.15);
-}
-
-.info-box.system-status.status-red { border-left-color: var(--danger); }
-.info-box.system-status.status-red:hover {
-  border-left-color: #bd2130;
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
-}
-
-.info-box.system-status.status-gray { border-left-color: #98a2b3; }
-.info-box.system-status.status-gray:hover {
-  border-left-color: #667085;
-  box-shadow: 0 4px 12px rgba(152, 162, 179, 0.15);
 }
 
 .info-box.focus-area {
@@ -354,25 +322,20 @@
   color: var(--text-secondary);
 }
 
-.status-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-.status-indicator.status-blue { background: var(--primary); }
-.status-indicator.status-green { background: var(--secondary); }
-.status-indicator.status-yellow { background: var(--accent); }
-.status-indicator.status-red { background: var(--danger); }
-.status-indicator.status-gray {
-  background: #98a2b3;
-  animation: none;
+/* Above-the-map placement (Dashboard): reads as a horizontal legend strip
+   instead of the sidebar's vertical stack. */
+.risk-legend-horizontal .risk-legend-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .high-risk-container {
   background: linear-gradient(135deg, var(--bg-card) 0%, #f9f9f9 100%);
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   padding: 14px 16px;
   border-radius: 10px;
   border-left: 4px solid var(--danger);
@@ -403,15 +366,6 @@
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.4;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
 }
 
 .dashboard-button {
@@ -460,7 +414,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 220px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 6px;
   margin-top: 8px;

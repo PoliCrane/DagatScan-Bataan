@@ -27,11 +27,6 @@ export default function Navbar({ username, isLoggedIn }){
       </div>
 
       <div className="navbar-right">
-        <div className="online-status-badge">
-          <span className="online-status-dot" />
-          Online
-        </div>
-
         {isLoggedIn ? (
           <div className="profile-dropdown-container">
             <button

@@ -511,50 +511,44 @@ export default function DataManagement() {
                     <div className="action-icons flex flex-wrap items-center gap-2">
                       <Button
                         type="button"
-                        label="View"
                         icon="pi pi-eye"
-                        size="small"
-                        outlined
+                        rounded
+                        text
                         className="dm-view-btn"
                         onClick={() => window.open(thumb, "_blank", "noopener,noreferrer")}
                         disabled={!thumb || brokenThumbs.has(thumb)}
-                        tooltip="View NDWI preview"
+                        tooltip="View"
                         tooltipOptions={{ position: "top" }}
+                        aria-label="View NDWI preview"
                       />
                       <Button
                         type="button"
-                        label={loadingImageryId === d.id ? "Loading..." : "Satellite"}
                         icon="pi pi-globe"
-                        size="small"
-                        outlined
+                        rounded
+                        text
+                        loading={loadingImageryId === d.id}
                         severity="secondary"
                         className="dm-satellite-btn"
                         onClick={() => handleViewSatelliteImagery(d)}
                         disabled={!d.has_bounds || loadingImageryId !== null}
-                        tooltip={
-                          d.has_bounds
-                            ? "Fetch a true-color satellite photo for this area/year"
-                            : "No location data available for this coastal area record"
-                        }
+                        tooltip="Satellite"
                         tooltipOptions={{ position: "top" }}
+                        aria-label="Fetch satellite imagery"
                       />
                       {d.upload_type === "Satellite_Image" && (
                         <Button
                           type="button"
-                          label={reuploadingId === d.id ? "Reuploading..." : "Reupload"}
                           icon="pi pi-refresh"
-                          size="small"
-                          outlined
+                          rounded
+                          text
+                          loading={reuploadingId === d.id}
                           severity="secondary"
                           className="dm-reupload-btn"
                           onClick={() => handleReupload(d)}
                           disabled={!d.bounds || reuploadingId !== null}
-                          tooltip={
-                            d.bounds
-                              ? "Regenerate NDWI imagery for this area/year"
-                              : "No stored bounds for this coastal area record"
-                          }
+                          tooltip="Reupload"
                           tooltipOptions={{ position: "top" }}
+                          aria-label="Regenerate NDWI imagery"
                         />
                       )}
                       {isSuperadmin && (
@@ -578,11 +572,7 @@ export default function DataManagement() {
                             className="dm-delete-btn"
                             onClick={() => handleDelete(d)}
                             disabled={busyId !== null}
-                            tooltip={
-                              d.can_deactivate
-                                ? "Permanently delete this coastal area record's shoreline data \u2014 can't be undone"
-                                : "Superseded upload \u2014 delete its audit record and file."
-                            }
+                            tooltip="Delete"
                             tooltipOptions={{ position: "top" }}
                             aria-label="Delete coastal area record"
                           />

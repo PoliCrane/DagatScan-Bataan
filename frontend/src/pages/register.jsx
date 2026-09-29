@@ -201,7 +201,7 @@ export default function Register() {
           <h2 className="register-section-title">Personal Information</h2>
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Full Name *</label>
+              <label className="form-label">Full Name <span className="required-mark">*</span></label>
               <InputText
                 className="form-input"
                 value={fullName}
@@ -211,7 +211,7 @@ export default function Register() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Email Address *</label>
+              <label className="form-label">Email Address <span className="required-mark">*</span></label>
               <InputText
                 className="form-input"
                 type="email"
@@ -222,7 +222,7 @@ export default function Register() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Municipal DENR Office *</label>
+              <label className="form-label">Municipal DENR Office <span className="required-mark">*</span></label>
               <Dropdown
                 className="form-input"
                 value={municipalityId}
@@ -233,7 +233,7 @@ export default function Register() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Contact Number *</label>
+              <label className="form-label">Contact Number <span className="required-mark">*</span></label>
               <InputText
                 className="form-input"
                 value={contactNumber}
@@ -244,7 +244,7 @@ export default function Register() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Position / Designation *</label>
+              <label className="form-label">Position / Designation <span className="required-mark">*</span></label>
               <Dropdown
                 className="form-input"
                 value={positionIsOther ? "Others" : position}
@@ -269,7 +269,7 @@ export default function Register() {
           <div className="register-section-divider" />
 
           <h2 className="register-section-title">Request Letter</h2>
-          <label className="form-label">Upload Request Letter *</label>
+          <label className="form-label">Upload Request Letter <span className="required-mark">*</span></label>
           <div
             className="upload-drop-zone"
             onDragOver={handleDragOver}

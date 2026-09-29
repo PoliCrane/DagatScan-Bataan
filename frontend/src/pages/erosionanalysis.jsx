@@ -36,6 +36,10 @@ const LOCKED_SEGMENT_COLOR = "#9CA3AF";
 
 function MapController({ geoJsonData, bataanBounds, selectedMunicipality, municipalityBounds, satelliteBounds }) {
   const map = useMap();
+  // Only the province-wide fit should be gated to "once" — deselecting a
+  // municipality (selectedMunicipality -> null) must not re-trigger it and
+  // reset the user's zoom/pan back out to the whole province.
+  const hasFitOnceRef = useRef(false);
 
   useEffect(() => {
     if (!map) return;
@@ -50,12 +54,14 @@ function MapController({ geoJsonData, bataanBounds, selectedMunicipality, munici
         paddingTopLeft: [50, 50],
         paddingBottomRight: [50 + rightInset, 50],
       });
+      hasFitOnceRef.current = true;
     }
-    else if (geoJsonData && bataanBounds) {
+    else if (!hasFitOnceRef.current && geoJsonData && bataanBounds) {
       map.fitBounds(bataanBounds, {
         paddingTopLeft: [30, 30],
         paddingBottomRight: [30 + rightInset, 30],
       });
+      hasFitOnceRef.current = true;
     }
 
   }, [selectedMunicipality, municipalityBounds, geoJsonData, bataanBounds, map]);

@@ -4,14 +4,14 @@ import { SEGMENT_COLORS, SEGMENT_RISK_LEVELS } from "../utils/segmentData";
 // static (non-toggleable) risk-level reference for the Dashboard
 const RISK_TIER_ORDER = ["VERY_HIGH", "HIGH", "MODERATE", "LOW", "VERY_LOW"];
 
-function RiskLevelLegendCard() {
+function RiskLevelLegendCard({ horizontal = false }) {
   const riskLevels = RISK_TIER_ORDER.map((key) => ({
     color: SEGMENT_COLORS[`${key}_RISK`],
     label: SEGMENT_RISK_LEVELS[key],
   }));
 
   return (
-    <div className="info-box risk-legend-card">
+    <div className={`info-box risk-legend-card${horizontal ? " risk-legend-horizontal" : ""}`}>
       <div className="info-header-with-icon">
         <i className="pi pi-exclamation-triangle info-icon" aria-hidden="true" />
         <h3>Erosion Risk Level</h3>

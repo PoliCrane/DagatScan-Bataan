@@ -3,7 +3,7 @@ import MapLegend from "../components/MapLegend";
 import CoastalSummary from "../components/CoastalSummary";
 import SatelliteToggle from "../components/SatelliteToggle";
 import SegmentsPanel from "../components/SegmentsPanel";
-import { MapContainer, Marker, Popup, TileLayer, GeoJSON, useMap, Polyline } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, GeoJSON, useMap, useMapEvents, Polyline } from 'react-leaflet'
 import { useEffect, useState, useRef } from "react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -19,21 +19,46 @@ import { TOUR_PAGE_IDS } from "../tours/pageIds";
 import { coastalMonitoringSteps } from "../tours/steps/coastalMonitoringSteps";
 import MapWorkspace from "../components/MapWorkspace";
 
-function MapController({ geoJsonData, bataanBounds, selectedMunicipality, municipalityBounds }) {
+function MapController({ geoJsonData, bataanBounds, selectedMunicipality, municipalityBounds, selectedSegment }) {
   const map = useMap();
+  // Only the province-wide fit should be gated to "once" — deselecting a
+  // municipality (selectedMunicipality -> null) must not re-trigger it and
+  // reset the user's zoom/pan back out to the whole province.
+  const hasFitOnceRef = useRef(false);
 
   useEffect(() => {
     if (!map) return;
 
     if (selectedMunicipality && municipalityBounds) {
       map.fitBounds(municipalityBounds, { padding: [50, 50] });
+      hasFitOnceRef.current = true;
     }
-    else if (geoJsonData && bataanBounds) {
+    else if (!hasFitOnceRef.current && geoJsonData && bataanBounds) {
       map.fitBounds(bataanBounds, { padding: [20, 20] });
+      hasFitOnceRef.current = true;
     }
 
   }, [selectedMunicipality, municipalityBounds, geoJsonData, bataanBounds, map]);
 
+  // Directs the map to a segment when it's picked in the segments list.
+  // Deselecting it (selectedSegment -> null) intentionally does nothing —
+  // same "don't force a camera move on deselect" rule as above.
+  useEffect(() => {
+    if (!map || !selectedSegment?.shoreline?.length) return;
+    map.fitBounds(L.latLngBounds(selectedSegment.shoreline), {
+      padding: [80, 80],
+      maxZoom: 16,
+    });
+  }, [selectedSegment, map]);
+
+  return null;
+}
+
+// Municipality/segment clicks stop propagation, so a click reaching here is outside everything
+function MapClickOutsideHandler({ onOutsideClick }) {
+  useMapEvents({
+    click: () => onOutsideClick(),
+  });
   return null;
 }
 
@@ -199,6 +224,11 @@ export default function CoastalMonitoring() {
     setSelectedMunicipality(municipalityName);
   };
 
+  const handleDeselectMunicipality = () => {
+    setSelectedMunicipality(null);
+    setShowSegmentsPanel(false);
+  };
+
   const centerPoint = bataanBounds
     ? bataanBounds.getCenter() 
     : [14.657, 120.500];
@@ -231,10 +261,7 @@ export default function CoastalMonitoring() {
           selectedMunicipality={selectedMunicipality}
           segments={segments}
           selectedSegment={selectedSegment}
-          onClose={() => {
-            setSelectedMunicipality(null);
-            setShowSegmentsPanel(false);
-          }}
+          onClose={handleDeselectMunicipality}
           onSelectSegment={setSelectedSegment}
         />
       </MapWorkspace>
@@ -358,12 +385,16 @@ export default function CoastalMonitoring() {
             ) : null;
           })}
 
-          <MapController 
-            geoJsonData={geoJsonData} 
+          <MapController
+            geoJsonData={geoJsonData}
             bataanBounds={bataanBounds}
             selectedMunicipality={selectedMunicipality}
             municipalityBounds={municipalityBounds}
+            selectedSegment={selectedSegment}
           />
+          {selectedMunicipality && (
+            <MapClickOutsideHandler onOutsideClick={handleDeselectMunicipality} />
+          )}
         </MapContainer>
 
       </div>

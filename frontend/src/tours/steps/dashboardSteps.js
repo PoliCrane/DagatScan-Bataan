@@ -17,27 +17,20 @@ export const dashboardSteps = [
       "The Monitoring Statistics cards provide a summary of the latest coastal monitoring information, including the number of Active Monitoring Sites, Latest Erosion Rate, Data Records, and Very High Risk Areas.",
   },
   {
+    target: ".risk-legend-card",
+    placement: "bottom",
+    title: "Erosion Risk Level",
+    before: scrollTargetIntoView(".risk-legend-card"),
+    content:
+      "The Erosion Risk Level panel explains the coastal risk categories used in the system based on the calculated shoreline erosion or accretion rate, from Very High to Very Low, to help users interpret the coastal conditions displayed throughout the system.",
+  },
+  {
     target: ".map-container",
     placement: "top",
     title: "Coastal Erosion Map",
     before: scrollTargetIntoView(".map-container"),
     content:
       "The Coastal Erosion Map provides an overview of monitored coastal areas in Bataan. Select View Full Map to open the Coastal Monitoring page.",
-  },
-  {
-    target: ".info-box.system-status",
-    placement: "left",
-    title: "System Status",
-    before: scrollTargetIntoView(".info-box.system-status"),
-    content: "The System Status panel displays the current operational status of the system.",
-  },
-  {
-    target: ".risk-legend-card",
-    placement: "left",
-    title: "Erosion Risk Level",
-    before: scrollTargetIntoView(".risk-legend-card"),
-    content:
-      "The Erosion Risk Level panel explains the coastal risk categories used in the system based on the calculated shoreline erosion or accretion rate, from Very High to Very Low, to help users interpret the coastal conditions displayed throughout the system.",
   },
   {
     target: ".profile-btn",

@@ -12,18 +12,7 @@ import useGuidedTour from "../hooks/useGuidedTour";
 import TourInfoButton from "../components/tour/TourInfoButton";
 import { TOUR_PAGE_IDS } from "../tours/pageIds";
 import { dashboardSteps } from "../tours/steps/dashboardSteps";
-
 import { API_BASE_URL } from "../config/api";
-
-// Status colors are standardized across the system (green=online, yellow=warning,
-// red=critical, blue=in-progress, gray=inactive). Reflects real backend
-// reachability, not the environment — "checking" naturally covers a Render
-// free-tier cold start.
-const BACKEND_STATUS_CONFIG = {
-  checking: { color: "blue", label: "Checking...", info: "Contacting backend" },
-  online: { color: "green", label: "Online", info: "Backend operational" },
-  offline: { color: "red", label: "Offline", info: "Backend unreachable" },
-};
 
 // Staggered by the parent's staggerChildren — each card just needs its own entrance.
 const STAT_CARD_VARIANTS = {
@@ -70,7 +59,6 @@ export default function Home() {
   });
   const [allZones, setAllZones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [backendStatus, setBackendStatus] = useState("checking");
   const { Tour, replay } = useGuidedTour(TOUR_PAGE_IDS.DASHBOARD, dashboardSteps);
   const mapContainerRef = useRef(null);
 
@@ -90,21 +78,6 @@ export default function Home() {
       }
     };
     loadGeoJson();
-  }, []);
-
-  // Populates the sidebar's "System Status" card.
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_BASE_URL}/api/health`)
-      .then((res) => {
-        if (!cancelled) setBackendStatus(res.ok ? "online" : "offline");
-      })
-      .catch(() => {
-        if (!cancelled) setBackendStatus("offline");
-      });
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   // Dashboard is admin/superadmin/municipal only; others get redirected.
@@ -302,6 +275,8 @@ export default function Home() {
 
         <div className="dashboard-grid">
           <div className="dashboard-main">
+            <RiskLevelLegendCard horizontal />
+
             <div className="dashboard-map-section">
               <div className="dashboard-section-header">
                 <h2 className="dashboard-section-title">Coastal Erosion Map</h2>
@@ -415,19 +390,6 @@ export default function Home() {
           </div>
 
           <div className="dashboard-sidebar">
-            <div className={`info-box system-status status-${BACKEND_STATUS_CONFIG[backendStatus].color}`}>
-              <div className="info-header">
-                <div className={`status-indicator status-${BACKEND_STATUS_CONFIG[backendStatus].color}`}></div>
-                <h3>System Status</h3>
-              </div>
-              <p>{BACKEND_STATUS_CONFIG[backendStatus].label}</p>
-              <p className="info-meta">
-                {BACKEND_STATUS_CONFIG[backendStatus].info} — {import.meta.env.PROD ? "Production" : "Local dev"}
-              </p>
-            </div>
-
-            <RiskLevelLegendCard />
-
             <div className="info-box focus-area">
               <div className="info-header-with-icon">
                 <i className="pi pi-crosshairs info-icon" aria-hidden="true" />

@@ -156,32 +156,6 @@
   gap: 16px;
 }
 
-/* Same palette as .profile-btn (background/border/text) so the two sit
-   together as one visual family, just with the badge's background made
-   translucent to read as lighter-weight than the actual profile control. */
-.online-status-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: rgba(234, 244, 248, 0.55);
-  border: 1px solid #ddd;
-  color: var(--text-primary);
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.online-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
-  flex-shrink: 0;
-}
-
 .profile-dropdown-container {
   position: relative;
 }
