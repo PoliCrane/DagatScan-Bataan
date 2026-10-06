@@ -3,8 +3,8 @@
 const KEY_PREFIX = "dagatscan_tour_seen";
 
 function buildKey(pageId) {
-  const username = localStorage.getItem("username") || "anon";
-  return `${KEY_PREFIX}:${pageId}:${username}`;
+  const full_name = localStorage.getItem("full_name") || "anon";
+  return `${KEY_PREFIX}:${pageId}:${full_name}`;
 }
 
 export function hasSeenTour(pageId) {

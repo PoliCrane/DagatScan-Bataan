@@ -6,11 +6,11 @@ const pool = require("../db");
 async function logAction(client, { actor, action, category, severity = "normal", targetType, targetId, details }) {
   try {
     await (client || pool).query(
-      `INSERT INTO audit_log (actor_id, actor_username, actor_role, action, category, severity, target_type, target_id, details)
+      `INSERT INTO audit_log (actor_id, actor_full_name, actor_role, action, category, severity, target_type, target_id, details)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
         actor.id,
-        actor.username,
+        actor.full_name,
         actor.roles,
         action,
         category,

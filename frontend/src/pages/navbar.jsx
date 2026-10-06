@@ -5,7 +5,7 @@ import ChangePasswordModal from "../components/ChangePasswordModal";
 import AuthModals from "../components/AuthModals";
 import { useAuth } from "../contexts/useAuth";
 
-export default function Navbar({ username, isLoggedIn }){
+export default function Navbar({ full_name, isLoggedIn }){
   const navigate = useNavigate();
   const auth = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -35,7 +35,7 @@ export default function Navbar({ username, isLoggedIn }){
               onMouseLeave={() => setShowDropdown(false)}
             >
               <i className="pi pi-user profile-icon" aria-hidden="true" />
-              <span className="profile-username">{username || "User"}</span>
+              <span className="profile-display-name">{full_name || "User"}</span>
               <i className="pi pi-chevron-down dropdownprofile" aria-hidden="true" />
             </button>
 
@@ -75,7 +75,7 @@ export default function Navbar({ username, isLoggedIn }){
         <ChangePasswordModal
           isOpen={showPasswordModal}
           onClose={() => setShowPasswordModal(false)}
-          username={username}
+          full_name={full_name}
         />
       ) : (
         <AuthModals ref={authModalsRef} />

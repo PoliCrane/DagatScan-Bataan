@@ -56,39 +56,42 @@ const describeLog = (log) => {
   switch (log.action) {
     case "role_changed":
       return {
-        target: d.username || rawFallbackTarget(log),
+        target: d.full_name || d.username || rawFallbackTarget(log),
         detail:
           d.from_role && d.to_role
             ? `${formatRole(d.from_role)} → ${formatRole(d.to_role)}`
             : rawFallbackDetail(d),
       };
     case "user_deactivated":
-      return { target: d.username || rawFallbackTarget(log), detail: "Account deactivated" };
+      return { target: d.full_name || d.username || rawFallbackTarget(log), detail: "Account deactivated" };
     case "user_reactivated":
-      return { target: d.username || rawFallbackTarget(log), detail: "Account reactivated" };
+      return { target: d.full_name || d.username || rawFallbackTarget(log), detail: "Account reactivated" };
     case "user_created":
       return {
-        target: d.username || rawFallbackTarget(log),
+        target: d.full_name || d.username || rawFallbackTarget(log),
         detail: d.role
           ? `${formatRole(d.role)} account created${d.email ? ` (${d.email})` : ""}`
           : rawFallbackDetail(d),
       };
     case "user_edited":
       return {
-        target: d.new_username || d.old_username || rawFallbackTarget(log),
+        // old_username/new_username are legacy keys on rows written before the full_name rename
+        target: d.new_full_name || d.old_full_name || d.new_username || d.old_username || rawFallbackTarget(log),
         detail:
-          d.old_username && d.new_username && d.old_username !== d.new_username
-            ? `Renamed to "${d.new_username}"`
-            : "Username unchanged",
+          (d.old_full_name || d.old_username) &&
+          (d.new_full_name || d.new_username) &&
+          (d.old_full_name || d.old_username) !== (d.new_full_name || d.new_username)
+            ? `Renamed to "${d.new_full_name || d.new_username}"`
+            : "Full name unchanged",
       };
     case "account_request_approved":
       return {
-        target: d.username || rawFallbackTarget(log),
+        target: d.full_name || d.username || rawFallbackTarget(log),
         detail: d.municipality ? `Approved — assigned to ${d.municipality}` : "Approved",
       };
     case "account_request_rejected":
       return {
-        target: d.username || rawFallbackTarget(log),
+        target: d.full_name || d.username || rawFallbackTarget(log),
         detail: d.reason ? `Rejected — ${d.reason}` : "Rejected (no reason given)",
       };
     case "upload_created":
@@ -147,7 +150,7 @@ const describeLog = (log) => {
     case "login_denied_deactivated":
       return { target: "-", detail: "Blocked — account is deactivated" };
     case "login_failed_unknown_email":
-      return { target: log.actor_username || "Unknown", detail: "Login failed — no account with this email" };
+      return { target: log.actor_full_name || "Unknown", detail: "Login failed — no account with this email" };
     case "login_failed_wrong_password":
       return { target: "-", detail: "Login failed — incorrect password" };
     case "password_changed":
@@ -392,7 +395,7 @@ export default function AuditTrail() {
                 header="Actor"
                 body={(log) => (
                   <>
-                    <div className="at-actor">{log.actor_username}</div>
+                    <div className="at-actor">{log.actor_full_name}</div>
                     <div className="at-actor-sub">{formatRole(log.actor_role)}</div>
                   </>
                 )}

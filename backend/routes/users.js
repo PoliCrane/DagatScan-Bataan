@@ -15,7 +15,7 @@ const { logAction } = require("../services/auditLog");
 const { validate, schemas } = require("../middleware/validate");
 const {
   generateTemporaryPassword,
-  USERNAME_REQUIREMENTS_MESSAGE,
+  FULL_NAME_REQUIREMENTS_MESSAGE,
   isValidFullName,
 } = require("../utils/validators");
 
@@ -27,7 +27,7 @@ const VALID_ROLES = ["municipal", "admin", "superadmin"];
 router.get("/users", async (req, res) => {
   try {
     const users = await pool.query(`
-      SELECT u.id, u.username, u.email, u.roles, u.verified, u.created_at, u.active,
+      SELECT u.id, u.full_name, u.email, u.roles, u.verified, u.created_at, u.active,
              u.last_login, u.municipality_id, m.name AS municipality
       FROM users u
       LEFT JOIN municipalities m ON m.id = u.municipality_id
@@ -70,7 +70,7 @@ router.put("/users/:userId/role", validate(schemas.roleUpdate), async (req, res)
     }
 
     const result = await pool.query(
-      "UPDATE users SET roles = $1, municipality_id = $2 WHERE id = $3 RETURNING id, username, email, roles, municipality_id",
+      "UPDATE users SET roles = $1, municipality_id = $2 WHERE id = $3 RETURNING id, full_name, email, roles, municipality_id",
       [roles, resolvedMunicipalityId, userId]
     );
 
@@ -83,7 +83,7 @@ router.put("/users/:userId/role", validate(schemas.roleUpdate), async (req, res)
       severity: ["admin", "superadmin"].includes(roles) ? "critical" : "normal",
       targetType: "user",
       targetId: userId,
-      details: { username: targetUser.rows[0].username, from_role: targetUser.rows[0].roles, to_role: roles },
+      details: { full_name: targetUser.rows[0].full_name, from_role: targetUser.rows[0].roles, to_role: roles },
     });
   } catch (err) {
     logger.error(err.message);
@@ -105,7 +105,7 @@ router.patch("/users/:userId/deactivate", async (req, res) => {
     }
 
     const result = await pool.query(
-      "UPDATE users SET active = false WHERE id = $1 AND active = true RETURNING id, username, email",
+      "UPDATE users SET active = false WHERE id = $1 AND active = true RETURNING id, full_name, email",
       [userId]
     );
 
@@ -115,7 +115,7 @@ router.patch("/users/:userId/deactivate", async (req, res) => {
 
     res.json({ message: "User deactivated successfully", user: result.rows[0] });
 
-    sendAccountDeactivatedEmail(result.rows[0].email, result.rows[0].username).catch((err) => {
+    sendAccountDeactivatedEmail(result.rows[0].email, result.rows[0].full_name).catch((err) => {
       logger.error(`Failed to send account-deactivated email to ${result.rows[0].email}:`, err.message);
     });
 
@@ -126,7 +126,7 @@ router.patch("/users/:userId/deactivate", async (req, res) => {
       severity: "critical",
       targetType: "user",
       targetId: userId,
-      details: { username: result.rows[0].username },
+      details: { full_name: result.rows[0].full_name },
     });
   } catch (err) {
     logger.error("Deactivate user error:", err.message);
@@ -144,7 +144,7 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
     }
 
     const result = await pool.query(
-      "UPDATE users SET active = true WHERE id = $1 AND active = false RETURNING id, username, email",
+      "UPDATE users SET active = true WHERE id = $1 AND active = false RETURNING id, full_name, email",
       [userId]
     );
 
@@ -154,7 +154,7 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
 
     res.json({ message: "User reactivated successfully", user: result.rows[0] });
 
-    sendAccountReactivatedEmail(result.rows[0].email, result.rows[0].username).catch((err) => {
+    sendAccountReactivatedEmail(result.rows[0].email, result.rows[0].full_name).catch((err) => {
       logger.error(`Failed to send account-reactivated email to ${result.rows[0].email}:`, err.message);
     });
 
@@ -165,7 +165,7 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
       severity: "normal",
       targetType: "user",
       targetId: userId,
-      details: { username: result.rows[0].username },
+      details: { full_name: result.rows[0].full_name },
     });
   } catch (err) {
     logger.error("Reactivate user error:", err.message);
@@ -176,14 +176,14 @@ router.patch("/users/:userId/reactivate", async (req, res) => {
 router.post("/create-user", validate(schemas.createUser), async (req, res) => {
   try {
     const { email, roles } = req.body;
-    const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
+    const full_name = typeof req.body.full_name === "string" ? req.body.full_name.trim() : req.body.full_name;
 
-    if (!username || !email) {
-      return res.status(400).json({ error: "Username and email are required" });
+    if (!full_name || !email) {
+      return res.status(400).json({ error: "Full name and email are required" });
     }
 
-    if (!isValidFullName(username)) {
-      return res.status(400).json({ error: USERNAME_REQUIREMENTS_MESSAGE });
+    if (!isValidFullName(full_name)) {
+      return res.status(400).json({ error: FULL_NAME_REQUIREMENTS_MESSAGE });
     }
 
     // Issued by the system, never chosen by the admin — the recipient changes it
@@ -207,7 +207,7 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
       userRole === "municipal"
         ? pool.query("SELECT id, name FROM municipalities WHERE id = $1", [req.body.municipality_id])
         : Promise.resolve(null),
-      pool.query("SELECT * FROM users WHERE email = $1 OR username = $2", [email, username]),
+      pool.query("SELECT * FROM users WHERE email = $1 OR full_name = $2", [email, full_name]),
     ]);
 
     if (userRole === "municipal") {
@@ -218,14 +218,14 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
     }
 
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: "Email or username already exists" });
+      return res.status(400).json({ error: "Email or full name already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await pool.query(
-      "INSERT INTO users (username, email, password_hash, roles, verified, municipality_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, username, email, roles, municipality_id",
-      [username, email, hashedPassword, userRole, true, municipalityId]
+      "INSERT INTO users (full_name, email, password_hash, roles, verified, municipality_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, full_name, email, roles, municipality_id",
+      [full_name, email, hashedPassword, userRole, true, municipalityId]
     );
 
     res.json({
@@ -234,7 +234,7 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
       temporaryPassword: password,
     });
 
-    sendAccountCreatedEmail(email, username, password, municipality?.rows?.[0]?.name ?? null).catch((err) => {
+    sendAccountCreatedEmail(email, full_name, password, municipality?.rows?.[0]?.name ?? null).catch((err) => {
       logger.error(`Failed to send account-created email to ${email}:`, err.message);
     });
 
@@ -245,7 +245,7 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
       severity: "normal",
       targetType: "user",
       targetId: newUser.rows[0].id,
-      details: { username, email, role: userRole },
+      details: { full_name, email, role: userRole },
     });
   } catch (err) {
     logger.error(err.message);
@@ -253,18 +253,18 @@ router.post("/create-user", validate(schemas.createUser), async (req, res) => {
   }
 });
 
-// Editable fields: username, and municipality for municipal accounts.
+// Editable fields: full_name, and municipality for municipal accounts.
 router.put("/users/:userId/edit", async (req, res) => {
   try {
     const { userId } = req.params;
-    const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
+    const full_name = typeof req.body.full_name === "string" ? req.body.full_name.trim() : req.body.full_name;
 
-    if (!username) {
-      return res.status(400).json({ error: "Username is required" });
+    if (!full_name) {
+      return res.status(400).json({ error: "Full name is required" });
     }
 
-    if (!isValidFullName(username)) {
-      return res.status(400).json({ error: USERNAME_REQUIREMENTS_MESSAGE });
+    if (!isValidFullName(full_name)) {
+      return res.status(400).json({ error: FULL_NAME_REQUIREMENTS_MESSAGE });
     }
 
     const targetUser = await pool.query("SELECT * FROM users WHERE id = $1", [userId]);
@@ -272,13 +272,13 @@ router.put("/users/:userId/edit", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const usernameExists = await pool.query(
-      "SELECT * FROM users WHERE username = $1 AND id != $2",
-      [username, userId]
+    const fullNameExists = await pool.query(
+      "SELECT * FROM users WHERE full_name = $1 AND id != $2",
+      [full_name, userId]
     );
 
-    if (usernameExists.rows.length > 0) {
-      return res.status(400).json({ error: "Username is already taken" });
+    if (fullNameExists.rows.length > 0) {
+      return res.status(400).json({ error: "Full name is already taken" });
     }
 
     // Only meaningful for municipal accounts; COALESCE keeps the existing value otherwise.
@@ -292,8 +292,8 @@ router.put("/users/:userId/edit", async (req, res) => {
     }
 
     const updatedUser = await pool.query(
-      "UPDATE users SET username = $1, municipality_id = COALESCE($3, municipality_id) WHERE id = $2 RETURNING id, username, email, roles, verified, municipality_id",
-      [username, userId, municipalityId ?? null]
+      "UPDATE users SET full_name = $1, municipality_id = COALESCE($3, municipality_id) WHERE id = $2 RETURNING id, full_name, email, roles, verified, municipality_id",
+      [full_name, userId, municipalityId ?? null]
     );
 
     if (updatedUser.rows.length === 0) {
@@ -312,7 +312,7 @@ router.put("/users/:userId/edit", async (req, res) => {
       severity: "normal",
       targetType: "user",
       targetId: userId,
-      details: { old_username: targetUser.rows[0].username, new_username: username },
+      details: { old_full_name: targetUser.rows[0].full_name, new_full_name: full_name },
     });
   } catch (err) {
     logger.error(err.message);
@@ -325,10 +325,10 @@ router.get("/account-requests", async (req, res) => {
   try {
     const status = req.query.status || "pending";
     const query = `
-      SELECT ar.id, ar.username, ar.email, ar.municipality_id, m.name AS municipality,
+      SELECT ar.id, ar.full_name, ar.email, ar.municipality_id, m.name AS municipality,
              ar.contact_number, ar.position, ar.request_letter_filename, ar.request_letter_url, ar.additional_remarks,
              ar.status, ar.requested_at, ar.reviewed_by, ar.reviewed_at, ar.rejection_reason,
-             reviewer.username AS reviewed_by_username
+             reviewer.full_name AS reviewed_by_full_name
       FROM account_requests ar
       JOIN municipalities m ON m.id = ar.municipality_id
       LEFT JOIN users reviewer ON reviewer.id = ar.reviewed_by
@@ -415,21 +415,21 @@ router.post("/account-requests/:id/approve", async (req, res) => {
     }
 
     const existingUser = await client.query(
-      "SELECT id FROM users WHERE email = $1 OR username = $2",
-      [request.email, request.username]
+      "SELECT id FROM users WHERE email = $1 OR full_name = $2",
+      [request.email, request.full_name]
     );
     if (existingUser.rows.length > 0) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Email or username already exists as an account" });
+      return res.status(400).json({ error: "Email or full name already exists as an account" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await client.query(
-      `INSERT INTO users (username, email, password_hash, roles, verified, municipality_id, contact_number, position)
+      `INSERT INTO users (full_name, email, password_hash, roles, verified, municipality_id, contact_number, position)
        VALUES ($1, $2, $3, 'municipal', true, $4, $5, $6)
-       RETURNING id, username, email, roles, municipality_id`,
-      [request.username, request.email, hashedPassword, request.municipality_id, request.contact_number, request.position]
+       RETURNING id, full_name, email, roles, municipality_id`,
+      [request.full_name, request.email, hashedPassword, request.municipality_id, request.contact_number, request.position]
     );
 
     await client.query(
@@ -447,7 +447,7 @@ router.post("/account-requests/:id/approve", async (req, res) => {
     });
 
     // fire-and-forget — a slow/failed email shouldn't block the response
-    sendAccountApprovedEmail(request.email, request.username, password, request.municipality_name).catch((err) => {
+    sendAccountApprovedEmail(request.email, request.full_name, password, request.municipality_name).catch((err) => {
       logger.error(`Failed to send account-approved email to ${request.email}:`, err.message);
     });
 
@@ -458,7 +458,7 @@ router.post("/account-requests/:id/approve", async (req, res) => {
       severity: "normal",
       targetType: "account_request",
       targetId: request.id,
-      details: { username: request.username, email: request.email, municipality: request.municipality_name },
+      details: { full_name: request.full_name, email: request.email, municipality: request.municipality_name },
     });
   } catch (err) {
     await client.query("ROLLBACK");
@@ -477,7 +477,7 @@ router.post("/account-requests/:id/reject", validate(schemas.rejectRequest), asy
       `UPDATE account_requests
        SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW(), rejection_reason = $2
        WHERE id = $3 AND status = 'pending'
-       RETURNING id, username, email`,
+       RETURNING id, full_name, email`,
       [req.user.id, reason || null, req.params.id]
     );
 
@@ -494,7 +494,7 @@ router.post("/account-requests/:id/reject", validate(schemas.rejectRequest), asy
       severity: "normal",
       targetType: "account_request",
       targetId: updated.rows[0].id,
-      details: { username: updated.rows[0].username, email: updated.rows[0].email, reason: reason || null },
+      details: { full_name: updated.rows[0].full_name, email: updated.rows[0].email, reason: reason || null },
     });
   } catch (err) {
     logger.error(err.message);

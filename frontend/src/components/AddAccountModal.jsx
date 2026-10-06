@@ -15,7 +15,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
   const isSuperadmin = currentUserRole === "superadmin";
 
   const [formData, setFormData] = useState({
-    username: "",
+    full_name: "",
     email: "",
     roles: "municipal",
     municipality_id: "",
@@ -41,7 +41,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
   const handleSave = async () => {
     setError("");
 
-    if (!isValidFullName(formData.username)) {
+    if (!isValidFullName(formData.full_name)) {
       setError("Enter a full name (at least 2 letters, not just spaces)");
       return;
     }
@@ -72,7 +72,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          username: formData.username,
+          full_name: formData.full_name,
           email: formData.email,
           roles: formData.roles,
           municipality_id: formData.municipality_id,
@@ -94,7 +94,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
       // email bounces or lands in spam.
       await showSuccessHtml(
         `Account created successfully!<br/>` +
-        `<small>Username: <strong>${formData.username}</strong></small><br/>` +
+        `<small>Full Name: <strong>${formData.full_name}</strong></small><br/>` +
         `<small>Temporary password: <strong>${data.temporaryPassword}</strong></small><br/>` +
         `<small>Also emailed to ${formData.email}. They can change it from their account menu after signing in.</small>`
       );
@@ -113,7 +113,7 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
 
   const handleCancel = () => {
     setFormData({
-      username: "",
+      full_name: "",
       email: "",
       roles: "municipal",
       municipality_id: "",
@@ -156,13 +156,13 @@ export default function AddAccountModal({ isOpen, onClose, onSuccess, onError })
       {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
       <div className="form-group">
-        <label htmlFor="username">Username *</label>
+        <label htmlFor="full_name">Full Name *</label>
         <InputText
-          id="username"
-          name="username"
-          value={formData.username}
+          id="full_name"
+          name="full_name"
+          value={formData.full_name}
           onChange={handleChange}
-          placeholder="Enter username"
+          placeholder="Enter full name"
           className="form-input w-full"
         />
       </div>

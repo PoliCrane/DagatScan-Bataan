@@ -278,7 +278,7 @@ router.get("/", async (req, res) => {
                         m.name AS municipality,
                         ca.name AS coastal_area,
                         ca.lrr_confidence AS confidence,
-                        u.username AS uploaded_by,
+                        u.full_name AS uploaded_by,
                         u.roles AS uploaded_by_role,
                         (uh.area_id IS NOT NULL AND uh.upload_type = 'Satellite_Image') AS can_deactivate,
                         (si.bounds IS NOT NULL) AS has_bounds,

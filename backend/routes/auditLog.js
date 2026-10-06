@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
     const { category, severity } = req.query;
     const search = typeof req.query.search === "string" ? req.query.search.slice(0, 100) : undefined;
 
-    let query = `SELECT id, actor_id, actor_username, actor_role, action, category, severity, target_type, target_id, details, created_at
+    let query = `SELECT id, actor_id, actor_full_name, actor_role, action, category, severity, target_type, target_id, details, created_at
                  FROM audit_log WHERE 1=1`;
     let countQuery = `SELECT COUNT(*) AS total FROM audit_log WHERE 1=1`;
     const params = [];
@@ -36,8 +36,8 @@ router.get("/", async (req, res) => {
       paramIndex++;
     }
     if (search) {
-      query += ` AND (actor_username ILIKE $${paramIndex} OR action ILIKE $${paramIndex} OR target_id ILIKE $${paramIndex})`;
-      countQuery += ` AND (actor_username ILIKE $${paramIndex} OR action ILIKE $${paramIndex} OR target_id ILIKE $${paramIndex})`;
+      query += ` AND (actor_full_name ILIKE $${paramIndex} OR action ILIKE $${paramIndex} OR target_id ILIKE $${paramIndex})`;
+      countQuery += ` AND (actor_full_name ILIKE $${paramIndex} OR action ILIKE $${paramIndex} OR target_id ILIKE $${paramIndex})`;
       params.push(`%${search}%`);
       paramIndex++;
     }

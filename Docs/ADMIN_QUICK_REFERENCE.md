@@ -10,7 +10,7 @@ Run this command to create the first admin account:
 curl -X POST http://localhost:5000/admin/create-admin \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "your_username",
+    "full_name": "Your Full Name",
     "email": "your_email@example.com",
     "password": "your_secure_password"
   }'
@@ -23,7 +23,7 @@ Expected response:
   "message": "Admin account created successfully",
   "admin": {
     "id": 1,
-    "username": "your_username",
+    "full_name": "Your Full Name",
     "email": "your_email@example.com",
     "fullname": "Your Name",
     "roles": "admin"
@@ -59,7 +59,7 @@ Expected response:
 ### User Management (`/admin/user-management`)
 
 - **View All Users**: See a complete list of all registered users
-- **User Information**: Username, Email, Full Name, Role, Verification Status
+- **User Information**: Full Name, Email, Role, Verification Status
 - **User Status**:
   - ✅ Verified (email confirmed)
   - ⚠️ Unverified (pending email verification)

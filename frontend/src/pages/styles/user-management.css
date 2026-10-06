@@ -138,7 +138,7 @@
   background-color: #eaf4f8;
 }
 
-/* Assumes the base 7-column shape (avatar/Username/Email/Status/Joined
+/* Assumes the base 7-column shape (avatar/Full Name/Email/Status/Joined
    Date/Last Active/Actions); tables with extra columns need their own rules
    below, or leftover columns get squeezed toward 0 under table-layout:fixed
    since these already sum to 100%. */
@@ -177,7 +177,7 @@
   width: 12%;
 }
 
-/* Municipal Accounts — 8 columns: avatar/Username/Email/Municipality/Status/
+/* Municipal Accounts — 8 columns: avatar/Full Name/Email/Municipality/Status/
    Joined Date/Last Active/Actions */
 .user-table.with-municipality th:nth-child(1),
 .user-table.with-municipality td:nth-child(1) {
@@ -219,7 +219,7 @@
   width: 12%;
 }
 
-/* Pending Account Requests — 8 columns: Username/Email/Municipality/
+/* Pending Account Requests — 8 columns: Full Name/Email/Municipality/
    Contact Number/Position/Request Letter/Requested/Actions */
 .user-table.pending-requests th:nth-child(1),
 .user-table.pending-requests td:nth-child(1) {

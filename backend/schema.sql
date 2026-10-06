@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS municipalities (
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
+  full_name TEXT NOT NULL UNIQUE,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   roles TEXT NOT NULL DEFAULT 'municipal',
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS satellite_imagery (
 
 CREATE TABLE IF NOT EXISTS account_requests (
   id SERIAL PRIMARY KEY,
-  username TEXT NOT NULL,
+  full_name TEXT NOT NULL,
   email TEXT NOT NULL,
   municipality_id INTEGER NOT NULL REFERENCES municipalities(id),
   contact_number VARCHAR(30) NOT NULL,

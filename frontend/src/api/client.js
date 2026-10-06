@@ -38,7 +38,7 @@ export async function api(path, { auth = false, body, headers = {}, ...opts } = 
   });
 
   if (res.status === 401 && auth) {
-    ["token", "username", "roles", "municipality", "municipality_id"].forEach((key) =>
+    ["token", "full_name", "roles", "municipality", "municipality_id"].forEach((key) =>
       localStorage.removeItem(key)
     );
     window.dispatchEvent(new StorageEvent("storage", { key: "token" }));

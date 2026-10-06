@@ -147,7 +147,7 @@ export default function Register() {
       await showLoading("Submitting request...", 1500);
 
       const formData = new FormData();
-      formData.append("username", fullName.trim());
+      formData.append("full_name", fullName.trim());
       formData.append("email", email);
       formData.append("municipality_id", municipalityId);
       formData.append("contact_number", contactNumber);

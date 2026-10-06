@@ -33,7 +33,7 @@ const schemas = {
     municipality_id: z.union([z.string(), z.number()]).optional(),
   }),
   createUser: z.object({
-    username: z.string().min(1, "Username is required"),
+    full_name: z.string().min(1, "Full name is required"),
     email: z.string().min(1, "Email is required"),
     roles: z.string().min(1, "Role is required"),
     municipality_id: z.union([z.string(), z.number()]).optional(),

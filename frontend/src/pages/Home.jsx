@@ -49,7 +49,7 @@ function DashboardMapFocus({ bounds, containerRef }) {
 
 export default function Home() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("User");
+  const [fullName, setFullName] = useState("User");
   const [currentDate, setCurrentDate] = useState("");
   const [stats, setStats] = useState({
     activeMonitoringSites: 0,
@@ -150,9 +150,9 @@ export default function Home() {
       return;
     }
 
-    const storedUsername = localStorage.getItem("username");
-    if (storedUsername) {
-      setUsername(storedUsername);
+    const storedFullName = localStorage.getItem("full_name");
+    if (storedFullName) {
+      setFullName(storedFullName);
     }
 
     const today = new Date();
@@ -236,7 +236,7 @@ export default function Home() {
       <TourInfoButton onClick={replay} />
       <div className="dashboard-container">
         <div className="dashboard-welcome">
-          <h1>Welcome back, {username}! </h1>
+          <h1>Welcome back, {fullName}! </h1>
           <p>Coastal Erosion Monitoring System for {scopeLabel}</p>
           <p className="welcome-timestamp">{currentDate}</p>
         </div>

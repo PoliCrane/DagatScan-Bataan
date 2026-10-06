@@ -201,7 +201,7 @@
   margin-left: auto;
 }
 
-.profile-username {
+.profile-display-name {
   max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;

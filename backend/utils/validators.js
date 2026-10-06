@@ -49,18 +49,18 @@ function generateTemporaryPassword(length = 14) {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PH_MOBILE_REGEX = /^(09\d{9}|\+639\d{9})$/;
-const USERNAME_REGEX = /^[\p{L}\p{N} .,'-]{2,60}$/u;
-const USERNAME_REQUIREMENTS_MESSAGE =
+const FULL_NAME_REGEX = /^[\p{L}\p{N} .,'-]{2,60}$/u;
+const FULL_NAME_REQUIREMENTS_MESSAGE =
   "Name must be 2-60 characters, contain only letters, numbers, spaces, and . , ' -, and include at least 2 letters";
 
-// USERNAME_REGEX alone isn't enough: it counts spaces toward the 2-60 length, so
+// FULL_NAME_REGEX alone isn't enough: it counts spaces toward the 2-60 length, so
 // "   " (just spaces) or "A    " (one real letter padded with spaces) both satisfy
 // it without containing a real name. Trimming first, then requiring at least 2 actual
 // letters, closes both gaps while still accepting names with numerals/punctuation
 // (e.g. "Jose Rizal II", "Ma. Peñaflorida-Reyes").
 function isValidFullName(value) {
   const trimmed = typeof value === "string" ? value.trim() : "";
-  if (!USERNAME_REGEX.test(trimmed)) return false;
+  if (!FULL_NAME_REGEX.test(trimmed)) return false;
   const letterCount = (trimmed.match(/\p{L}/gu) || []).length;
   return letterCount >= 2;
 }
@@ -80,8 +80,8 @@ module.exports = {
   PASSWORD_REQUIREMENTS_MESSAGE,
   EMAIL_REGEX,
   PH_MOBILE_REGEX,
-  USERNAME_REGEX,
-  USERNAME_REQUIREMENTS_MESSAGE,
+  FULL_NAME_REGEX,
+  FULL_NAME_REQUIREMENTS_MESSAGE,
   isValidFullName,
   escapeHtml,
 };

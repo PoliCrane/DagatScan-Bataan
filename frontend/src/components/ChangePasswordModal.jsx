@@ -12,7 +12,7 @@ import "../pages/styles/accountModals.css";
 import { showSuccess, showError, showLoading } from "../utils/sweetAlertUtils";
 
 import { API_BASE_URL } from "../config/api";
-export default function ChangePasswordModal({ isOpen, onClose, username }) {
+export default function ChangePasswordModal({ isOpen, onClose, full_name }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

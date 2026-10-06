@@ -145,7 +145,7 @@ export default function UserManagement() {
 
   const handleDeactivate = async (account) => {
     const result = await confirmAction(
-      `Are you sure you want to deactivate ${account.username}? They will not be able to log in, but their data will be preserved.`,
+      `Are you sure you want to deactivate ${account.full_name}? They will not be able to log in, but their data will be preserved.`,
       {
         confirmButtonText: "Deactivate",
         cancelButtonText: "Cancel"
@@ -155,7 +155,7 @@ export default function UserManagement() {
     if (!result) return;
 
     setDeletingUserId(account.id);
-    await showLoading(`Deactivating ${account.username}...`, 2000);
+    await showLoading(`Deactivating ${account.full_name}...`, 2000);
 
     try {
       const token = localStorage.getItem("token");
@@ -179,7 +179,7 @@ export default function UserManagement() {
         throw new Error(errorMessage);
       }
 
-      await showSuccess(`User ${account.username} deactivated successfully`);
+      await showSuccess(`User ${account.full_name} deactivated successfully`);
       fetchUsers();
     } catch (err) {
       await showError(err.message);
@@ -191,7 +191,7 @@ export default function UserManagement() {
 
   const handleReactivate = async (account) => {
     const result = await confirmAction(
-      `Are you sure you want to reactivate ${account.username}? They will be able to log in again.`,
+      `Are you sure you want to reactivate ${account.full_name}? They will be able to log in again.`,
       {
         confirmButtonText: "Reactivate",
         cancelButtonText: "Cancel"
@@ -201,7 +201,7 @@ export default function UserManagement() {
     if (!result) return;
 
     setDeletingUserId(account.id);
-    await showLoading(`Reactivating ${account.username}...`, 2000);
+    await showLoading(`Reactivating ${account.full_name}...`, 2000);
 
     try {
       const token = localStorage.getItem("token");
@@ -225,7 +225,7 @@ export default function UserManagement() {
         throw new Error(errorMessage);
       }
 
-      await showSuccess(`User ${account.username} reactivated successfully`);
+      await showSuccess(`User ${account.full_name} reactivated successfully`);
       fetchUsers();
     } catch (err) {
       await showError(err.message);
@@ -238,13 +238,13 @@ export default function UserManagement() {
   const filterUsers = (userList) => {
     if (!searchQuery.trim()) return userList;
     return userList.filter(user =>
-      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
 
   const avatarBody = (account) => (
-    <span className="user-avatar">{account.username.charAt(0).toUpperCase()}</span>
+    <span className="user-avatar">{account.full_name ? account.full_name.charAt(0).toUpperCase() : "?"}</span>
   );
 
   const statusBody = (account) => {
@@ -299,7 +299,7 @@ export default function UserManagement() {
         size="small"
       >
         <Column body={avatarBody} className="avatar-col" style={{ width: "3.5rem" }} />
-        <Column field="username" header="Username" sortable />
+        <Column field="full_name" header="Full Name" sortable />
         <Column field="email" header="Email" sortable />
         {showMunicipality && (
           <Column
@@ -366,7 +366,7 @@ export default function UserManagement() {
             <InputIcon className="pi pi-search" />
             <InputText
               className="w-full"
-              placeholder="Search by username or email..."
+              placeholder="Search by full name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -392,7 +392,7 @@ export default function UserManagement() {
                 emptyMessage="No pending account requests."
                 size="small"
               >
-                <Column field="username" header="Username" sortable />
+                <Column field="full_name" header="Full Name" sortable />
                 <Column field="email" header="Email" sortable />
                 <Column field="municipality" header="Municipality" sortable />
                 <Column field="contact_number" header="Contact Number" />

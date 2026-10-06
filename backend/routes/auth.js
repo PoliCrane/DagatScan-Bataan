@@ -17,7 +17,7 @@ const {
   PASSWORD_REQUIREMENTS_MESSAGE,
   EMAIL_REGEX,
   PH_MOBILE_REGEX,
-  USERNAME_REQUIREMENTS_MESSAGE,
+  FULL_NAME_REQUIREMENTS_MESSAGE,
   isValidFullName,
 } = require("../utils/validators");
 
@@ -48,18 +48,18 @@ router.post(
       const { email, municipality_id, contact_number, position, additional_remarks } = req.body;
       // Trimmed once, up front, so every downstream use (duplicate checks, the INSERT
       // itself) sees the clean value — not just the validation check below.
-      const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
+      const full_name = typeof req.body.full_name === "string" ? req.body.full_name.trim() : req.body.full_name;
 
-      if (!username || !email || !municipality_id || !contact_number || !position) {
+      if (!full_name || !email || !municipality_id || !contact_number || !position) {
         cleanupFile();
         return res.status(400).json({
           error: "Full name, email, municipality, contact number, and position are required",
         });
       }
 
-      if (!isValidFullName(username)) {
+      if (!isValidFullName(full_name)) {
         cleanupFile();
-        return res.status(400).json({ error: USERNAME_REQUIREMENTS_MESSAGE });
+        return res.status(400).json({ error: FULL_NAME_REQUIREMENTS_MESSAGE });
       }
 
       if (!EMAIL_REGEX.test(email)) {
@@ -90,10 +90,10 @@ router.post(
       // independent checks, run concurrently
       const [municipality, existingUser, existingRequest] = await Promise.all([
         pool.query("SELECT id FROM municipalities WHERE id = $1", [municipality_id]),
-        pool.query("SELECT id FROM users WHERE email = $1 OR username = $2", [email, username]),
+        pool.query("SELECT id FROM users WHERE email = $1 OR full_name = $2", [email, full_name]),
         pool.query(
-          "SELECT id FROM account_requests WHERE (email = $1 OR username = $2) AND status = 'pending'",
-          [email, username]
+          "SELECT id FROM account_requests WHERE (email = $1 OR full_name = $2) AND status = 'pending'",
+          [email, full_name]
         ),
       ]);
 
@@ -104,18 +104,18 @@ router.post(
 
       if (existingUser.rows.length > 0) {
         cleanupFile();
-        return res.status(400).json({ error: "Email or username already exists" });
+        return res.status(400).json({ error: "Email or full name already exists" });
       }
 
       if (existingRequest.rows.length > 0) {
         cleanupFile();
-        return res.status(400).json({ error: "A pending request already exists for this email or username" });
+        return res.status(400).json({ error: "A pending request already exists for this email or full name" });
       }
 
       const newRequest = await pool.query(
-        `INSERT INTO account_requests (username, email, municipality_id, contact_number, position, request_letter_filename, additional_remarks)
+        `INSERT INTO account_requests (full_name, email, municipality_id, contact_number, position, request_letter_filename, additional_remarks)
          VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
-        [username, email, municipality_id, contact_number, position, req.file.filename, additional_remarks || null]
+        [full_name, email, municipality_id, contact_number, position, req.file.filename, additional_remarks || null]
       );
 
       scheduleSync();
@@ -144,7 +144,7 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
 
     if (userResult.rows.length === 0) {
       logAction(null, {
-        actor: { id: null, username: email, roles: "unknown" },
+        actor: { id: null, full_name: email, roles: "unknown" },
         action: "login_failed_unknown_email",
         category: "auth",
         severity: "normal",
@@ -156,7 +156,7 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
 
     if (!user.active) {
       logAction(null, {
-        actor: { id: user.id, username: user.username, roles: user.roles },
+        actor: { id: user.id, full_name: user.full_name, roles: user.roles },
         action: "login_denied_deactivated",
         category: "auth",
         severity: "critical",
@@ -173,7 +173,7 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
 
     if (!validPassword) {
       logAction(null, {
-        actor: { id: user.id, username: user.username, roles: user.roles },
+        actor: { id: user.id, full_name: user.full_name, roles: user.roles },
         action: "login_failed_wrong_password",
         category: "auth",
         severity: "normal",
@@ -188,7 +188,7 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
     const token = jwt.sign(
       {
         id: user.id,
-        username: user.username,
+        full_name: user.full_name,
         roles: user.roles,
         municipality_id: user.municipality_id,
         municipality: user.municipality_name,
@@ -200,14 +200,14 @@ router.post("/login", loginLimiter, validate(schemas.login), async (req, res) =>
     res.json({
       message: "Login successful",
       token,
-      username: user.username,
+      full_name: user.full_name,
       roles: user.roles,
       municipality_id: user.municipality_id,
       municipality: user.municipality_name,
     });
 
     logAction(null, {
-      actor: { id: user.id, username: user.username, roles: user.roles },
+      actor: { id: user.id, full_name: user.full_name, roles: user.roles },
       action: "login_success",
       category: "auth",
       severity: "normal",
@@ -245,7 +245,7 @@ router.post("/forgot-password", passwordResetLimiter, validate(schemas.forgotPas
       );
 
       logAction(null, {
-        actor: { id: userResult.rows[0].id, username: userResult.rows[0].username, roles: userResult.rows[0].roles },
+        actor: { id: userResult.rows[0].id, full_name: userResult.rows[0].full_name, roles: userResult.rows[0].roles },
         action: "password_reset_requested",
         category: "auth",
         severity: "normal",
@@ -325,7 +325,7 @@ router.post("/reset-password", passwordResetLimiter, validate(schemas.resetPassw
     res.json({ message: "Password reset successfully" });
 
     logAction(null, {
-      actor: { id: user.id, username: user.username, roles: user.roles },
+      actor: { id: user.id, full_name: user.full_name, roles: user.roles },
       action: "password_reset_completed",
       category: "auth",
       severity: "normal",

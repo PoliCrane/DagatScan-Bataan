@@ -40,7 +40,7 @@ export default function RejectRequestModal({ isOpen, request, onClose, onSuccess
       if (!response.ok) {
         throw new Error(data.error || "Failed to reject request");
       }
-      await showSuccess(`Request from ${request.username} rejected`);
+      await showSuccess(`Request from ${request.full_name} rejected`);
       setReason("");
       onSuccess();
     } catch (err) {
@@ -81,7 +81,7 @@ export default function RejectRequestModal({ isOpen, request, onClose, onSuccess
       {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
       <div className="approve-request-summary">
-        <p><strong>{request.username}</strong> ({request.email}) — {request.municipality}</p>
+        <p><strong>{request.full_name}</strong> ({request.email}) — {request.municipality}</p>
         <p>Contact: {request.contact_number} · Position: {request.position}</p>
         <p>
           <Button

@@ -37,7 +37,7 @@ export const userManagementSteps = [
     placement: "bottom",
     title: "Search",
     before: scrollTargetIntoViewNearest(".search-bar-wrapper"),
-    content: "Use the Search bar to quickly find an account by its username or email address.",
+    content: "Use the Search bar to quickly find an account by its full name or email address.",
   },
   {
     target: ".user-section",

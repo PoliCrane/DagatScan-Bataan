@@ -67,7 +67,7 @@ const sendPasswordResetEmail = async (email, resetCode) => {
   }
 };
 
-const sendAccountApprovedEmail = async (email, username, password, municipalityName) => {
+const sendAccountApprovedEmail = async (email, fullName, password, municipalityName) => {
   try {
     await sendViaBrevo({
       to: email,
@@ -78,8 +78,8 @@ const sendAccountApprovedEmail = async (email, username, password, municipalityN
         <p>Your DagatScan Bataan account request${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""} has been approved. You can log in with the credentials below.</p>
 
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-          <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
-          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(username)}</p>
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Full Name:</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(fullName)}</p>
           <p style="font-size: 14px; margin: 0 0 10px 0;">Temporary password:</p>
           <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(password)}</p>
         </div>
@@ -97,7 +97,7 @@ const sendAccountApprovedEmail = async (email, username, password, municipalityN
   }
 };
 
-const sendAccountCreatedEmail = async (email, username, password, municipalityName) => {
+const sendAccountCreatedEmail = async (email, fullName, password, municipalityName) => {
   try {
     await sendViaBrevo({
       to: email,
@@ -108,8 +108,8 @@ const sendAccountCreatedEmail = async (email, username, password, municipalityNa
         <p>An administrator has created a DagatScan Bataan account for you${municipalityName ? ` for ${escapeHtml(municipalityName)}` : ""}. You can log in with the credentials below.</p>
 
         <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
-          <p style="font-size: 14px; margin: 0 0 10px 0;">Username:</p>
-          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(username)}</p>
+          <p style="font-size: 14px; margin: 0 0 10px 0;">Full Name:</p>
+          <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0 0 14px 0;">${escapeHtml(fullName)}</p>
           <p style="font-size: 14px; margin: 0 0 10px 0;">Temporary password:</p>
           <p style="font-size: 18px; font-weight: bold; color: #0077B6; margin: 0;">${escapeHtml(password)}</p>
         </div>
@@ -127,7 +127,7 @@ const sendAccountCreatedEmail = async (email, username, password, municipalityNa
   }
 };
 
-const sendAccountDeactivatedEmail = async (email, username) => {
+const sendAccountDeactivatedEmail = async (email, fullName) => {
   try {
     await sendViaBrevo({
       to: email,
@@ -135,7 +135,7 @@ const sendAccountDeactivatedEmail = async (email, username) => {
       html: emailTemplate(
         "Account Deactivated",
         `
-        <p>Hi ${escapeHtml(username)}, your DagatScan Bataan account has been deactivated. You will not be able to log in until it's reactivated.</p>
+        <p>Hi ${escapeHtml(fullName)}, your DagatScan Bataan account has been deactivated. You will not be able to log in until it's reactivated.</p>
         <p style="color: #666;">If you believe this is a mistake, please contact your DENR-Bataan administrator.</p>
         `
       )
@@ -148,7 +148,7 @@ const sendAccountDeactivatedEmail = async (email, username) => {
   }
 };
 
-const sendAccountReactivatedEmail = async (email, username) => {
+const sendAccountReactivatedEmail = async (email, fullName) => {
   try {
     await sendViaBrevo({
       to: email,
@@ -156,7 +156,7 @@ const sendAccountReactivatedEmail = async (email, username) => {
       html: emailTemplate(
         "Account Reactivated",
         `
-        <p>Hi ${escapeHtml(username)}, your DagatScan Bataan account has been reactivated. You can now log in again.</p>
+        <p>Hi ${escapeHtml(fullName)}, your DagatScan Bataan account has been reactivated. You can now log in again.</p>
         `
       )
     });

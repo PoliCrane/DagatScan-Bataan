@@ -26,7 +26,7 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const result = await pool.query(
-      `SELECT u.id, u.username, u.roles, u.active, u.municipality_id, m.name AS municipality
+      `SELECT u.id, u.full_name, u.roles, u.active, u.municipality_id, m.name AS municipality
        FROM users u
        LEFT JOIN municipalities m ON m.id = u.municipality_id
        WHERE u.id = $1`,
@@ -40,7 +40,7 @@ const verifyToken = async (req, res, next) => {
     const user = result.rows[0];
     req.user = {
       id: user.id,
-      username: user.username,
+      full_name: user.full_name,
       roles: user.roles,
       municipality_id: user.municipality_id,
       municipality: user.municipality,

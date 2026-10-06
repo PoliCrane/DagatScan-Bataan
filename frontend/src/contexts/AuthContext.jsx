@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./useAuth";
 
-const AUTH_KEYS = ["token", "username", "roles", "municipality", "municipality_id", "resetEmail"];
+const AUTH_KEYS = ["token", "full_name", "roles", "municipality", "municipality_id", "resetEmail"];
 
 function decodeTokenExpiry(token) {
   try {
@@ -22,7 +22,7 @@ function readStoredAuth() {
   }
   return {
     token,
-    username: localStorage.getItem("username") || "User",
+    full_name: localStorage.getItem("full_name") || "User",
     roles: localStorage.getItem("roles") || null,
     municipality: localStorage.getItem("municipality") || null,
     municipalityId: localStorage.getItem("municipality_id") || null,
@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
 
   const login = useCallback((payload) => {
     localStorage.setItem("token", payload.token);
-    if (payload.username) localStorage.setItem("username", payload.username);
+    if (payload.full_name) localStorage.setItem("full_name", payload.full_name);
     if (payload.roles) localStorage.setItem("roles", payload.roles);
     if (payload.municipality) localStorage.setItem("municipality", payload.municipality);
     if (payload.municipality_id) localStorage.setItem("municipality_id", payload.municipality_id);
@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
     () => ({
       isLoggedIn: !!auth,
       token: auth?.token ?? null,
-      username: auth?.username ?? null,
+      full_name: auth?.full_name ?? null,
       roles: auth?.roles ?? null,
       municipality: auth?.municipality ?? null,
       municipalityId: auth?.municipalityId ?? null,

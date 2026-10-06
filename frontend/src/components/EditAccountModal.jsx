@@ -12,7 +12,7 @@ import { isValidFullName } from "../utils/validation";
 import { API_BASE_URL } from "../config/api";
 export default function EditAccountModal({ isOpen, onClose, account, onSuccess }) {
   const [formData, setFormData] = useState({
-    username: "",
+    full_name: "",
     municipality_id: "",
     roles: "",
   });
@@ -28,7 +28,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
   useEffect(() => {
     if (account) {
       setFormData({
-        username: account.username,
+        full_name: account.full_name,
         municipality_id: account.municipality_id || "",
         roles: account.roles,
       });
@@ -55,7 +55,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
   const handleSave = async () => {
     setError("");
 
-    if (!isValidFullName(formData.username)) {
+    if (!isValidFullName(formData.full_name)) {
       setError("Enter a full name (at least 2 letters, not just spaces)");
       return;
     }
@@ -70,8 +70,8 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
 
     const confirmed = await confirmActionHtml(
       roleChanged
-        ? `Update username to <strong>${formData.username}</strong> and change role to <strong>${formData.roles}</strong>?<br/><small>Current: ${account.username} (${account.roles})</small>`
-        : `Update username to <strong>${formData.username}</strong>?<br/><small>Current: ${account.username}</small>`
+        ? `Update full name to <strong>${formData.full_name}</strong> and change role to <strong>${formData.roles}</strong>?<br/><small>Current: ${account.full_name} (${account.roles})</small>`
+        : `Update full name to <strong>${formData.full_name}</strong>?<br/><small>Current: ${account.full_name}</small>`
     );
 
     if (!confirmed) return;
@@ -104,7 +104,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
       }
 
       // only include municipality_id if /role didn't already set it above
-      const editBody = { username: formData.username };
+      const editBody = { full_name: formData.full_name };
       if (showMunicipalityField && !roleChanged) {
         editBody.municipality_id = formData.municipality_id;
       }
@@ -125,7 +125,7 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
         return;
       }
 
-      await showSuccessHtml(`Account updated successfully!<br/><small>Username: ${formData.username}</small>`);
+      await showSuccessHtml(`Account updated successfully!<br/><small>Full Name: ${formData.full_name}</small>`);
       onSuccess();
       handleCancel();
     } catch (err) {
@@ -181,13 +181,13 @@ export default function EditAccountModal({ isOpen, onClose, account, onSuccess }
       </div>
 
       <div className="form-group">
-        <label htmlFor="username">Username *</label>
+        <label htmlFor="full_name">Full Name *</label>
         <InputText
-          id="username"
-          name="username"
-          value={formData.username}
+          id="full_name"
+          name="full_name"
+          value={formData.full_name}
           onChange={handleChange}
-          placeholder="Enter username"
+          placeholder="Enter full name"
           className="form-input w-full"
         />
       </div>

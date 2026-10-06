@@ -39,7 +39,7 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
         throw new Error(data.error || "Failed to approve request");
       }
       await showSuccessHtml(
-        `Account created for <strong>${request.username}</strong><br/>` +
+        `Account created for <strong>${request.full_name}</strong><br/>` +
         `<small>Temporary password: <strong>${data.temporaryPassword}</strong></small><br/>` +
         `<small>Also emailed to ${request.email}. They can change it from their account menu after signing in.</small>`
       );
@@ -81,7 +81,7 @@ export default function ApproveRequestModal({ isOpen, request, onClose, onSucces
       {error && <Message severity="error" text={error} className="mb-3 w-full" />}
 
       <div className="approve-request-summary">
-        <p><strong>{request.username}</strong> ({request.email}) — {request.municipality}</p>
+        <p><strong>{request.full_name}</strong> ({request.email}) — {request.municipality}</p>
         <p>Contact: {request.contact_number} · Position: {request.position}</p>
         <p>
           <Button

@@ -7,7 +7,7 @@ import "../pages/styles/responsive-shell.css";
 
 export default function AdminLayout({ children }) {
   const location = useLocation();
-  const { username } = useAuth();
+  const { full_name } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [lastPath, setLastPath] = useState(location.pathname);
 
@@ -18,7 +18,7 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className={`layout-container ${drawerOpen ? "drawer-open" : ""}`}>
-      <Navbar username={username || "Admin"} isLoggedIn={true} />
+      <Navbar full_name={full_name || "Admin"} isLoggedIn={true} />
       <button
         type="button"
         aria-label={drawerOpen ? "Close menu" : "Open menu"}

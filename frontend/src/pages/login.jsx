@@ -31,7 +31,7 @@ export default function Login({ onClose, onSwitchToForgotPassword }) {
     if (res.token) {
       auth.login(res);
 
-      await showSuccess(`Welcome back, ${res.username || 'User'}!`);
+      await showSuccess(`Welcome back, ${res.full_name || 'User'}!`);
 
       if (res.roles === "admin") {
         navigate("/admin/data-upload");

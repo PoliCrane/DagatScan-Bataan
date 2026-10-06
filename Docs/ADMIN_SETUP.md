@@ -18,7 +18,7 @@ Use one of the following methods to create an admin account:
 curl -X POST http://localhost:5000/admin/create-admin \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "adminuser",
+    "full_name": "Admin User",
     "email": "admin@coastalerosion.com",
     "password": "AdminPassword123"
   }'
@@ -34,7 +34,7 @@ curl -X POST http://localhost:5000/admin/create-admin \
 
 ```json
 {
-  "username": "adminuser",
+  "full_name": "Admin User",
   "email": "admin@coastalerosion.com",
   "password": "AdminPassword123"
 }
@@ -49,7 +49,7 @@ fetch("http://localhost:5000/admin/create-admin", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    username: "adminuser",
+    full_name: "Admin User",
     email: "admin@coastalerosion.com",
     password: "AdminPassword123",
   }),
@@ -112,7 +112,7 @@ This usually means:
 Make sure your database is properly set up with the users table. The table structure should include:
 
 - `id`: UUID or integer primary key
-- `username`: string (unique)
+- `full_name`: string (unique)
 - `email`: string (unique)
 - `password_hash`: string
 - `fullname`: string

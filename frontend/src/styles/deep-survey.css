@@ -78,7 +78,7 @@ body {
   border-color: rgba(56, 189, 248, 0.5) !important;
 }
 
-.main-navbar .profile-username {
+.main-navbar .profile-display-name {
   max-width: 160px;
   color: #ffffff !important;
   font-weight: 600;

@@ -9,7 +9,7 @@ const { createJob, runNdwiBatch, getJob } = require("../services/ndwiBatchWorker
 
 async function main() {
   const actor = await pool.query(
-    `SELECT id, username, roles FROM users WHERE roles = 'superadmin' AND active ORDER BY id LIMIT 1`
+    `SELECT id, full_name, roles FROM users WHERE roles = 'superadmin' AND active ORDER BY id LIMIT 1`
   );
   if (actor.rows.length === 0) throw new Error("No active superadmin to attribute this run to.");
 
